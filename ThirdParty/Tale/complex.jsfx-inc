@@ -1,0 +1,490 @@
+desc:Complex math operations
+
+// Copyright (C) 2017 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+/* Setting Functions
+
+    * cplx_set_real(a)
+      Example: z.cplx_set_real(1.0);
+      Sets the complex number to a + 0*i.
+
+    * cplx_set(a, b)
+      Example: z.cplx_set(1.0, -1.0);
+      Sets the complex number to a + b*i.
+
+    * cplx_set(z*)
+      Example: z2.cplx_set(z1); // z2 = z1
+      Sets the complex number to the value of another complex number.
+
+   Polar Functions
+
+    * cplx_polar(r, phi)
+      Example: z.cplx_polar(1.0, $pi/4);
+      Sets the complex number using polar coordinates, converting from polar
+      to trigonometric form.
+
+    * cplx_norm()
+      Example: norm = z.cplx_norm();
+      Returns the norm of the complex number i.e. Re(z)^2 + Im(z)^2.
+
+    * cplx_abs()
+      Example: mag = z.cplx_abs();
+      Returns the absolute value (or modulus or magnitude) of the complex
+      number.
+
+    * cplx_arg()
+      Example: phase = z.cplx_arg();
+      Returns the argument (or phase) of the complex number.
+
+   Equality Functions
+
+    * cplx_eq(z*)
+      Example: is_eq = z1.cplx_eq(z2); // z1 == z2
+      Returns 1 if the complex numbers are equal, or 0 otherwise.
+
+    * cplx_not_eq(z*)
+      Example: is_diff = z1.cplx_not_eq(z2); // z1 != z2
+      Returns 1 if the complex numbers are not equal, or 0 otherwise.
+
+   Elementary Functions
+
+    * cplx_add(x*[, y*]) -- Add
+    * cplx_sub(x*[, y*]) -- Subtract
+    * cplx_mul(x*[, y*]) -- Multiply
+    * cplx_div(x*[, y*]) -- Divide
+      Example: z.cplx_add(x, y); // z = x + y
+      Example: z.cplx_add(x);    // z = z + x
+      Sets the complex number to the result of the operation on two complex
+      numbers.
+
+    * cplx_add_real([z*,] a) -- Add
+    * cplx_sub_real([z*,] a) -- Subtract
+    * cplx_mul_real([z*,] a) -- Multiply
+    * cplx_div_real([z*,] a) -- Divide
+      Example: z.cplx_add_real(x, a); // z = x + a
+      Example: z.cplx_add_real(a);    // z = z + a
+      Sets the complex number to the result of the operation on a complex
+      number and a real number.
+
+    * cplx_conj(z*)  -- Complex conjugate
+    * cplx_neg(z*)   -- Negation (-z)
+    * cplx_recip(z*) -- Reciprocal (1/z)
+    * cplx_sqrt(z*)  -- Square root
+    * cplx_sqr(z*)   -- Square (z^2)
+      Example: z.cplx_recip(x); // z = 1/x
+      Sets the complex number to the result of the operation on a complex
+      number.
+
+   Exponentiation Functions
+
+    * cplx_exp(z*)   -- Exponential function
+    * cplx_log(z*)   -- Natural logarithm
+    * cplx_log10(z*) -- Base 10 logarithm
+      Example: z.cplx_log(x); // z = ln(x)
+      Sets the complex number to the result of the function of a complex
+      number.
+
+    * cplx_pow(x*, y*)
+    * cplx_pow_real(z*, a)
+      Example: z.cplx_pow(x, y); // z = x^y
+      Sets the complex number to a complex number raised to the power of
+      another complex or real number.
+
+   Trigonometric functions
+
+    * cplx_sin(z*)  -- Sine
+    * cplx_cos(z*)  -- Cosine
+    * cplx_tan(z*)  -- Tangent
+
+    * cplx_sinh(z*) -- Hyperbolic sine
+    * cplx_cosh(z*) -- Hyperbolic cosine
+    * cplx_tanh(z*) -- Hyperbolic tangent
+      Example: z.cplx_sin(x);
+      Sets the complex number to the trigonometric function of a complex
+      number.
+
+   Instance Variables
+
+    * re
+    * im
+      Example: a = z.re;
+      Example: b = z.im;
+      The real/imaginary part of the complex number.
+
+*/
+
+@init
+
+function cplx_set(a, b)
+  instance(re, im)
+(
+  im = b;
+  re = a;
+);
+
+function cplx_set(z*)
+  instance(re, im)
+(
+  im = z.im;
+  re = z.re;
+);
+
+function cplx_set_real(a)
+  instance(re, im)
+(
+  im = 0;
+  re = a;
+);
+
+function cplx_polar(r, phi)
+  instance(re, im)
+(
+  im = r * sin(phi);
+  re = r * cos(phi);
+);
+
+function cplx_norm()
+  instance(re, im)
+(
+  sqr(re) + sqr(im);
+);
+
+function cplx_abs()
+  instance(re, im)
+(
+  sqrt(this.cplx_norm());
+);
+
+function cplx_arg()
+  instance(re, im)
+(
+  atan2(im, re);
+);
+
+function cplx_eq(z*)
+  instance(re, im)
+(
+  re == z.re && im == z.im;
+);
+
+function cplx_not_eq(z*)
+  instance(re, im)
+(
+  re != z.re || im != z.im;
+);
+
+function cplx_conj(z*)
+  instance(re, im)
+(
+  im = -z.im;
+  re = z.re;
+);
+
+function cplx_neg(z*)
+  instance(re, im)
+(
+  im = -z.im;
+  re = -z.re;
+);
+
+function cplx_add(x*, y*)
+  instance(re, im)
+(
+  im = x.im + y.im;
+  re = x.re + y.re;
+);
+
+function cplx_add(z*)
+  instance(re, im)
+(
+  im += z.im;
+  re += z.re;
+);
+
+function cplx_add_real(z*, a)
+  instance(re)
+(
+  re = z.re + a;
+);
+
+function cplx_add_real(a)
+  instance(re)
+(
+  re += a;
+);
+
+function cplx_sub(x*, y*)
+  instance(re, im)
+(
+  im = x.im - y.im;
+  re = x.re - y.re;
+);
+
+function cplx_sub(z*)
+  instance(re, im)
+(
+  im -= z.im;
+  re -= z.re;
+);
+
+function cplx_sub_real(z*, a)
+  instance(re)
+(
+  re = z.re - a;
+);
+
+function cplx_sub_real(a)
+  instance(re)
+(
+  re -= a;
+);
+
+function cplx_mul(x*, y*)
+  instance(re, im)
+  local(a)
+(
+  a = x.re * y.re - x.im * y.im;
+  im = x.im * y.re + x.re * y.im;
+  re = a;
+);
+
+function cplx_mul(z*)
+  instance(re, im)
+  local(a)
+(
+  a = re * z.re - im * z.im;
+  im = im * z.re + re * z.im;
+  re = a;
+);
+
+function cplx_mul_real(z*, a)
+  instance(re, im)
+(
+  im = z.im * a;
+  re = z.re * a;
+);
+
+function cplx_mul_real(a)
+  instance(re, im)
+(
+  im *= a;
+  re *= a;
+);
+
+function cplx_div(x*, y*)
+  instance(re, im)
+  local(norm, a)
+(
+  norm = y.cplx_norm();
+  a = (x.re * y.re + x.im * y.im) / norm;
+  im = (x.im * y.re - x.re * y.im) / norm;
+  re = a;
+);
+
+function cplx_div(z*)
+  instance(re, im)
+  local(norm, a)
+(
+  norm = z.cplx_norm();
+  a = (re * z.re + im * z.im) / norm;
+  im = (im * z.re - re * z.im) / norm;
+  re = a;
+);
+
+function cplx_div_real(z*, a)
+  instance(re, im)
+(
+  im = z.im / a;
+  re = z.re / a;
+);
+
+function cplx_div_real(a)
+  instance(re, im)
+(
+  im /= a;
+  re /= a;
+);
+
+function cplx_recip(z*)
+  instance(re, im)
+  local(norm)
+(
+  norm = z.cplx_norm();
+  im = z.im / norm;
+  re = z.re / norm;
+);
+
+function cplx_sqrt(z*)
+  instance(re, im)
+  local(mod)
+(
+  mod = z.cplx_abs();
+  im = sign(z.im) * sqrt((mod - z.re) * 0.5);
+  re = sqrt((mod + z.re) * 0.5);
+);
+
+function cplx_sqr(z*)
+  instance(re, im)
+  local(a)
+(
+  a = sqr(z.re) - sqr(z.im);
+  im = 2 * z.re * z.im;
+  re = a;
+);
+
+function cplx_exp(z*)
+  instance(re, im)
+  local(e)
+(
+  e = exp(z.re);
+  re = e * cos(z.im);
+  im = e * sin(z.im);
+  re;
+);
+
+function cplx_log(z*)
+  instance(re, im)
+  local(a)
+(
+  a = log(z.cplx_abs());
+  im = z.cplx_arg();
+  re = a;
+);
+
+function cplx_log10(z*)
+  instance(re, im)
+(
+  this.cplx_log(z);
+
+  // log(10) / sqr(log(10))
+  im *= 0.43429448190325183;
+  re *= 0.43429448190325183;
+);
+
+function cplx_pow(x*, y*)
+  instance(re, im)
+  local(a, b, c)
+(
+  // z.cplx_log(x)
+  a = log(x.cplx_abs());
+  b = x.cplx_arg();
+
+  // z.cplx_mul(y)
+  c = a * y.re - b * y.im;
+  im = b * y.re + a * y.im;
+  re = c;
+
+  // this.cplx_exp(z)
+  this.cplx_exp(this);
+);
+
+function cplx_pow_real(z*, a)
+  instance(re, im)
+  local(b)
+(
+  // y.cplx_log(z)
+  // y.cplx_mul_real(a)
+  b = z.cplx_arg() * a;
+  re = log(z.cplx_abs()) * a;
+  im = b;
+
+  // this.cplx_exp(y)
+  this.cplx_exp(this);
+);
+
+function cplx_cos(z*)
+  instance(re, im)
+  local(e)
+(
+  e = exp(z.im);
+  im = (1/e - e) * 0.5 * sin(z.re);
+  re = (1/e + e) * 0.5 * cos(z.re);
+);
+
+function cplx_sin(z*)
+  instance(re, im)
+  local(e)
+(
+  e = exp(z.im);
+  im = (e - 1/e) * 0.5 * cos(z.re);
+  re = (e + 1/e) * 0.5 * sin(z.re);
+);
+
+function cplx_tan(z*)
+  instance(re, im)
+  local(p, q, e, a, b, c, d, norm)
+(
+  e = exp(z.im);
+  a = (e + 1/e) * 0.5;
+  b = (e - 1/e) * 0.5;
+
+  p = cos(z.re);
+  q = sin(z.re);
+
+  // x.cplx_sin(z)
+  c = a*q;
+  d = b*p;
+
+  // y.cplx_cos(z)
+  a *= p;
+  b *= q;
+
+  // this.cplx_div(x, y)
+  norm = sqr(a) + sqr(b);
+  im = (a*d + b*c) / norm;
+  re = (a*c - b*d) / norm;
+);
+
+function cplx_cosh(z*)
+  instance(re, im)
+  local(e)
+(
+  e = exp(z.re);
+  re = (e + 1/e) * 0.5 * cos(z.im);
+  im = (e - 1/e) * 0.5 * sin(z.im);
+  re;
+);
+
+function cplx_sinh(z*)
+  instance(re, im)
+  local(e)
+(
+  e = exp(z.re);
+  re = (e - 1/e) * 0.5 * cos(z.im);
+  im = (e + 1/e) * 0.5 * sin(z.im);
+  re;
+);
+
+function cplx_tanh(z*)
+  instance(re, im)
+  local(e, a, b, c, d, norm)
+(
+  e = exp(z.re);
+  c = cos(z.im);
+  d = sin(z.im);
+
+  // x.cplx_exp(z)
+  a = c*e;
+  b = d*e;
+
+  // y.cplx_exp(-z)
+  c /= e;
+  d /= e;
+
+  // this.cplx_sub(x, y)
+  im = b + d;
+  re = a - c;
+
+  // x.cplx_add(y)
+  a += c;
+  b -= d;
+
+  // this.cplx_div(x)
+  norm = sqr(a) + sqr(b);
+  c = (re * a + im * b) / norm;
+  im = (im * a - re * b) / norm;
+  re = c;
+);

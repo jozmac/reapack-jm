@@ -1,0 +1,1328 @@
+desc:Fourier series waveforms
+
+// Copyright (C) 2015-2021 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+/* Example
+
+   desc:Fourier series square wave oscillator
+
+   slider1:440<20,20000,1>Freq (Hz)
+   slider2:0.5<0.0,1.0,0.01>Pulse Width
+
+   import Tale/fft_synth.jsfx-inc
+   import Tale/fourier_series.jsfx-inc
+   import Tale/wavetable.jsfx-inc
+
+   @init
+
+   osc.four_init(0, 1024);
+
+   @slider
+
+   osc.four_setf(slider1);
+   osc.four_setpw(slider2);
+
+   osc.four_update() ? (
+     osc.four_rect();
+     osc.four_setdc(0);
+     osc.four_ifft();
+   );
+
+   @sample
+
+   spl0 = spl1 = 0.25 * osc.wave_lerp();
+
+   Setting Functions
+
+    * four_setpw(pw)
+      Example: osc.four_setpw(0.30);
+      Sets the pulse width [0.0..1.0] of the waveform, and returns this
+      value.
+
+    * four_setf2(freq)
+    * four_setfc(freq)
+      Example: osc.four_setf2(660);
+      Example: osc.four_setfc(660);
+      Sets the slave/cutoff frequency (specified in Hz) of the hard sync or
+      filtered waveform, and returns the slave/master frequency ratio.
+
+      Note: You should always first set the master oscillator frequency, and
+      then set the slave/cutoff frequency. If you change the master
+      frequency, then you will probably also want to update the slave
+      frequency.
+
+    * four_setn(num_steps)
+      Example: osc.four_setn(3);
+      Sets the integer number of steps (>=1) for the stepped waveform, and
+      returns this value.
+
+   Waveform Functions
+
+    * four_sin()       -- Sine
+    * four_cos()       -- Cosine
+    * four_tri()       -- Triangle
+    * four_sqr()       -- Square (fixed 0.5 pulse width)
+    * four_rect()      -- Rectangle (variable pulse width)
+    * four_saw()       -- Sawtooth
+    * four_ramp()      -- Ramp
+
+    * four_tri2()      -- Modified triangle
+    * four_sqr2()      -- Modified square
+
+    * four_half()      -- Half-wave rectified sine (fixed 0.5 pulse width)
+    * four_half2()     -- Half-wave rectified sine (variable pulse width)
+    * four_full()      -- Full-wave rectified sine
+    * four_sinp()      -- Pulse sine (fixed 0.5 pulse width)
+    * four_sawp()      -- Saw pulse sine (fixed 0.5 pulse width)
+    * four_trip()      -- Triangular pulse
+    * four_hwsaw()     -- Half-wave rectified sawtooth
+    * four_alt()       -- Alternating sine
+    * four_camel()     -- Camel sine
+    * four_camela()    -- Alternating camel sine
+    * four_camel2()    -- Bipolar camel sine
+
+    * four_sin2()      -- Bipolar squared sine
+    * four_para()      -- Parabola
+    * four_circ()      -- Circle
+    * four_arc()       -- Cycloid
+    * four_trap()      -- Trapezoid (fixed 0.5 pulse width)
+    * four_trap2()     -- Trapezoid (variable pulse width)
+
+    * four_hyptri()    -- Hyper triangular wave
+    * four_lpsqr()     -- Low-pass filtered square
+    * four_lpsqrN()    -- LPF square approximation (order N = 2 or 3)
+    * four_intlpsqrN() -- Integrated LPF square (order N = 2 or 3)
+    * four_hpsqr()     -- High-pass filtered square
+    * four_intsaw()    -- Integrated sawtooth
+    * four_cubsaw()    -- Cubic sawtooth
+    * four_sinsaw()    -- Sine sawtooth
+    * four_hpsaw()     -- High-pass filtered sawtooth
+    * four_hpsaw6()    -- HPF sawtooth approximation
+    * four_logit3()    -- Logit approximation
+
+    * four_sqrm1()     -- Square wave minus fundamental
+    * four_sawm1()     -- Sawtooth minus fundamental
+
+    * four_sinn()      -- Stepped sine
+    * four_trin()      -- Stepped triangle
+    * four_sawn()      -- Stepped sawtooth
+    * four_hssaw()     -- Hard sync sawtooth
+
+    * four_ham()       -- Hammond 88 8000 000
+    * four_stairs()    -- Staircase (fixed 0.5 pulse width)
+    * four_stairs3()   -- Staircase (variable pulse width)
+    * four_stairs2()   -- Uneven staircase
+      Example: osc.four_saw();
+      Calculates the Fourier coefficients that define the waveform, and
+      stores them in the coefficient buffer.
+
+   Miscellaneous Functions
+
+    * _four_j1_pi(n)
+      Example: y = _four_j1_pi(42);
+      Approximates the Bessel function of the first kind order 1 on the
+      integer n (>=0) multiplied with $pi, i.e. y = j1($pi*n).
+
+   Instance Variables
+
+    * coef
+      Example: coef_index = osc.coef;
+      The local memory index of the Fourier coefficients (cosine/sine
+      pairs).
+
+    * size
+      Example: num_coef = osc.size / 2;
+      The number of cosines/sines, i.e. there are size/2 Fourier
+      coefficient cosine/sine pairs.
+
+    * m
+      Example: num_harm = osc.m - 1;
+      The number of harmonics (up to and including half the Nyquist
+      frequency).
+
+    * pw
+      Example: duty_cycle = osc.pw;
+      The pulse width [0.0..1.0] of the waveform.
+
+    * n
+      Example: num_steps = osc.n;
+      The integer number of steps (>=1) of the stepped waveform.
+
+    * fc
+      Example: cutoff_freq = osc.fc * osc.dt * srate;
+      The cutoff/oscillator frequency ratio of the filtered waveform.
+
+*/
+
+@init
+
+function four_setpw(pw)
+  instance(m)
+(
+  pw != this.pw ? m = 0;
+  this.pw = pw;
+);
+
+function four_setf2(freq)
+  // global(srate)
+  instance(dt, m)
+  local(fc)
+(
+  dt > 0 ? fc = freq / (dt * srate) : fc = 0;
+  fc != this.fc ? m = 0;
+  this.fc = fc;
+);
+
+function four_setfc(freq)
+(
+  this.four_setf2(freq);
+);
+
+function four_setn(num_steps)
+  instance(n, m)
+(
+  num_steps |= 0;
+  num_steps != n ? m = 0;
+  n = num_steps;
+);
+
+// Sine
+
+function four_sin(phase)
+  instance(size)
+  local(cos, sin)
+(
+  cos = this.four_setdc(0, phase);
+  sin = cos + 1;
+
+  // k = 1
+  cos[] = 0;
+  sin[] = 1;
+
+  memset(cos + 2, 0, (size - 2));
+);
+
+function four_cos()
+(
+  this.four_sin(0.25);
+);
+
+// Stepped sine
+
+function four_sinn()
+  instance(size, n)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 0;
+    // Square
+    sin[] = n == 1 ? /* 2*sqrt(2)/$pi */ 0.90031631615710607 / k :
+    // Stepped sine
+    ((k + 1)/2) % n > 1 ? 0 : ((k/n + 1) & 3 > 1 ? -1 : 1) * (1 - /* 4/$pi^2 */ 0.40528473456935109 / sqr(n)) / k;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Half-wave rectified sine
+
+function four_half()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(2/$pi - 1, 0);
+  sin = cos + 1;
+
+  // k = 1
+  cos[] = 0;
+  sin[] = 1;
+
+  cos += 2; sin += 2;
+
+  k = 2;
+  loop(size / 4 - 1,
+    cos[] = 4/$pi / (1 - sqr(k));
+    sin[] = 0;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+function four_half2()
+  instance(size, pw)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(4/$pi * pw - 1, 0.75);
+  pw > 0 ? (
+    sin = cos + 1;
+
+    k = 1;
+    loop(size / 2 - 1,
+      cos[] = pw * k == 0.5 ? (k & 1 ? -1 : 1) / k : 2/$pi * pw * cos($pi * (k - pw * k)) / (0.25 - sqr(pw * k));
+      sin[] = 0;
+
+      k += 1; cos += 2; sin += 2;
+    );
+  ) : (
+    memset(cos, 0, size - 2);
+  );
+);
+
+// Full-wave rectified sine
+
+function four_full()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(4/$pi - 1, 0.75);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = 2/$pi / (0.25 - sqr(k));
+    sin[] = 0;
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Pulse sine
+
+function four_sinp()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(2/$pi - 1, 0.5);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = 1/$pi / (0.25 - sqr(k));
+    sin[] = (k & 1 ? 2/$pi : -2/$pi) * k / (0.25 - sqr(k));
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Saw pulse
+
+function four_sawp()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(-0.5, 0);
+  sin = cos + 1;
+
+  k = 1;
+  cos[] = 0.5;
+  sin[] = 2/$pi;
+
+  loop(size / 2 - 2,
+    k += 1; cos += 2; sin += 2;
+
+    cos[] = 0;
+    sin[] = k & 1 ? 2/$pi / k : 2/$pi * k / (sqr(k) - 1);
+  );
+);
+
+// Alternating sine
+
+function four_alt()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  // k = 1
+  cos[] = /* -4/(3*$pi) */ -0.42441318157838756;
+  sin[] = 0;
+
+  cos += 2; sin += 2;
+
+  // k = 2
+  cos[] = 0;
+  sin[] = -0.5;
+
+  cos += 2; sin += 2;
+
+  k = 3;
+  loop(size / 4 - 1,
+    cos[] = 4/$pi / (sqr(k) - 4);
+    sin[] = 0;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Camel sine
+
+function four_camel()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(2/$pi - 1, 0.75);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = k & 1 ? 8/$pi / (sqr(k) - 4) : k & 2 ? 0 : 16/$pi / (4 - sqr(k));
+    sin[] = 0;
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Alternating camel sine
+
+function four_camela()
+  instance(size)
+  local(cos, sin, k, y)
+(
+  cos = this.four_setdc(1/$pi, 0);
+  sin = cos + 1;
+
+  // k = 1
+  cos[] = sin[] = /* 4/(3*$pi) */ 0.42441318157838756;
+  cos += 2; sin += 2;
+
+  k = 2;
+  cos[] = 0;
+  sin[] = -0.5;
+
+  loop(size / 2 - 2,
+    k += 1; cos += 2; sin += 2;
+
+    cos[] = k & 1 ? (y = 4/$pi / (4 - sqr(k))) : k & 2 ? 0 : 8/$pi / (4 - sqr(k));
+    sin[] = k & 1 ? (k & 2 ? -y : y) : 0;
+  );
+);
+
+// Bipolar camel sine
+
+function four_camel2()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.75);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 8/$pi / (sqr(k) - 4);
+    sin[] = 0;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Bipolar squared sine
+
+function four_sin2()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.5);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 0;
+    sin[] = 8/$pi / (sqr(k)*k - 4*k);
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Parabola
+
+function four_para()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 0;
+    sin[] = /* 32/$pi^3 */ 1.0320491018623837 / (sqr(k)*k);
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Higher order parabolas
+
+/* function four_para3()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.25);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 24 * 4/$pi^4 / sqr(sqr(k));
+    sin[] = 0;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+function four_para4()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 0;
+    sin[] = 384/5 * 4/$pi^5 / (sqr(sqr(k))*k);
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+function four_para5()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.25);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 240 * 4/$pi^6 / sqr(sqr(k)*k);
+    sin[] = 0;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Silly order parabolas (sine wave approximations)
+
+function four_para6()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 0;
+    sin[] = 46080/61 * 4/$pi^7 / k^7;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+function four_para7()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.25);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 40320/17 * 4/$pi^8 / k^8;
+    sin[] = 0;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+function four_para8()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 0;
+    sin[] = 2064384/277 * 4/$pi^9 / k^9;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+function four_para9()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.25);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 725760/31 * 4/$pi^10 / k^10;
+    sin[] = 0;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// etc. etc. */
+
+// Circle
+
+function _four_j1_pi(n) // j1($pi*n)
+  local(y)
+(
+  n > 1 ? (
+    y = sqrt(/* 1/$pi^2 */ 0.10132118364233777 / n);
+    n & 1 ? y : -y;
+  ) :
+  n == 1 ? 0.28461534317975279;
+);
+
+function four_j1_pi(n) ( _four_j1_pi(n) ); // Legacy
+
+function four_circ()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  cos[] = 0;
+  sin[] = 1.1384613727190112; // _four_j1_pi(1) * 4
+
+  loop(size / 4 - 1,
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+
+    cos[] = 0;
+    sin[] = sqrt(/* 16/$pi^2 */ 1.6211389382774043 / (2*k - 1)) / k; // _four_j1_pi(2*k - 1) * 4 / k
+  );
+);
+
+// Cycloid
+
+function four_arc()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0.5*$pi - 1, 0.25);
+  sin = cos + 1;
+
+  k = 1;
+  cos[] = 0.56923068635950558; // _four_j1_pi(1) * 2
+  sin[] = 0;
+
+  loop(size / 2 - 2,
+    k += 1; cos += 2; sin += 2;
+
+    cos[] = (k & 1 ? 1 : -1) * sqrt(/* 4/$pi^2 */ 0.40528473456935109 / k) / k; // _four_j1_pi(k) * 2 / k
+    sin[] = 0;
+  );
+);
+
+// Triangle
+
+function four_tri()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.25);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = /* 8/$pi^2 */ 0.81056946913870217 / sqr(k);
+    sin[] = 0;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Hyper triangular wave
+
+function four_hyptri()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(/* -2/(exp(2) - 1) */ -0.31303528549933130, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = (k & 1 ? 1.0643063143275772 : /* 8/$pi^2 */ 0.81056946913870217) / (sqr(k) + /* 4/$pi^2 */ 0.40528473456935109);
+    sin[] = 0;
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Stepped triangle
+
+function four_trin()
+  instance(size, n)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.25);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 4/$pi / (sin(0.5*$pi * k / n) * n * k);
+    sin[] = 0;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Modified triangle
+
+function four_tri2()
+  instance(size, pw)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, pw <= 0 ? 0.5 : 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = 0;
+    // Ramp/sawtooth
+    sin[] = pw <= 0 ? -2/$pi / k : pw >= 1 ? 2/$pi / k :
+    // Modified triangle
+    /* 2/$pi^2 */ 0.20264236728467554 * sin($pi * (k - pw * k)) / ((pw - sqr(pw)) * sqr(k));
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Triangular pulse
+
+function four_trip()
+  instance(size, pw)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(pw - 1, 0.25);
+  pw > 0 ? (
+    sin = cos + 1;
+
+    k = 1;
+    loop(size / 2 - 1,
+      cos[] = /* 8/$pi^2 */ 0.81056946913870217 * sqr(sin(0.5*$pi * pw * k)) / (pw * sqr(k));
+      sin[] = 0;
+
+      k += 1; cos += 2; sin += 2;
+    );
+  ) : (
+    memset(cos, 0, size - 2);
+  );
+);
+
+// Trapezoid
+
+function four_trap()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 0;
+    sin[] = (k & 4 ? /* -8*sqrt(2)/$pi^2 */ -1.1463183365015125 : /* 8*sqrt(2)/$pi^2 */ 1.1463183365015125) / sqr(k);
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+function four_trap2()
+  instance(size, pw)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 0;
+    // Square
+    sin[] = pw >= 1 ? 4/$pi / k :
+    // Trapezoid
+    /* 8/$pi^2 */ 0.81056946913870217 * sin(0.5*$pi * (1 - pw) * k) / ((1 - pw) * sqr(k));
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Square
+
+function four_sqr()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 0;
+    sin[] = 4/$pi / k;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Low-pass filtered square
+
+function four_lpsqr()
+  instance(size, fc)
+  local(cos, sin, k)
+(
+  // Non-normalized
+
+  cos = this.four_setdc(0, 0 /* + 0.5*dt */);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 4/$pi * fc / (sqr(fc) + sqr(k));
+    sin[] = 4/$pi * sqr(fc) / ((sqr(fc) + sqr(k)) * k);
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+/* function four_lpsqr_norm()
+  instance(size, fc)
+  local(cos, sin, k, gain)
+(
+  // Normalized
+
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  // Low-pass filtered square
+  fc > 0 ? (
+    gain = exp(-$pi * fc);
+    gain = 4/$pi * fc * (1 + gain) / (1 - gain);
+  ) :
+
+  // Triangle
+  fc <= 0 ? (
+    gain = 8/$pi^2;
+  );
+
+  k = 1;
+  loop(size / 4,
+    cos[] = gain / (sqr(fc) + sqr(k));
+    sin[] = gain * fc / ((sqr(fc) + sqr(k)) * k);
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+); */
+
+// Low-pass filtered square approximations
+
+function four_lpsqr2()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = /* 8/$pi^2 */ 0.81056946913870217 / sqr(k);
+    sin[] = /* 16/$pi^3 */ 0.51602455093119183 / (sqr(k)*k);
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+function four_lpsqr3()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = (/* -48/$pi^4 */ -0.49276714822484809 / sqr(k) + /* 12/$pi^2 */ 1.2158542037080533) / sqr(k);
+    sin[] = /* 24/$pi^3 */ 0.77403682639678774 / (sqr(k)*k);
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Integrated low-pass filtered square approximations
+
+function four_intlpsqr2()
+  instance(size)
+  local(cos, sin, k)
+(
+  // (32*t^3 - 48*t^2 + 12*t + 1) / (2*sqrt(2) - 1) = 0
+  cos = this.four_setdc(0, 0.41503077834420436);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = /* 96/(2*sqrt(2) - 1)/$pi^4 */ 0.53900660469938138 / sqr(sqr(k));
+    sin[] = /* -48/(2*sqrt(2) - 1)/$pi^3 */ -0.84666959477997714 / (sqr(k)*k);
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+function four_intlpsqr3()
+  instance(size)
+  local(cos, sin, k)
+(
+  // (64*t^4 - 128*t^3 + 96*t^2 - 16*t - 2) / (3*2^(2/3) - 2) = 0
+  cos = this.four_setdc(0, 0.37399153968783991);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = /* 192/(3*2^(2/3) - 2)/$pi^4 */ 0.71358567116468444 / sqr(sqr(k));
+    sin[] = (/* 384/(3*2^(2/3) - 2)/$pi^5 */ 0.45428274754162916 / sqr(k) - /* 96/(3*2^(2/3) - 2)/$pi^3 */ 1.1208977511189573) / (sqr(k)*k);
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// High-pass filtered square
+
+function four_hpsqr()
+  instance(size, fc)
+  local(cos, sin, k)
+(
+  // Non-normalized
+
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = -4/$pi * fc / (sqr(fc) + sqr(k));
+    sin[] = 4/$pi * k / (sqr(fc) + sqr(k));
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+/* function four_hpsqr_norm()
+  instance(size, fc)
+  local(cos, sin, k, gain)
+(
+  // Normalized
+
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  gain = exp(-$pi * fc);
+  gain = 4/$pi / ((1 - gain) / (1 + gain) + 1);
+
+  k = 1;
+  loop(size / 4,
+    cos[] = -gain * fc / (sqr(fc) + sqr(k));
+    sin[] = gain * k / (sqr(fc) + sqr(k));
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+); */
+
+// Square wave minus fundamental
+
+function four_sqrm1()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  cos[] = sin[] = cos[2] = sin[2] = 0;
+
+  loop(size / 4 - 1,
+    k += 2; cos += 4; sin += 4;
+
+    cos[] = 0;
+    sin[] = 4/$pi / k;
+
+    cos[2] = sin[2] = 0;
+  );
+);
+
+// Modified square
+
+function four_sqr2()
+  instance(size, pw)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 4,
+    cos[] = 0;
+    sin[] = 4/$pi * cos(0.5*$pi * k * (1 - pw)) / k;
+
+    k += 2; cos[2] = sin[2] = 0; cos += 4; sin += 4;
+  );
+);
+
+// Rectangle
+
+function four_rect()
+  instance(size, pw)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(2*pw - 1, 0.5 * (1 - pw));
+  pw > 0 && pw < 1 ? (
+    sin = cos + 1;
+
+    k = 1;
+    loop(size / 2 - 1,
+      cos[] = 4/$pi * sin($pi * pw * k) / k;
+      sin[] = 0;
+
+      k += 1; cos += 2; sin += 2;
+    );
+  ) : (
+   memset(cos, 0, size - 2);
+  );
+);
+
+// Sawtooth
+
+function four_saw()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = 0;
+    sin[] = 2/$pi / k;
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Ramp
+
+function four_ramp()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.5);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = 0;
+    sin[] = -2/$pi / k;
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Integrated sawtooth
+
+function four_intsaw()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(-1/3, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = /* 8/$pi^2 */ 0.81056946913870217 / sqr(k);
+    sin[] = 0;
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Cubic sawtooth
+
+function four_cubsaw()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = 0;
+    sin[] = /* 18*sqrt(3)/$pi^3 */ 1.0055033326864553 / (sqr(k)*k);
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Sine sawtooth
+
+function four_sinsaw()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.5);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = 0;
+    sin[] = 2/$pi * k / (0.25 - sqr(k));
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// High-pass filtered sawtooth
+
+function four_hpsaw()
+  instance(size, fc)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(fc > 0 ? -2/(exp(-2*$pi * fc) - 1) - 1/$pi / fc - 1 : 0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = -2/$pi * fc / (sqr(fc) + sqr(k));
+    sin[] = 2/$pi * k / (sqr(fc) + sqr(k));
+
+    // Low-pass
+    // cos[] = 2/$pi * fc / (sqr(fc) + sqr(k));
+    // sin[] = 2/$pi * fc*fc / ((sqr(fc) + sqr(k)) * k);
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// High-pass filtered sawtooth approximation
+
+function four_hpsaw6()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(5/7, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = ((/* -45/$pi^6 */ -0.046807266298313353 / sqr(k) + /* 30/$pi^4 */ 0.30797946764053006) / sqr(k) - /* 6/$pi^2 */ 0.60792710185402663) / sqr(k);
+    sin[] = ((/* 45/$pi^5 */ 0.14704936393740235 / sqr(k) - /* 15/$pi^3 */ 0.48377301649799234) / sqr(k) + 2/$pi) / k;
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Sawtooth minus fundamental
+
+function four_sawm1()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  cos[] = sin[] = 0;
+
+  loop(size / 2 - 2,
+    k += 1; cos += 2; sin += 2;
+
+    cos[] = 0;
+    sin[] = 2/$pi / k;
+  );
+);
+
+// Stepped sawtooth
+
+function four_sawn()
+  instance(size, n)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = 0;
+    sin[] = k % (n + 1) ? 2/$pi * (n + 1) / (n * k) : 0;
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Half-wave rectified sawtooth
+
+function four_hwsaw()
+  instance(size, pw)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(pw - 1, 0);
+  pw > 0 ? (
+    sin = cos + 1;
+
+    k = 1;
+    loop(size / 2 - 1,
+      cos[] = /* 2/$pi^2 */ 0.20264236728467554 * sqr(sin($pi * pw * k)) / (pw * sqr(k));
+      sin[] = 2/$pi / k - /* 1/$pi^2 */ 0.10132118364233777 * sin(2*$pi * pw * k) / (pw * sqr(k));
+
+      k += 1; cos += 2; sin += 2;
+    );
+  ) : (
+    memset(cos, 0, size - 2);
+  );
+);
+
+// Hard sync sawtooth
+
+function four_hssaw()
+  instance(size, fc)
+  local(cos, sin, k, n, dc, a, b, x, dx)
+(
+  n = ceil(fc);
+  dc = fc - n;
+
+  cos = this.four_setdc(fc > 0 ? (sqr(dc) + dc) / fc : -1, 0);
+  sin = cos + 1;
+
+  dx = fc > 0 ? 2*$pi / fc - 2*$pi : 0;
+
+  k = 1;
+  loop(size / 2 - 1,
+    a = 0;
+    b = dc;
+
+    x = 0;
+    loop(n,
+      a += sin(x);
+      b += cos(x);
+      x += dx*k;
+    );
+
+    cos[] = 2/$pi * a / k;
+    sin[] = 2/$pi * b / k;
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Logit approximation
+
+function four_logit3()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = 0;
+    sin[] = /* 2/$pi^3 */ 0.064503068866398978 * (/* $pi^2 */ 9.8696044010893586 * sqr(k) - 6) / (sqr(k)*k);
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Staircase
+
+function four_stairs()
+  instance(size)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(0, 0.5);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    cos[] = 0;
+    sin[] = k & 3 ? /* -8/(3*$pi) */ -0.84882636315677512 / k : 0;
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+function four_stairs3()
+  instance(size, pw)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(2/3*pw - 1/3, 0.5);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    k & 1 ? (
+      cos[] = 0;
+      sin[] = /* -8/(3*$pi) */ -0.84882636315677512 / k;
+    ) : (
+      cos[] = /* 4/(3*$pi) */ 0.42441318157838756 * sin($pi * pw * k) / k;
+      sin[] = /* 4/(3*$pi) */ 0.42441318157838756 * (cos($pi * (pw * k + k)) - 1) / k;
+    );
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Uneven staircase
+
+function four_stairs2()
+  instance(size, pw)
+  local(cos, sin, k)
+(
+  cos = this.four_setdc(pw - 0.5, 0.5);
+  sin = cos + 1;
+
+  k = 1;
+  loop(size / 2 - 1,
+    k & 1 ? (
+      cos[] = 0;
+      sin[] = -2/$pi / k;
+    ) : (
+      cos[] = 2/$pi * sin($pi * pw * k) / k;
+      sin[] = 2/$pi * (cos($pi * (pw * k + k)) - 1) / k;
+    );
+
+    k += 1; cos += 2; sin += 2;
+  );
+);
+
+// Hammond 88 8000 000
+
+function four_ham()
+  instance(size)
+  local(cos, sin)
+(
+  cos = this.four_setdc(0, 0.5);
+  sin = cos + 1;
+
+  loop(3,
+    cos[] = 0;
+    sin[] = -0.4; // Approximation
+
+    cos += 2; sin += 2;
+  );
+
+  memset(cos, 0, size - 8);
+);

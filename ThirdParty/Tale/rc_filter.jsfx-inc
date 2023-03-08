@@ -1,0 +1,235 @@
+desc:1st-order RC filter
+
+// Copyright (C) 2012-2019 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+/* Example
+
+   desc:RC filter
+   slider1:1000<20,20000,1>Cutoff (Hz)
+
+   import Tale/rc_filter.jsfx-inc
+
+   @slider
+   lp.rc_setf(slider1);
+
+   @sample
+   spl0 = spl1 = lp.rc_lp(0.5*(spl0 + spl1));
+
+   Setting Functions
+
+    * rc_setf(freq)
+      Example: lp.rc_setf(1000);
+      Sets the filter cutoff frequency (specified in Hz), and returns the
+      filter coefficient.
+
+    * rc_set(rc)
+      Example: lp.rc_set(0.00015);
+      Sets the filter cutoff frequency by means of the RC time constant
+      (specified in seconds), and returns the filter coefficient.
+
+      (To convert from Hz to RC time constant or vice versa, do 1/(2*$pi*x),
+      i.e. freq=1/(2*$pi*rc) and rc=1/(2*$pi*freq).)
+
+    * rc_sett(time)
+      Example: env.rc_sett(0.100);
+      Sets the filter cutoff frequency so that it takes the specified time
+      (in seconds) to almost fully (99.3%) change from one constant value to
+      another (e.g. from 0.0 to 1.0), and returns the filter coefficient.
+
+      (To convert from seconds to RC time constant, divide by 5. To convert
+      from RC time constant to seconds, multiple with 5.)
+
+    * rc_leaky_set(rc)
+      Example: sum.rc_leaky_set(0.022);
+      Sets the feedback coefficient of the leaky integrator to the specified
+      RC time constant (in seconds), and returns the filter coefficient.
+
+   Filter Functions
+
+    * rc_lp(sample) -- Low-pass
+    * rc_hp(sample) -- High-pass
+    * rc_ap(sample) -- All-pass
+      Example: output = lp.rc_lp(input);
+      Sends a sample through the filter, and returns its output.
+
+    * rc_leaky(sample)
+      Example: output = sum.rc_leaky(input);
+      Sends a sample through the leaky integrator, and returns its output.
+
+   High Precision Functions
+
+    * rc_setf_precise(freq)
+    * rc_sett_precise(time)
+    * rc_set_precise(rc)
+    * rc_leaky_set_precise(rc)
+    * rc_hp_precise(sample)
+      Example: lp.rc_setf_precise(1000);
+      Example: output = hp.rc_hp_precise(input);
+      High precision versions of setting/filter functions, which are less
+      efficient but more precise.
+
+      Note: There are no specialized high precision versions of the
+      low-pass, all-pass, or leaky integrator filter funtions.
+
+   Instance Variables
+
+    * a
+      Example: lp2.a = lp1.a;
+      The filter coefficient.
+
+    * lp
+      Example: output = lp.lp;
+      The low-pass filter output value.
+
+    * hp
+      Example: output = hp.hp;
+      The high precision high-pass filter output value.
+
+    * in
+      Example: input = hp.in;
+      The high precision high-pass filter input value.
+
+*/
+
+@init
+
+// Fast approximations
+
+function rc_set(rc)
+  // global(srate)
+  instance(a)
+(
+  a = 1 / (rc * srate + 1);
+);
+
+function rc_setf(freq)
+  // global(srate)
+  instance(a)
+(
+  a = 1 / (srate / (2*$pi * freq) + 1);
+);
+
+function rc_sett(time)
+  // global(srate)
+  instance(a)
+(
+  a = 1 / (0.2 * time * srate + 1);
+);
+
+// High precision
+
+function rc_set_precise(rc)
+  // global(srate)
+  instance(a)
+(
+  a = 1 - exp(-1 / (rc * srate));
+);
+
+function rc_setf_precise(freq)
+  // global(srate)
+  instance(a)
+(
+  a = 1 - exp(-2*$pi * freq / srate);
+);
+
+function rc_sett_precise(time)
+  // global(srate)
+  instance(a)
+(
+  a = 1 - exp(-5 / (time * srate));
+);
+
+// Source: https://dsp.stackexchange.com/questions/28308/exponential-weighted-moving-average-time-constant/28314#28314
+
+function rc_set_exact(rc)
+  // global(srate)
+  instance(a)
+  local(cos_w0)
+(
+  cos_w0 = cos(min(1 / (rc * srate), $pi)) - 2;
+  a = sqrt(sqr(cos_w0) - 1) + cos_w0 + 1;
+);
+
+function rc_setf_exact(freq)
+  // global(srate)
+  instance(a)
+  local(cos_w0)
+(
+  cos_w0 = cos(min(freq / srate * (2*$pi), $pi)) - 2;
+  a = sqrt(sqr(cos_w0) - 1) + cos_w0 + 1;
+);
+
+function rc_sett_exact(time)
+  // global(srate)
+  instance(a)
+  local(cos_w0)
+(
+  cos_w0 = cos(min(5 / (time * srate), $pi)) - 2;
+  a = sqrt(sqr(cos_w0) - 1) + cos_w0 + 1;
+);
+
+// Low-pass
+
+function rc_lp(sample)
+  instance(lp, a)
+(
+  lp += a * (sample - lp);
+);
+
+// High-pass
+
+function rc_hp(sample)
+  instance(lp, a)
+(
+  lp += a * (sample - lp);
+  sample - lp;
+);
+
+function rc_hp_precise(sample)
+  instance(hp, a, in)
+(
+  hp = (1 - 0.5*a) * (sample - in) + (1 - a) * hp;
+  in = sample;
+  hp;
+);
+
+// All-pass
+
+function rc_ap(sample)
+  instance(lp, a)
+(
+  lp += a * (sample - lp);
+  lp - (sample - lp);
+);
+
+// Leaky integrator
+
+function rc_leaky_set(rc)
+  // global(srate)
+  instance(a)
+(
+  a = 1 - 1 / (rc * srate + 1);
+);
+
+function rc_leaky_set_precise(rc)
+  // global(srate)
+  instance(a)
+(
+  a = exp(-1 / (rc * srate));
+);
+
+function rc_leaky(sample)
+  instance(lp, a)
+(
+  lp = a * (sample + lp);
+);
+
+// Legacy, use rc_sett() instead.
+
+function rc_sets(time)
+(
+  this.rc_sett(time);
+);

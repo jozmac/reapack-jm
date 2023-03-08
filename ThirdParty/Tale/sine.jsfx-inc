@@ -1,0 +1,182 @@
+desc:Efficient sine/cosine wave oscillator
+
+// Copyright (C) 2014-2017 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+// Based on the linear trapezoidal integrated SVF implementation as posted
+// by Andrew Simper on the KVR forum.
+// http://www.kvraudio.com/forum/viewtopic.php?p=5767554#p5767554
+
+/* Example
+
+   desc:Sine/cosine wave oscillator
+
+   slider1:440<20,12000,1>Freq (Hz)
+   slider2:0<0,1,1{Sine,Cosine}>Wave
+
+   import Tale/sine.jsfx-inc
+
+   @slider
+   osc.sin_setf(slider1);
+
+   @sample
+   spl0 = spl1 = 0.25 * (slider2 < 0.5 ? osc.sin_sin() : osc.sin_cos());
+
+   Setting Functions
+
+    * sin_setf(freq)
+      Example: osc.sin_setf(440);
+      Sets the oscillator frequency (specified in Hz), and returns the
+      frequency in seconds/sample.
+
+      (To convert from Hz to seconds/sample, divide by srate. To convert
+      from seconds/sample to Hz, multiply with srate.)
+
+      Note: Although the maximum frequency supported is srate/2, you can
+      safely specify higher frequencies.
+
+    * sin_setf(note, tuning)
+      Example: osc.sin_setf(60, 440);
+      Sets the oscillator frequency to the specified MIDI note and tuning
+      (in Hz), and returns the frequency in seconds/sample.
+
+    * sin_setdt(time)
+      Example: osc2.sin_setdt(osc1.dt);
+      Sets the oscillator frequency (specified in seconds/sample), and
+      returns this value.
+
+   Waveform Functions
+
+    * sin_sin() -- Sine
+    * sin_cos() -- Cosine
+      Example: sample = osc.sin_sin();
+      Returns a sample of a waveform, and increments its phase.
+
+   Miscellaneous Functions
+
+    * sin_sync(phase)
+      Example: osc2.sin_sync(osc1.t + 0.5);
+      Synchronizes the oscillator with the specified phase, and returns the
+      normalized phase.
+
+      Note: You can safely specify out or range (and even negative) values
+      here.
+
+    * sin_inc()
+      Example: osc.sin_inc();
+      Increments the oscillator phase, and returns it.
+
+      Note: The waveform functions automatically increment the phase.
+
+   Instance Variables
+
+    * t
+      Example: phase = osc.t;
+      The current phase [0.0..1.0) of the oscillator.
+
+    * dt
+      Example: freq = osc.dt * srate;
+      The oscillator frequency, in seconds/sample.
+
+    * a
+      Example: osc2.a = osc1.a;
+      The frequency dependent gain [0.0..1.0].
+
+    * sin
+    * cos
+      Example: sample = osc.sin;
+      The current sine/cosine output values.
+
+   Correctional Facilities
+
+    * Sing Sing
+      Example: Sing Sing prison
+      Maximum security prison in Ossining, New York, USA.
+
+*/
+
+@init
+
+function _sin_sync(t)
+  instance(cos, sin)
+(
+  cos = cos(2*$pi * t);
+  sin = sin(2*$pi * t);
+);
+
+function sin_sync(phase)
+  instance(t)
+(
+  t = phase;
+  t >= 0 ? t -= t|0 : t += 1 - (t|0);
+  this._sin_sync(t);
+  t;
+);
+
+function _sin_setdt(dt)
+(
+  dt <= 0.25 ? (
+    1;
+  ) : dt < 0.5 ? (
+    dt = 4 * (dt - 0.25);
+    1 - dt*dt;
+  );
+  // 0 otherwise
+);
+
+function sin_setdt(time)
+  instance(dt, a, g0, g1, t)
+  local(g, gg)
+(
+  dt = time;
+  a = _sin_setdt(dt);
+
+  g = tan($pi * dt);
+  gg = 2/(1 + g*g);
+  g0 = gg - 1;
+  g1 = g * gg;
+
+  this._sin_sync(t);
+  dt;
+);
+
+function sin_setf(freq)
+  // global(srate)
+(
+  this.sin_setdt(freq / srate);
+);
+
+function sin_setf(note, tuning)
+  // global(srate)
+(
+  this.sin_setdt(exp(/* log(2)/12 */ 0.057762265046662109 * (note - 69)) * tuning / srate);
+);
+
+function sin_inc()
+  instance(g0, g1, cos, sin, t, dt)
+  local(c, s)
+(
+  c = g0*cos - g1*sin;
+  s = g1*cos + g0*sin;
+  cos = c;
+  sin = s;
+
+  t += dt;
+  t -= t|0;
+);
+
+function sin_cos()
+  instance(a, cos)
+(
+  this.sin_inc();
+  a * cos;
+);
+
+function sin_sin()
+  instance(a, sin)
+(
+  this.sin_inc();
+  a * sin;
+);

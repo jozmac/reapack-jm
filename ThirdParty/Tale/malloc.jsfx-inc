@@ -1,0 +1,353 @@
+desc:Dynamic memory management
+
+// Copyright (C) 2015-2017 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+/* Example
+
+   desc:Delay
+
+   slider1:300<0,1000,1>Delay (ms)
+   slider2:-6.0<-72.0,0.0,0.1>Feedback (dB)
+   slider3:-6.0<-72.0,0.0,0.1>Wet Mix (dB)
+
+   import Tale/malloc.jsfx-inc
+
+   @slider
+
+   function resize(new_len)
+     global(buf, len, idx)
+   (
+     buf = realloc(buf, new_len);
+     new_len > len ? memset(buf + len, 0, new_len - len);
+
+     idx %= new_len;
+     len = new_len;
+   );
+
+   resize(max(floor(slider1 * 0.001 * srate), 1));
+   fb = exp(log(10)/20 * slider2);
+   mix = exp(log(10)/20 * slider3);
+
+   @sample
+
+   buf[idx] = 0.5*(spl0 + spl1) + fb * buf[idx];
+   idx = (idx + 1) % len;
+
+   out = mix * buf[idx];
+   spl0 += out;
+   spl1 += out;
+
+   Memory Management Functions
+
+    * malloc(size)
+      Example: buf = malloc(128);
+      Example: top = malloc(0);
+      Allocates a block of local memory, and returns its index.
+
+      If size is 0, then returns the next available index.
+
+    * aligned_malloc(size)
+      Example: fft_buf = aligned_malloc(1024);
+      Allocates a block of local memory that is aligned in such a way that
+      it will not cross a 65,536 item boundary, and returns its index.
+
+    * calloc(num, size)
+      Example: buf = calloc(64, 2);
+      Allocates a block of local memory of num*size items, and initializes
+      it to zero.
+
+    * realloc(ptr, size)
+    * aligned_realloc(ptr, size)
+      Example: buf = realloc(buf, 256);
+      Example: fft_buf = aligned_realloc(fft_buf, 2048);
+      Changes the size of the memory block, moving it to a new location if
+      necessary. If ptr is 0, then it calls malloc(size) or
+      aligned_malloc(size).
+
+    * free(ptr)
+      Example: free(buf);
+      Deallocates the memory block, and returns 0.
+
+*/
+
+@init
+
+function malloc(size)
+  static(top, alloc, in_use)
+  local(ptr)
+(
+  top = 0; alloc = -2; in_use = -1;
+
+  (size |= 0) > 0 ? (
+    ptr = top + 3;
+    while(ptr < top[] && (ptr[alloc] < size || ptr[in_use] > 0) ? ptr += ptr[alloc] + 2);
+
+    ptr >= top[] ? (
+      ptr[alloc] = size;
+      top[] = ptr + size;
+    );
+    ptr[in_use] = size;
+    ptr;
+  ) : (
+    top[];
+  );
+);
+
+function aligned_malloc(size)
+  static(top, alloc, in_use)
+  local(ptr, prev_ptr, padding)
+(
+  top = 0; alloc = -2; in_use = -1;
+
+  (size |= 0) > 0 ? (
+    ptr = top + 3;
+    while(ptr < top[] && (ptr[alloc] < size || ptr[in_use] > 0 || (ptr & 65535) + size > 65536) ? (
+      prev_ptr = ptr;
+      ptr += ptr[alloc] + 2;
+    ));
+
+    ptr >= top[] ? (
+      (ptr & 65535) + size > 65536 ? (
+        padding = 65536 - (ptr & 65535);
+        padding > 2 ? (
+          // Allocate empty block.
+          ptr[alloc] = padding - 2;
+          ptr[in_use] = 0;
+        ) : (
+          // Extend previous block.
+          prev_ptr[alloc] += padding;
+        );
+        ptr += padding;
+      );
+
+      ptr[alloc] = size;
+      top[] = ptr + size;
+    );
+    ptr[in_use] = size;
+    ptr;
+  ) : (
+    top[];
+  );
+);
+
+function calloc(num, size)
+  local(ptr)
+(
+  size = (size|0) * (num|0);
+  memset(ptr = malloc(size), 0, size);
+  ptr;
+);
+
+function realloc(ptr, size)
+  static(top, alloc, in_use)
+  local(new_ptr, old_size)
+(
+  top = 0; alloc = -2; in_use = -1;
+
+  new_ptr = old_size = 0;
+
+  (ptr |= 0) > 0 ? (
+    (size |= 0) <= ptr[alloc] ? (
+      // Resize current block.
+      ptr[in_use] = size;
+      new_ptr = ptr;
+    ) : ptr + ptr[alloc] >= top[] ? (
+      // Extend last block.
+      ptr[alloc] = ptr[in_use] = size;
+      top[] = ptr + size;
+      new_ptr = ptr;
+    ) : (
+      old_size = ptr[in_use];
+    );
+  );
+
+  new_ptr <= 0 ? (
+    // Allocate new block.
+    new_ptr = malloc(size);
+    old_size > 0 ? (
+      // Move old block to new block.
+      memcpy(new_ptr, ptr, old_size);
+      ptr[in_use] = 0;
+    );
+  );
+
+  new_ptr;
+);
+
+function aligned_realloc(ptr, size)
+  static(top, alloc, in_use)
+  local(new_ptr, old_size)
+(
+  top = 0; alloc = -2; in_use = -1;
+
+  new_ptr = old_size = 0;
+
+  (ptr |= 0) > 0 ? (
+    (ptr & 65535) + (size |= 0) <= 65536 ? (
+      size <= ptr[alloc] ? (
+        // Resize current block.
+        ptr[in_use] = size;
+        new_ptr = ptr;
+      ) : ptr + ptr[alloc] >= top[] ? (
+        // Extend last block.
+        ptr[alloc] = ptr[in_use] = size;
+        top[] = ptr + size;
+        new_ptr = ptr;
+      );
+    );
+    new_ptr <= 0 ? old_size = ptr[in_use];
+  );
+
+  new_ptr <= 0 ? (
+    // Allocate new block.
+    new_ptr = aligned_malloc(size);
+    old_size > 0 ? (
+      // Move old block to new block.
+      memcpy(new_ptr, ptr, old_size);
+      ptr[in_use] = 0;
+    );
+  );
+
+  new_ptr;
+);
+
+function free(ptr)
+  static(top, alloc, in_use)
+  local(top_ptr)
+(
+  top = 0; alloc = -2; in_use = -1;
+
+  (ptr |= 0) > 0 ? (
+    ptr + ptr[alloc] >= top[] ? (
+      top[] = ptr - 2;
+
+      // Find last block in use.
+      top_ptr = 0;
+      ptr = top + 3;
+      while(ptr < top[] ? (
+        ptr[in_use] > 0 ? top_ptr = ptr;
+        ptr += ptr[alloc] + 2;
+      ));
+
+      // Free up to last block in use.
+      top[] = top_ptr > 0 ? top_ptr + top_ptr[alloc] : 0;
+      freembuf(top[]);
+      0;
+    ) : (
+      ptr[in_use] = 0;
+    );
+  );
+);
+
+// Actually part of other JSFX libraries, but included here to avoid
+// dependency issues.
+
+// array.jsfx-inc
+
+function array_alloc(max_rows, cols)
+  instance(buf, size, num)
+(
+  size = 0;
+  num = cols;
+  buf = malloc(max_rows * cols);
+);
+
+function array_alloc(max_rows)
+(
+  this.array_alloc(max_rows, 1);
+);
+
+function array_free()
+  instance(buf)
+(
+  free(buf);
+);
+
+// fft_synthesis.jsfx-inc
+
+function four_alloc(size)
+  instance(buf, coef, m)
+(
+  m = 0;
+
+  this.size = size;
+  size *= 2;
+
+  buf = aligned_malloc(size < 65536 ? size : size * 2);
+  coef = size < 65536 ? aligned_malloc(size) : buf + size;
+
+  buf;
+);
+
+function four_free()
+  instance(buf, coef, size)
+(
+  free(buf);
+  size * 2 < 65536 ? free(coef);
+);
+
+// midi_queue.jsfx-inc
+
+function midiq_alloc(size)
+  instance(buf)
+(
+  this.size = size;
+  buf = malloc(size * 3);
+);
+
+function midiq_free()
+  instance(buf)
+(
+  free(buf);
+);
+
+// wavetable_oscillator.jsfx-inc
+
+function wave_alloc(size)
+  instance(buf)
+(
+  this.size = size;
+  buf = malloc(size);
+);
+
+function wave_free()
+  instance(buf)
+(
+  free(buf);
+);
+
+// function _malloc_dump()
+  // local(ptr, top, alloc, in_use)
+// (
+  // top = malloc(0);
+
+  // gfx_g = gfx_a = 1;
+  // gfx_r = gfx_b = 0;
+  // gfx_x = gfx_y = gfx_texth;
+
+  // gfx_drawchar($'['); gfx_drawnumber(0, 0); gfx_drawchar($']');
+  // gfx_drawchar($'='); gfx_drawnumber(top, 0);
+
+  // ptr = 3;
+  // while(ptr < top ? (
+    // alloc = ptr[-2];
+    // in_use = ptr[-1];
+
+    // gfx_x = gfx_texth;
+    // gfx_y += gfx_texth * 5/4;
+
+    // gfx_drawchar($'['); gfx_drawnumber(ptr - 2, 0); gfx_drawchar($']');
+    // gfx_drawchar($'='); gfx_drawnumber(alloc, 0);
+    // gfx_drawchar($' ');
+    // gfx_drawchar($'['); gfx_drawnumber(ptr - 1, 0); gfx_drawchar($']');
+    // gfx_drawchar($'='); gfx_drawnumber(in_use, 0);
+
+    // alloc > 0 && in_use >= 0 ? ptr += alloc + 2;
+  // ));
+// );
+
+// @gfx
+// _malloc_dump();

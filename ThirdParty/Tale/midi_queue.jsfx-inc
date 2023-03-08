@@ -1,0 +1,302 @@
+desc:Sample accurate MIDI queue
+
+// Copyright (C) 2012-2018 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+/* Example #1 (simple interface)
+
+   desc:Simple MIDI mono synth
+
+   import Tale/midi_queue.jsfx-inc
+   import Tale/poly_blep.jsfx-inc
+
+   @sample
+
+   // Receive MIDI messages.
+   while(midi.midiq_recv()) (
+
+     // Parse MIDI message.
+     midi.msg1 &= 0xF0;
+
+     // Note On
+     midi.msg1 == 0x90 && midi.msg3 ? (
+       osc.poly_setf(note = midi.msg2, 440);
+       osc.a *= 0.5 * midi.msg3 / 128;
+     ) :
+
+     // Note Off
+     midi.msg1 == 0x80 || midi.msg1 == 0x90 ? (
+       midi.msg2 == note ? osc.a = 0;
+     );
+   );
+
+   // Sawtooth oscillator.
+   spl0 = spl1 = osc.poly_saw();
+
+   Example #2 (queue interface)
+
+   desc:MIDI queue mono synth
+
+   import Tale/midi_queue.jsfx-inc
+   import Tale/poly_blep.jsfx-inc
+
+   @init
+
+   // Set MIDI queue local memory index and size.
+   midi.midiq_init(0, 1024);
+
+   @block
+
+   // Receive MIDI messages and add them to queue.
+   midi.midiq_collect();
+
+   @sample
+
+   // Remove MIDI message from the head of queue.
+   while(midi.midiq_remove()) (
+
+     // Parse MIDI message.
+     midi.msg1 &= 0xF0;
+
+     // Note On
+     midi.msg1 == 0x90 && midi.msg3 ? (
+       osc.poly_setf(note = midi.msg2, 440);
+       osc.a *= 0.5 * midi.msg3 / 128;
+     ) :
+
+     // Note Off
+     midi.msg1 == 0x80 || midi.msg1 == 0x90 ? (
+       midi.msg2 == note ? osc.a = 0;
+     );
+   );
+
+   // Sawtooth oscillator.
+   spl0 = spl1 = osc.poly_saw();
+
+   Simple Interface
+
+    * midiq_recv()
+      Context: @sample
+      Example: is_avail = midi.midiq_recv();
+      Receives any MIDI message, and stores it in the msg1, msg2, and msg3
+      instance variables.
+
+      Note: The simple interface doesn't actually queue any MIDI messages,
+      so it can and should be used on its own (i.e. without the other
+      functions).
+
+   Initialization Functions
+
+    * midiq_init(index[, size])
+      Example: midi.midiq_init(0, 1024);
+      Sets the offset and size (omit for non-bounded size) of the local
+      memory buffer to store the queue in, and returns the next available
+      memory index (i.e. index+size*3).
+
+    * midiq_alloc(size)
+    * midiq_free()
+      Example: midi.midiq_alloc(1024);
+      Allocates/deallocates a block of local memory to store the queue in,
+      and returns its index.
+
+      Note: Requires Tale/malloc.jsfx-inc.
+
+   Queue Functions
+
+    * midiq_collect()
+    * midiq_collect(ch, mask)
+      Context: @block
+      Example: midi.midiq_collect();
+      Receives any MIDI messages, optionally filtering by channel (0..15,
+      <0=any) and status byte (1=Note Off, 2=Note On, 4=Poly Aftertouch,
+      8=Control Change, 16=Program Change, 32=Channel Atertouch, 64=Pitch
+      Bend).
+
+    * midiq_remove()
+      Context: @sample
+      Example: is_avail = midi.midiq_remove();
+      Checks if a MIDI message is available, removes it from the queue, and
+      stores it in the msg1, msg2, and msg3 instance variables.
+
+   Miscellaneous Functions
+
+    * midiq_add(ofs, msg1, msg2, msg3)
+      Example: midi.midiq_add(0, 0x90, 60, 127);
+      Adds a MIDI message to the queue.
+
+    * midiq_rewind()
+      Context: @block
+      Example: midi.midiq_rewind();
+      Rewinds (clears) the queue, so new MIDI messages can be added.
+
+      Note: This function is automatically called by midiq_collect().
+
+    * _midiq_rewind()
+      Context: @block
+      Example: midi._midiq_rewind();
+      Rewinds the queue, preserving any left-over messages.
+
+    * _midiq_collect()
+    * _midiq_collect(ch, mask)
+      Context: @block
+      Example: midi._midiq_collect();
+      Same as midiq_collect(), but without automatically rewinding the queue
+      first.
+
+   Instance Variables
+
+    * ofs
+      Example: offset_in_seconds = midi.ofs / srate;
+      The offset within the current sample block, in samples.
+
+    * msg1
+    * msg2
+    * msg3
+      Example: ch = midi.msg1 & 0x0F;
+      The MIDI message that was last removed from the queue.
+
+    * pend
+    * idx
+      Example: ofs_in_spls = midi.pend ? midi.ofs - midi.idx + 1;
+      A flag indicating that a MIDI message is pending (i.e. idx<=ofs), and
+      the sample index [0..samplesblock-1] of the next midiq_recv() call.
+
+    * buf
+    * size
+      Example: next_avail_index = midi.buf + midi.size * 3;
+      The local memory index and maximum size (in MIDI messages) of the
+      queue.
+
+    * head
+    * tail
+      Example: num_msgs = (midi.tail - midi.head) / 3;
+      Example: num_avail = midi.size - (midi.tail - midi.buf) / 3;
+      Pointers to the head and tail of the queue.
+
+*/
+
+@init
+
+function midiq_init(index, size)
+  instance(buf)
+(
+  buf = index;
+  this.size = size;
+
+  buf + size * 3;
+);
+
+function midiq_init(index)
+  instance(buf, size)
+(
+  size = 0;
+  buf = index;
+);
+
+function midiq_rewind()
+  instance(buf, head, tail, ofs)
+(
+  head = tail = buf;
+  ofs = 0;
+);
+
+function _midiq_rewind()
+  instance(buf, head, tail, ofs)
+  local(ptr)
+(
+  head < tail ? (
+    ptr = head;
+    loop(tail - head,
+      ptr[] -= ofs;
+      ptr += 3;
+    );
+  ) : (
+    head = tail = buf;
+  );
+
+  ofs = 0;
+);
+
+function midiq_add(ofs, msg1, msg23)
+  instance(buf, size, tail)
+(
+  !size || tail < buf + size * 3 ? (
+    tail[0] = ofs;
+    tail[1] = msg1;
+    tail[2] = msg23;
+    tail += 3;
+  );
+);
+
+function midiq_add(ofs, msg1, msg2, msg3)
+(
+  this.midiq_add(ofs, msg1, msg2 | (msg3 << 8));
+);
+
+function _midiq_collect(ch, mask)
+  local(ofs, msg1, msg23)
+(
+  while(
+    midirecv(ofs, msg1, msg23) ? (
+      msg1 >= 0x80 && !(msg23 & 0x8080) && (ch < 0 || msg1 & 0x0F == ch) && (mask & (1 << ((msg1 >> 4) - 8))) ? this.midiq_add(ofs, msg1, msg23);
+      midisend(ofs, msg1, msg23);
+    );
+  );
+);
+
+function _midiq_collect()
+(
+  this._midiq_collect(-1, 127);
+);
+
+function midiq_collect(ch, mask)
+(
+  this.midiq_rewind();
+  this._midiq_collect(ch, mask);
+);
+
+function midiq_collect()
+(
+  this.midiq_collect(-1, 127);
+);
+
+function midiq_remove()
+  instance(head, tail, ofs, msg1, msg2, msg3, msg23)
+(
+  head < tail && head[] <= ofs ? (
+    msg1  = head[1];
+    msg23 = head[2];
+    msg2 = msg23 & 0x7F;
+    msg3 = msg23 >> 8;
+    head += 3;
+  ) : (
+    ofs += 1;
+    0;
+  );
+);
+
+// Simple interface
+
+function midiq_recv()
+  // global(samplesblock)
+  instance(pend, idx, ofs, msg1, msg2, msg3)
+(
+  !pend && midirecv(ofs, msg1, msg2) ? (
+    midisend(ofs, msg1, msg2);
+
+    msg3 = msg2 >> 8;
+    msg2 &= 0xFF;
+
+    pend = msg1 >= 0x80 && (msg2|msg3) < 0x80;
+  );
+
+  pend && idx >= ofs ? (
+    pend = 0;
+    1;
+  ) : (idx += 1) >= samplesblock ? (
+    pend ? ofs -= samplesblock;
+    idx = 0;
+  );
+);

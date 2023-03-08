@@ -1,0 +1,397 @@
+desc:Low-level 32/64-bit unsigned integer operations
+
+// Copyright (C) 2017-2019 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+/* Example
+
+   desc:Xorshift noise generator
+
+   import Tale/uint.jsfx-inc
+
+   @init
+
+   // Source: https://en.wikipedia.org/wiki/Xorshift#xorshift.2A
+
+   state.hw = 0; state.lw = 1;
+   mul.hw = 0x2545F491; mul.lw = 0x4F6CDD1D;
+
+   @sample
+
+   x.hw = state.hw; x.lw = state.lw;
+
+   a.shr64(x, 12); x.xor64(x, a);
+   b.shl64(x, 25); x.xor64(x, b);
+   c.shr64(x, 27); x.xor64(x, c);
+
+   state.hw = x.hw; state.lw = x.lw;
+
+   x.mul64(x, mul);
+   spl0 = spl1 = ((x.hw * 2^(32 - 63) + x.lw * 2^(-63)) - 1) * 0.125;
+
+   32-Bit Functions
+
+    * not32(x)    -- Bitwise complement
+    * shl32(x, n) -- Shift left
+    * shr32(x, n) -- Logical (unsigned) shift right
+    * sar32(x, n) -- Arithmetic (signed) shift right
+    * rol32(x, n) -- Rotate left
+    * ror32(x, n) -- Rotate right
+    * neg32(x)    -- Two's complement negation
+    * abs32(x)    -- Absolute value
+    * add32(x, y) -- Add
+    * sub32(x, y) -- Subtract
+    * mul32(x, y) -- Multiply
+    * int32(x)    -- Convert from unsigned to signed
+    * uint32(x)   -- Convert from signed to unsigned
+    * ftoi32(x)   -- Convert from floating point to unsigned
+      Example: y = add32(x, y); // y = x + y
+      Both x and y should be unsigned 32-bit integers; n should be an
+      integer in the [0..31] range. Returns an unsigned 32-bit integer.
+
+   64-Bit Functions
+
+    * and64(x*, y*) -- Bitwise AND
+    * or64(x*, y*)  -- Bitwise OR
+    * xor64(x*, y*) -- Bitwise XOR
+    * not64(x*)     -- Bitwise complement
+    * shl64(x*, n)  -- Shift left
+    * shr64(x*, n)  -- Logical (unsigned) shift right
+    * sar64(x*, n)  -- Arithmetic (signed) shift right
+    * rol64(x*, n)  -- Rotate left
+    * ror64(x*, n)  -- Rotate right
+    * neg64(x*)     -- Two's complement negation
+    * abs64(x*)     -- Absolute value
+    * add64(x*, y*) -- Add
+    * sub64(x*, y*) -- Subtract
+    * mul64(x*, y*) -- Multiply
+      Example: y.add64(x, y); // y = x + y
+      Both x* and y* are unsigned 64-bit integer namespaces; n should be an
+      integer in the [0..63] range. Returns the low-order unsigned 32-bit
+      word of the unsigned 64-bit result.
+
+   Instance Variables
+
+    * hw
+    * lw
+      Example: y = 2^32 * x.hw + x.lw;
+      The high/low-order unsigned 32-bit word of the unsigned 64-bit
+      integer.
+
+*/
+
+@init
+
+function not32(x)
+(
+  4294967295 - x;
+);
+
+function shl32(x, n)
+(
+  (x * (n < 31 ? 1 << n : 2147483648)) & 0xFFFFFFFF;
+);
+
+function shr32(x, n)
+(
+  (x / (n < 31 ? 1 << n : 2147483648))|0;
+);
+
+function sar32(x, n)
+  local(shr)
+(
+  n < 31 ? shr = 1 << n : shr = 2147483648;
+
+  x >= 2147483648 ? (
+    (x / shr) | ((shr - 1) * (n > 1 ? 1 << (32 - n) : 2147483648));
+  ) : (
+    (x / shr)|0;
+  );
+);
+
+function rol32(x, n)
+(
+  ((x * (n < 31 ? 1 << n : 2147483648)) & 0xFFFFFFFF) |
+  (x / (n > 1 ? 1 << (32 - n) : 2147483648));
+);
+
+function ror32(x, n)
+(
+  ((x * (n > 1 ? 1 << (32 - n) : 2147483648)) & 0xFFFFFFFF) |
+  (x / (n < 31 ? 1 << n : 2147483648));
+);
+
+function neg32(x)
+(
+  x ? 4294967296 - x : 0;
+);
+
+function abs32(x)
+(
+  x >= 2147483648 ? 4294967296 - x : x;
+);
+
+function add32(x, y)
+(
+  (x += y) >= 4294967296 ? x - 4294967296 : x;
+);
+
+function sub32(x, y)
+(
+  (x -= y) < 0 ? x + 4294967296 : x;
+);
+
+function mul32(x, y)
+  local(a, b)
+(
+  a = x & 0xFFFF;
+  b = y & 0xFFFF;
+
+  y = ((((y / 65536)|0)*a + ((x / 65536)|0)*b) & 0xFFFF)*65536 + a*b;
+
+  y >= 4294967296 ? y - 4294967296 : y;
+);
+
+function int32(x)
+(
+  x >= 2147483648 ? x - 4294967296 : x;
+);
+
+function uint32(x)
+(
+  x < 0 ? x + 4294967296 : x;
+);
+
+function ftoi32(x)
+(
+  x <= -1 ? (
+    (min(max(-2147483648, x), -1)|0) + 4294967296;
+  ) : (
+    min(max(0, x), 4294967295)|0;
+  );
+);
+
+function and64(x*, y*)
+  instance(hw, lw)
+(
+  hw = x.hw & y.hw;
+  lw = x.lw & y.lw;
+);
+
+function or64(x*, y*)
+  instance(hw, lw)
+(
+  hw = x.hw | y.hw;
+  lw = x.lw | y.lw;
+);
+
+function xor64(x*, y*)
+  instance(hw, lw)
+(
+  hw = x.hw ~ y.hw;
+  lw = x.lw ~ y.lw;
+);
+
+function not64(x*)
+  instance(hw, lw)
+(
+  hw = 4294967295 - x.hw;
+  lw = 4294967295 - x.lw;
+);
+
+function shl64(x*, n)
+  instance(hw, lw)
+  local(m, shl, shr)
+(
+  (m = n & 31) < 31 ? shl = 1 << m : shl = 2147483648;
+
+  n < 32 ? (
+    m > 1 ? shr = 1 << (32 - m) : shr = 2147483648;
+
+    hw = ((x.hw * shl) & 0xFFFFFFFF) | (x.lw / shr);
+    lw = (x.lw * shl) & 0xFFFFFFFF;
+  ) : (
+    hw = (x.lw * shl) & 0xFFFFFFFF;
+    lw = 0;
+  );
+);
+
+function shr64(x*, n)
+  instance(hw, lw)
+  local(m, shr, shl)
+(
+  (m = n & 31) < 31 ? shr = 1 << m : shr = 2147483648;
+
+  n < 32 ? (
+    m > 1 ? shl = 1 << (32 - m) : shl = 2147483648;
+
+    lw = (x.lw / shr) | ((x.hw * shl) & 0xFFFFFFFF);
+    hw = (x.hw / shr)|0;
+  ) : (
+    lw = (x.hw / shr)|0;
+    hw = 0;
+  );
+
+  lw;
+);
+
+function sar64(x*, n)
+  instance(hw, lw)
+  local(m, shr, shl, msb)
+(
+  (m = n & 31) < 31 ? shr = 1 << m : shr = 2147483648;
+  m > 1 ? shl = 1 << (32 - m) : shl = 2147483648;
+
+  msb = x.hw >= 2147483648;
+
+  n < 32 ? (
+    lw = (x.lw / shr) | ((x.hw * shl) & 0xFFFFFFFF);
+    hw = (x.hw / shr) | (msb ? (shr - 1) * shl : 0);
+  ) :
+  msb ? (
+    lw = (x.hw / shr) | ((shr - 1) * shl);
+    hw = 0xFFFFFFFF;
+  ) :
+  /* !msb ? */ (
+    lw = (x.hw / shr)|0;
+    hw = 0;
+  );
+
+  lw;
+);
+
+function rol64(x*, n)
+  local(hw, lw, m, shl, shr)
+(
+  (m = n & 31) < 31 ? shl = 1 << m : shl = 2147483648;
+  m > 1 ? shr = 1 << (32 - m) : shr = 2147483648;
+
+  n > 32 ? (
+    hw = ((x.lw * shl) & 0xFFFFFFFF) | (x.hw / shr);
+    lw = ((x.hw * shl) & 0xFFFFFFFF) | (x.lw / shr);
+  ) :
+  n == 32 ? (
+    hw = x.lw;
+    lw = x.hw;
+  ) :
+  n > 0 ? (
+    hw = ((x.hw * shl) & 0xFFFFFFFF) | (x.lw / shr);
+    lw = ((x.lw * shl) & 0xFFFFFFFF) | (x.hw / shr);
+  ) :
+  /* n == 0 ? */ (
+    hw = x.hw;
+    lw = x.lw;
+  );
+
+  this.hw = hw;
+  this.lw = lw;
+);
+
+function ror64(x*, n)
+  local(hw, lw, m, shr, shl)
+(
+  (m = n & 31) < 31 ? shr = 1 << m : shr = 2147483648;
+  m > 1 ? shl = 1 << (32 - m) : shl = 2147483648;
+
+  n > 32 ? (
+    hw = ((x.hw * shl) & 0xFFFFFFFF) | (x.lw / shr);
+    lw = ((x.lw * shl) & 0xFFFFFFFF) | (x.hw / shr);
+  ) :
+  n == 32 ? (
+    hw = x.lw;
+    lw = x.hw;
+  ) :
+  n > 0 ? (
+    hw = ((x.lw * shl) & 0xFFFFFFFF) | (x.hw / shr);
+    lw = ((x.hw * shl) & 0xFFFFFFFF) | (x.lw / shr);
+  ) :
+  /* n == 0 ? */ (
+    hw = x.hw;
+    lw = x.lw;
+  );
+
+  this.hw = hw;
+  this.lw = lw;
+);
+
+function neg64(x*)
+  instance(hw, lw)
+(
+  hw = 4294967295 - x.hw;
+  lw = 4294967296 - x.lw;
+
+  lw >= 4294967296 ? ( lw -= 4294967296; hw += 1; );
+  hw >= 4294967296 ? hw -= 4294967296;
+
+  lw;
+);
+
+function abs64(x*)
+  instance(hw, lw)
+(
+  x.hw >= 2147483648 ? (
+    hw = 4294967295 - x.hw;
+    lw = 4294967296 - x.lw;
+
+    lw >= 4294967296 ? ( lw -= 4294967296; hw += 1; );
+
+    lw;
+  ) : (
+    hw = x.hw;
+    lw = x.lw;
+  );
+);
+
+function add64(x*, y*)
+  instance(hw, lw)
+(
+  hw = x.hw + y.hw;
+  lw = x.lw + y.lw;
+
+  lw >= 4294967296 ? ( lw -= 4294967296; hw += 1; );
+  hw >= 4294967296 ? hw -= 4294967296;
+
+  lw;
+);
+
+function sub64(x*, y*)
+  instance(hw, lw)
+(
+  hw = x.hw - y.hw;
+  lw = x.lw - y.lw;
+
+  lw < 0 ? ( lw += 4294967296; hw -= 1; );
+  hw < 0 ? hw += 4294967296;
+
+  lw;
+);
+
+function mul64(x*, y*)
+  instance(hw, lw)
+  local(a0, a1, a2, a3, b0, b1, b2, b3)
+(
+  a0 = x.lw & 0xFFFF;
+  a1 = (x.lw / 65536)|0;
+  a2 = x.hw & 0xFFFF;
+  a3 = (x.hw / 65536)|0;
+
+  b0 = y.lw & 0xFFFF;
+  b1 = (y.lw / 65536)|0;
+  b2 = y.hw & 0xFFFF;
+  b3 = (y.hw / 65536)|0;
+
+  a3 = a0*b3 + a1*b2 + a2*b1 + a3*b0;
+  a2 = a0*b2 + a1*b1 + a2*b0;
+  a1 = a0*b1 + a1*b0;
+  a0 = a0*b0;
+
+  hw = (a3 & 0xFFFF) * 65536 + a2 + ((a1 / 65536)|0);
+  lw = (a1 & 0xFFFF) * 65536 + a0;
+
+  lw >= 4294967296 ? ( lw -= 4294967296; hw += 1; );
+  while(hw >= 4294967296 ? hw -= 4294967296);
+
+  lw;
+);

@@ -1,0 +1,391 @@
+desc:FFT bandlimited synthesis
+
+// Copyright (C) 2015-2021 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+/* Example
+
+   desc:FFT sawtooth oscillator
+
+   slider1:440<20,20000,1>Freq (Hz)
+
+   import Tale/fft_synth.jsfx-inc
+   import Tale/wavetable.jsfx-inc
+
+   @init
+
+   function render_saw(buf, size, gain)
+     local(x, dx)
+   (
+     x = -gain;
+     dx = 2 * gain / (size - 1);
+     loop(size,
+       buf[] = x;
+       buf += 1;
+       x += dx;
+     );
+   );
+
+   osc.four_init(0, 1024);
+   render_saw(osc.buf, osc.size, 0.25);
+   osc.four_fft();
+
+   @slider
+
+   osc.four_setf(slider1);
+   osc.four_update() ? osc.four_ifft();
+
+   @sample
+
+   spl0 = spl1 = osc.wave_lerp();
+
+   Initialisation Functions
+
+    * four_init(index, size)
+      Example: osc.four_init(0, 1024);
+      Sets the offset and size of the local memory buffers to render the
+      waveform in, and returns the next available memory index. If necessary
+      the offset will automatically be realigned (i.e. rounded up) to
+      prevent the FFT from crossing a 65,536 item boundary.
+
+      The size of the FFT is specified by the second parameter, and must be
+      16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, or 32768.
+      Note that the FFT requires real/imaginary input pairs, and two buffers
+      are used internally, so a size of 1024 actually uses a total of 4096
+      items.
+
+      Note: There is also a real FFT optimized version of this library,
+      which is almost 2x as fast, but requires REAPER v5.25+, see
+      Tale/fft_real_synthesis.jsfx-inc.
+
+    * four_align(index, size)
+    * four_real_align(index, size)
+      Example: aligned_index = four_align(63489, 1024);
+      Realigns index so index+size will not cross a 65,536 item boundary.
+
+    * four_alloc(size)
+    * four_free()
+      Example: osc.four_alloc(1024);
+      Allocates/deallocates two blocks of local memory to render the
+      waveform in, and returns its index.
+
+      Note: Requires Tale/malloc.jsfx-inc.
+
+   Setting Functions
+
+    * four_setf(freq)
+      Example: osc.four_setf(440);
+      Sets the oscillator frequency (specified in Hz), and returns the
+      frequency in seconds/sample.
+
+      (To convert from Hz to seconds/sample, divide by srate. To convert
+      from seconds/sample to Hz, multiply with srate.)
+
+    * four_setf(note, tuning)
+      Example: osc.four_setf(60, 440);
+      Sets the oscillator frequency to the specified MIDI note and tuning
+      (in Hz), and returns the frequency in seconds/sample.
+
+    * four_setdt(time)
+      Example: osc2.four_setdt(osc1.dt);
+      Sets the oscillator frequency (specified in seconds/sample), and
+      returns this value.
+
+    * four_update()
+    * four_update_odd()
+    * four_update_one()
+      Example: osc.four_update() ? osc.four_ifft();
+      Recalculates the number of harmonics, and returns this (non-zero)
+      number if it has changed, indicating that the waveform should be
+      rerendered. Returns zero if the number has not changed.
+
+      If the waveform contains only odd harmonics, then you can use
+      four_update_odd() instead of four_update() to ignore changes in even
+      harmonics. Similarly four_update_one() only checks the first harmonic.
+
+    * four_reset()
+      Example: osc.four_reset();
+      Resets the number of hamonics, forcing the next call to one of the
+      update functions to return non-zero.
+
+    * four_setdc(dc[, phase])
+      Example: osc.four_setdc(0);
+      Example: ptr = osc.four_setdc(-0.5, 0.0);
+      The first form sets the DC component in the Fourier coefficients, and
+      returns this value.
+
+      The second form sets both the DC component and the phase offset
+      [0.0..1.0), and returns the local memory index of the first harmonic
+      cosine/sine pair.
+
+   FFT Functions
+
+    * four_fft()
+      Example: osc.four_fft();
+      Takes the FFT of the (non-bandimited) single cycle waveform in the
+      wavetable buffer (a real signal of length size*1).
+
+    * four_ifft([sigma])
+      Example: osc.four_ifft();
+      Renders a single cycle waveform in the wavetable buffer by taking the
+      inverse FFT of the Fourier coefficients.
+
+      If sigma is specified and is non-zero, then sigma approximation is
+      used to eliminate (most of) the ringing artifacts caused by the Gibbs
+      phenomenon.
+
+   Miscellaneous Functions
+
+    * four_getdc()
+    * four_getrms()
+      Example: dc = osc.four_getdc();
+      Extracts the DC/RMS value from the Fourier coefficients.
+
+    * four_sum(phase)
+      Example: output = osc.four_sum(osc.t);
+      Calculates and returns a sample by adding cosines/sines.
+
+      Note: Because this function needs to add m-1 cosines/sines, it can be
+      really, really slow.
+
+    * four_sigma(index, size)
+      Example: four_sigma(65535, 73);
+      Applies sigma approximation to the Fourier coefficients (cosine/sine
+      pairs) at the specified local memory index.
+
+   Instance Variables
+
+    * buf
+      Example: wavetbl_index = osc.buf;
+      The local memory index of the wavetable/FFT workspace.
+
+    * coef
+      Example: coef_index = osc.coef;
+      The local memory index of the Fourier coefficients (size/2 cosine/sine
+      pairs).
+
+    * size
+      Example: wavetbl_size = osc.size;
+      Example: num_coef = osc.size / 2;
+      The size of the wavetable in samples, which is also the number of
+      Fourier coefficient cosines/sines (i.e. there are size/2 Fourier
+      coefficient cosine/sine pairs).
+
+    * dt
+      Example: freq = osc.dt * srate;
+      The oscillator frequency, in seconds/sample.
+
+    * m
+      Example: num_harm = osc.m - 1;
+      The number of harmonics (up to and including half the Nyquist
+      frequency).
+
+*/
+
+@init
+
+function four_align(index, size)
+(
+  (index & 65535) + size * 2 > 65536 ? index = ((index >> 16) + 1) << 16 : index;
+);
+
+function four_init(index, size)
+  instance(buf, coef, m)
+(
+  m = 0;
+
+  buf = four_align(index, size);
+  coef = four_align(buf + size * 2, size);
+  this.size = size;
+
+  coef + size * 2;
+);
+
+function four_setf(freq)
+  // global(srate)
+  instance(dt)
+(
+  dt = freq / srate;
+);
+
+function four_setf(note, tuning)
+  // global(srate)
+  instance(dt)
+(
+  dt = exp(/* log(2)/12 */ 0.057762265046662109 * (note - 69)) * tuning / srate;
+);
+
+function four_setdt(time)
+  instance(dt)
+(
+  dt = time;
+);
+
+function four_update()
+  instance(dt, size, m)
+  local(n)
+(
+  dt > 0 ? n = min(ceil(0.5 / dt), size / 2) : n = 1;
+  n != m ? m = n;
+);
+
+function four_update_odd()
+  instance(dt, size, m)
+  local(n)
+(
+  dt > 0 ? n = min(ceil(0.5 / dt), size / 2) : n = 1;
+  (n|1) != (m|1) ? m = n : ( m = n; 0; );
+);
+
+function four_update_one()
+  instance(dt, size, m)
+  local(n)
+(
+  dt > 0 ? n = min(ceil(0.5 / dt), size / 2) : n = 1;
+  (!n) != (!m) ? m = n : ( m = n; 0; );
+);
+
+function four_reset()
+  instance(m)
+(
+  m = 0;
+);
+
+function four_setdc(dc)
+  instance(coef)
+(
+  coef[0] = dc;
+);
+
+function four_setdc(dc, phase)
+  instance(coef)
+  local(t)
+(
+  coef[0] = dc;
+
+  t = phase + 0.5;
+  coef[1] = t - (t|0);
+
+  coef + 2;
+);
+
+function four_getdc()
+  instance(coef)
+(
+  coef[0];
+);
+
+function four_getrms()
+  instance(coef, m)
+  local(sum, cos, sin)
+(
+  sum = sqr(coef[0]) * 2;
+
+  cos = coef + 2;
+  sin = cos + 1;
+
+  loop(m - 1,
+    sum += sqr(cos[]) + sqr(sin[]);
+    cos += 2; sin += 2;
+  );
+
+  sqrt(sum * 0.5);
+);
+
+function four_sum(phase)
+  instance(coef, m)
+  local(sum, k, cos, sin, t)
+(
+  sum = coef[0];
+
+  t = coef[1] + phase;
+  t = 2*$pi * (t - (t|0));
+
+  cos = coef + 2;
+  sin = cos + 1;
+
+  k = 1;
+  loop(m - 1,
+    sum += cos[] * cos(t * k) - sin[] * sin(t * k);
+    k += 1; cos += 2; sin += 2;
+  );
+
+  sum;
+);
+
+function four_sigma(index, size)
+  local(ptr, x, dx, y)
+(
+  // Skip DC.
+  ptr = index + 2;
+
+  x = dx = size > 0 ? $pi / size;
+  loop(size - 1,
+    y = sin(x)/x;
+    x += dx;
+    ptr[0] *= y;
+    ptr[1] *= y;
+    ptr += 2;
+  );
+);
+
+function four_fft()
+  instance(buf, coef, size)
+  local(src, dst, scale)
+(
+  // Scale and convert to complex.
+  src = buf;
+  dst = coef;
+  scale = 2 / size;
+  loop(size,
+    dst[0] = scale * src[];
+    src += 1;
+    dst[1] = 0;
+    dst += 2;
+  );
+
+  fft(coef, size);
+  fft_permute(coef, size);
+
+  // Scale DC.
+  coef[0] *= 0.5;
+  // Zero phase offset.
+  coef[1] = 0;
+);
+
+function four_ifft(sigma)
+  instance(buf, coef, size, m)
+  local(phase, src, dst)
+(
+  // Copy precalculated Fourier coefficients up to Nyquist.
+  memcpy(buf, coef, m * 2);
+
+  // Decode phase offset.
+  phase = (buf[1] * size)|0;
+  buf[1] = 0;
+
+  sigma ? four_sigma(buf, m);
+
+  // Zero bins beyond Nyquist frequency.
+  memset(buf + m * 2, 0, (size - m) * 2);
+
+  fft_ipermute(buf, size);
+  ifft(buf, size);
+
+  // Convert to real.
+  src = dst = buf;
+  loop(size,
+    dst[] = src[];
+    dst += 1;
+    src += 2;
+  );
+
+  phase > 0 ? (
+    // Apply phase offset.
+    memcpy(dst, buf, size);
+    memcpy(buf, dst + phase, size - phase);
+    memcpy(dst - phase, dst, phase);
+  );
+);

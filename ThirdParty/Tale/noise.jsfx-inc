@@ -1,0 +1,299 @@
+desc:Noise generator
+
+// Copyright (C) 2013-2017 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+/* Example
+
+   desc:Pink noise generator
+
+   import Tale/noise.jsfx-inc
+
+   @sample
+   spl0 = spl1 = 0.021 * rng.lcg_pink();
+
+   Setting Functions
+
+    * lcg_init(seed)
+      Example: rng.lcg_init(12345);
+      Initialises the random number generator with the specified seed value
+      (an integer in the range 1 through 2^31-2), and returns this value.
+
+    * lcg_density(density)
+      Example: black.lcg_density(0.25);
+      Sets the black noise density (0..1), and returns this value.
+
+    * lcg_leaky_set(rc)
+      Example: rng.lcg_leaky_set(0.0082);
+      Sets the feedback coefficient of the leaky integrator used for
+      generating Brownian noise to the specified RC time constant (in
+      seconds), and returns the filter coefficient.
+
+      The leaky integrator behaves like a high-pass filter with a
+      cutoff frequency (in Hz) of 1/(2*$pi*rc).
+
+      Note: lcg_brown() will automatically set the default RC time constant
+      if none has been set.
+
+   Noise Functions
+
+    * lcg_white()  -- White
+    * lcg_pink()   -- Pink (1/f)
+    * lcg_brown()  -- Brownian
+    * lcg_blue()   -- Blue
+    * lcg_violet() -- Violet
+    * lcg_grey()   -- Grey
+    * lcg_black()  -- Black
+      Example: sample = rng.lcg_white();
+      Returns a sample of noise.
+
+   Miscellaneous Functions
+
+    * lcg_rand(x)
+    * lcg_rand2(x)
+      Example: y = lcg_rand(x);
+      Example: y = rng.lcg_rand2(x);
+      Returns a psuedorandom number between 0 and the parameter.
+
+   Instance Variables
+
+    * seed
+      Example: rng2.lcg_init(rng1.seed);
+      The current seed value.
+
+    * density
+      Example: rng2.lcg_density(rng1.density);
+      The black noise density.
+
+    * b0
+    * b1
+    * b2
+      Example: rng2.b0 = rng1.b0; rng2.b1 = rng1.b1; rng2.b2 = rng1.b2;
+      Pink noise filter coefficients.
+
+    * leak.a
+    * leak.lp
+      Example: rng2.leak.a = rng1.leak.a;
+      Brownian noise leaky integrator.
+
+    * pink
+    * white
+      Example: pink_noise = blue_noise.pink;
+      Example: white_noise = violet_noise.white;
+      Blue/violet noise generator pink/white noise output.
+
+    * low_shelf*
+    * peak*
+      Grey noise generator filters.
+
+*/
+
+import rbj_filter.jsfx-inc
+
+@init
+
+// Recommended range is 1..2^31-2, but for legacy's sake supports at least
+// 0..2^31-1.
+
+function lcg_init(seed)
+(
+  seed >= 1 ? (
+    // seed = (seed - 1) % (2^31 - 2) + 1
+    seed -= 1;
+    seed -= ((seed / 2147483646)|0) * 2147483646;
+    seed += 1;
+  ) : (
+    seed = 2147483646;
+  );
+  this.seed = seed;
+);
+
+function lcg_density(density)
+(
+  this.density = density;
+);
+
+function lcg_leaky_set(rc)
+  instance(leak.a)
+(
+  rc <= 0 ? rc = 0.0082;
+  leak.a = 1 - 1 / (rc * srate + 1);
+);
+
+// Lehmer pseudorandom number generator, parameter values from Wikipedia.
+// http://en.wikipedia.org/wiki/Lehmer_random_number_generator
+
+function lcg_rand(x)
+  static(seed)
+(
+  !seed ? seed = 1;
+
+  // seed = (seed * 48271) % (2^31 - 1)
+  seed *= 48271;
+  seed -= ((seed * 0.00000000046566128752457969)|0) * 2147483647;
+
+  // (seed - 1) / (2^31 - 3) * x
+  (seed - 1) * 0.00000000046566128795826056 * x;
+);
+
+function _lcg_rand2()
+  instance(seed)
+(
+  !seed ? seed = 1;
+
+  seed *= 48271;
+  seed -= ((seed * 0.00000000046566128752457969)|0) * 2147483647;
+);
+
+function lcg_rand2(x)
+(
+  (this._lcg_rand2() - 1) * 0.00000000046566128795826056 * x;
+);
+
+function lcg_white()
+(
+  // (seed - 1) / (2^31 - 3) * 2 - 1
+  (this._lcg_rand2() - 1) * 0.00000000093132257591652112 - 1;
+);
+
+// "Pinking" filter (Paul Kellet's economy method) from "DSP generation of
+// Pink (1/f) Noise".
+// http://www.firstpr.com.au/dsp/pink-noise/
+
+function lcg_pink(s)
+  instance(b0, b1, b2)
+  local(white)
+(
+  white = this.lcg_white();
+
+  b0 = 0.99765 * b0 + white * 0.0990460;
+  b1 = 0.96300 * b1 + white * 0.2965164;
+  b2 = 0.57000 * b2 + white * 1.0526913;
+  (b0 + b1 + b2 + white * 0.1848);
+);
+
+function lcg_brown()
+  instance(leak.a, leak.lp)
+(
+  !leak.a ? this.lcg_leaky_set(0);
+  leak.lp = leak.a * (this.lcg_white() + leak.lp);
+);
+
+function lcg_blue()
+  instance(pink)
+  local(tmp)
+(
+  tmp = pink;
+  pink = this.lcg_pink();
+  (pink - tmp);
+);
+
+function lcg_violet()
+  instance(white)
+  local(tmp)
+(
+  tmp = white;
+  white = this.lcg_white();
+  (white - tmp);
+);
+
+function lcg_grey()
+  instance(low_shelf, peak)
+(
+  // Inverted A-weighting curve appoximation.
+  !low_shelf.a1 ? (
+    low_shelf.rbj_low_shelf(70, 0.707, 37.5);
+    peak.rbj_peak(2150, 0.19, -11.0);
+  );
+
+  low_shelf.rbj_df2(peak.rbj_df2(this.lcg_white())) * 3.1;
+);
+
+function lcg_black()
+  instance(density)
+  local(white)
+(
+  white = this.lcg_white();
+  abs(white) >= (1 - density) ? white : 0;
+);
+
+/* @gfx
+// _lcg_test(1000000);
+
+function _lcg_test(count)
+  instance(seed)
+  static(ok1, ok2, n, i, j, first, prev)
+  local(m, k, x, y, tmp)
+(
+  !i ? i += 1;
+  n = 2;
+
+  loop(i <= n ? count,
+
+    i == 1 ? (
+      this.lcg_init(j);
+
+      j == 0 ? ok1 = 1;
+      ok1 &= j == 0 ? seed == 2^31 - 2 :
+      j < 2^31 - 1 ? seed == j :
+      // j < 2^32 - 3 ? seed == j - (2^31 - 2) :
+      // j < 2^32 ? seed == j - (2^32 - 4);
+      j < 2^31 ? seed == j - (2^31 - 2);
+
+      j += 1;
+      // m = 2^32;
+      m = 2^31;
+      j >= m || !ok1 ? ( i += 1; j = 0; );
+    ) :
+
+    i == 2 ? (
+      j == 0 ? (
+        this.lcg_init(1);
+        first = prev = seed;
+      );
+      tmp = seed; x = this.lcg_rand2(1);
+      seed = tmp; y = this.lcg_white();
+
+      j == 0 ? ok2 = 1;
+      ok2 &= seed >= 1 && seed <= 2^31 - 2;
+      ok2 &= seed != prev;
+      ok2 &= j < 2^31 - 3 ? seed != first : seed == first;
+      ok2 &= x >= 0.0 && x <= 1.0;
+      ok2 &= y >= -1.0 && y <= 1.0;
+      prev = seed;
+
+      j += 1;
+      m = 2^31 - 2;
+      j >= m || !ok2 ? ( i += 1; j = 0; );
+    );
+  );
+
+  gfx_g = gfx_a = 1;
+  gfx_r = gfx_b = 0;
+  gfx_x = gfx_y = gfx_texth;
+
+  gfx_drawchar($'1'); gfx_drawchar($'.'); gfx_drawchar($'.');
+  gfx_drawnumber(n, 0);
+
+  k = 1;
+  loop(n,
+    gfx_x = gfx_texth;
+    gfx_y += gfx_texth * 5/4;
+
+    k == i ? (
+      gfx_drawnumber(min(j / m * 100, 99), 0); gfx_drawchar($'%');
+    ) : k < i ? (
+      tmp = k == 1 ? ok1 : k == 2 ? ok2;
+      !tmp ? ( gfx_drawchar($'n'); gfx_drawchar($'o'); gfx_drawchar($'t'); gfx_drawchar($' '); );
+
+      gfx_drawchar($'o'); gfx_drawchar($'k'); gfx_drawchar($' ');
+      gfx_drawnumber(k, 0); gfx_drawchar($' ');
+
+      k == 1 ? ( gfx_drawchar($'S'); gfx_drawchar($'e'); gfx_drawchar($'e'); gfx_drawchar($'d'); ) :
+      k == 2 ? ( gfx_drawchar($'R'); gfx_drawchar($'a'); gfx_drawchar($'n'); gfx_drawchar($'d'); gfx_drawchar($'o'); gfx_drawchar($'m'); );
+    );
+    k += 1;
+  );
+); */

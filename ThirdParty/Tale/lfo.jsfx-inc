@@ -1,0 +1,1455 @@
+desc:Naive (non-bandlimited) low-frequency oscillator
+
+// Copyright (C) 2012-2021 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+/* Example
+
+   desc:Tremolo
+
+   slider1:4.0<0.0,20.0,0.1>Rate (Hz)
+   slider2:-9.0<-24.0,0.0,0.1>Amount (dB)
+
+   import Tale/lfo.jsfx-inc
+
+   @slider
+
+   lfo.lfo_setf(slider1);
+   amount = 0.5*(exp(log(10)/20 * slider2) - 1);
+
+   @sample
+
+   trem = amount * (lfo.lfo_tri() + 1) + 1;
+   spl0 *= trem;
+   spl1 *= trem;
+
+   Setting Functions
+
+    * lfo_setf(freq)
+      Example: lfo.lfo_setf(4.0);
+      Sets the oscillator frequency (specified in Hz), and returns the
+      frequency in seconds/sample.
+
+      (To convert from Hz to seconds/sample, divide by srate. To convert
+      from seconds/sample to Hz, multiply with srate.)
+
+    * lfo_setf(note, tuning)
+      Example: osc.lfo_setf(0, 440);
+      Sets the oscillator frequency to the specified MIDI note and tuning
+      (in Hz), and returns the frequency in seconds/sample.
+
+    * lfo_setdt(time)
+      Example: lfo2.lfo_setdt(lfo1.dt);
+      Example: lfo2.dt = lfo1.dt;
+      Sets the oscillator frequency (specified in seconds/sample), and
+      returns this value.
+
+    * lfo_setpw(pw)
+      Example: lfo.lfo_setpw(0.3);
+      Example: lfo.pw = 0.3;
+      Sets the pulse width [0.0..1.0] of the waveform, and returns this
+      value.
+
+    * lfo_setf2(freq)
+    * lfo_setfc(freq)
+      Example: lfo.lfo_setf2(6.0);
+      Example: lfo.lfo_setfc(6.0);
+      Sets the slave/cutoff frequency (specified in Hz) of the hard sync or
+      filtered waveform, and returns the slave/master frequency ratio.
+
+      Note: You should always first set the master oscillator frequency, and
+      then set the slave/cutoff frequency. If you change the master
+      frequency, then you will probably also want to update the slave
+      frequency.
+
+    * lfo_setn(num_steps)
+      Example: lfo.lfo_setn(3);
+      Sets the integer number of steps (>=1) for the stepped waveform, and
+      returns this value.
+
+   Waveform Functions
+
+    * lfo_sin()         -- Sine approximation
+    * lfo_cos()         -- Cosine approximation
+    * lfo_tri()         -- Triangle
+    * lfo_sqr()         -- Square (fixed 0.5 pulse width)
+    * lfo_rect()        -- Rectangle (variable pulse width)
+    * lfo_saw()         -- Sawtooth
+    * lfo_ramp()        -- Ramp
+
+    * lfo_sin_precise() -- Sine
+    * lfo_cos_precise() -- Cosine
+
+    * lfo_tri2()        -- Modified triangle
+    * lfo_sqr2()        -- Modified square
+
+    * lfo_half()        -- Half-wave rectified sine (fixed 0.5 pulse width)
+    * lfo_half2()       -- Half-wave rectified sine (variable pulse width)
+    * lfo_full()        -- Full-wave rectified sine
+    * lfo_sinp()        -- Pulse sine (fixed 0.5 pulse width)
+    * lfo_sawp()        -- Saw pulse (fixed 0.5 pulse width)
+    * lfo_trip()        -- Triangular pulse
+    * lfo_hwsaw()       -- Half-wave rectified sawtooth
+    * lfo_alt()         -- Alternating sine
+    * lfo_camel()       -- Camel sine
+    * lfo_camela()      -- Alternating camel sine
+    * lfo_camel2()      -- Bipolar camel sine
+
+    * lfo_sin2()        -- Bipolar squared sine
+    * lfo_para()        -- Parabola
+    * lfo_circ()        -- Circle
+    * lfo_arc()         -- Cycloid
+    * lfo_trap()        -- Trapezoid (fixed 0.5 pulse width)
+    * lfo_trap2()       -- Trapezoid (variable pulse width)
+
+    * lfo_hyptri()      -- Hyper triangular wave
+    * lfo_lpsqr()       -- Low-pass filtered square
+    * lfo_lpsqrN()      -- LPF square approximation (order N = 2 or 3)
+    * lfo_intlpsqrN()   -- Integrated LPF square (order N = 2 or 3)
+    * lfo_hpsqr()       -- High-pass filtered square
+    * lfo_intsaw()      -- Integrated sawtooth
+    * lfo_cubsaw()      -- Cubic sawtooth
+    * lfo_sinsaw()      -- Sine sawtooth
+    * lfo_hpsaw()       -- High-pass filtered sawtooth
+    * lfo_hpsaw6()      -- HPF sawtooth approximation
+    * lfo_logit3()      -- Logit approximation
+
+    * lfo_sqrm1()       -- Square wave minus fundamental
+    * lfo_sawm1()       -- Sawtooth minus fundamental
+
+    * lfo_sinn()        -- Stepped sine
+    * lfo_trin()        -- Stepped triangle
+    * lfo_sawn()        -- Stepped sawtooth
+    * lfo_yawn()        -- Very boring :-O
+    * lfo_hssaw()       -- Hard sync sawtooth
+
+    * lfo_ham()         -- Hammond 88 8000 000
+    * lfo_stairs()      -- Staircase (fixed 0.5 pulse width)
+    * lfo_stairs3()     -- Staircase (variable pulse width)
+    * lfo_stairs2()     -- Uneven staircase
+
+    * lfo_sh()          -- Sample and hold noise
+    * lfo_sh2(x)        -- Sample and hold X
+      Example: sample = lfo.lfo_tri();
+      Returns a sample of a waveform, and increments its phase.
+
+      Note: In v20151024 the phase of lfo_full() and lfo_trip() has been
+      corrected. To convert code relying on the old behavior, synchronize
+      the phase to t-0.25 for lfo_full(), and to t-(0.75+0.5*pw) for
+      lfo_trip().
+
+   Miscellaneous Functions
+
+    * lfo_sync(phase)
+      Example: lfo2.lfo_sync(lfo1.t + 0.5);
+      Synchronizes the oscillator with the specified phase, and returns the
+      normalized phase.
+
+      Note: You can safely specify out or range (and even negative) values
+      here.
+
+    * lfo_inc()
+      Example: lfo.lfo_inc();
+      Increments the oscillator phase, and returns it.
+
+      Note: All waveform functions automatically increment the phase.
+
+    * lfo_rect_dc()     -- Rectangle
+
+    * lfo_half_dc()     -- Half-wave rectified sine (fixed 0.5 pulse width)
+    * lfo_half2_dc()    -- Half-wave rectified sine (variable pulse width)
+    * lfo_full_dc()     -- Full-wave rectified sine
+    * lfo_sinp_dc()     -- Pulse sine (fixed 0.5 pulse width)
+    * lfo_sawp_dc()     -- Saw pulse
+    * lfo_trip_dc()     -- Triangular pulse
+    * lfo_hwsaw_dc()    -- Half-wave rectified sawtooth
+    * lfo_camel_dc()    -- Camel sine
+    * lfo_camela_dc()   -- Alternating camel sine
+
+    * lfo_arc_dc()      -- Cycloid
+    * lfo_hyptri_dc()   -- Hyper triangular wave
+    * lfo_intsaw_dc()   -- Integrated sawtooth
+    * lfo_hpsaw_dc()    -- High-pass filtered sawtooth
+    * lfo_hpsaw6_dc()   -- HPF sawtooth approximation
+    * lfo_hssaw_dc()    -- Hard sync sawtooth
+
+    * lfo_stairs3_dc()  -- Staircase (variable pulse width)
+      Example: sample = lfo.lfo_rect() - lfo.lfo_rect_dc();
+      Returns the (constant or pulse width/slave frequency dependent) DC
+      value for the waveform.
+
+    * _lfo_sin(x)
+    * _lfo_cos(x)
+      Example: y = _lfo_sin(x);
+      Example: y = _lfo_cos(x);
+      Fast approximations of sin(x) and cos(x) for x in the ranges of
+      [-$pi..$pi] and [0..2*$pi].
+
+   Instance Variables
+
+    * t
+      Example: phase = lfo.t;
+      The current phase [0.0..1.0) of the oscillator.
+
+    * dt
+      Example: freq = lfo.dt * srate;
+      The oscillator frequency, in seconds/sample.
+
+    * pw
+      Example: duty_cycle = lfo.pw;
+      The pulse width [0.0..1.0] of the waveform.
+
+    * fc
+      Example: cutoff = lfo.fc * lfo.dt * srate;
+      The cutoff/oscillator frequency ratio of the filtered waveform.
+
+    * n
+      Example: num_steps = lfo.n;
+      The integer number of steps (>=1) of the stepped waveform.
+
+*/
+
+@init
+
+function lfo_setf(freq)
+  // global(srate)
+  instance(dt)
+(
+  dt = freq / srate;
+);
+
+function lfo_setf(note, tuning)
+  // global(srate)
+  instance(dt)
+(
+  dt = exp((note - 69) * /* log(2)/12 */ 0.057762265046662109) * tuning / srate;
+);
+
+function lfo_setdt(time)
+  instance(dt)
+(
+  dt = time;
+);
+
+function lfo_setpw(pw)
+(
+  this.pw = pw;
+);
+
+function lfo_setf2(freq)
+  // global(srate)
+  instance(fc, dt)
+(
+  dt > 0 ? fc = freq / (dt * srate) : fc = 0;
+);
+
+function lfo_setfc(freq)
+  instance(dt, fc, exp_fc)
+(
+  fc = max(dt > 0 ? freq / (dt * srate) : 0, 0.000001);
+  exp_fc = exp(fc * /* -$pi */ -3.1415926535897932);
+  fc;
+);
+
+function lfo_setn(num_steps)
+  instance(n)
+(
+  n = num_steps|0;
+);
+
+function lfo_sync(phase)
+  instance(t)
+(
+  t = phase;
+  t >= 0 ? t -= t|0 : t += 1 - (t|0);
+);
+
+function lfo_inc()
+  instance(t, dt)
+(
+  t += dt;
+  t -= t|0;
+);
+
+// Sine [DC = 0; RMS = 1/sqrt(2)]
+
+function lfo_sin_precise()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  sin(t * /* 2*$pi */ 6.2831853071795865);
+);
+
+function _lfo_sin(x)
+(
+  // Approximation [DC = 0; RMS = sqrt(45030)/300]
+
+  // Source: http://forum.devmaster.net/t/fast-and-accurate-sine-cosine/9648
+  x = (abs(x) * /* 3*sqrt(10)/(5*$pi^2) */ 0.19224342932038953 - /* 3*sqrt(10)/(5*$pi) */ 0.60395054525384442) * (abs(x - $pi) - $pi);
+  (abs(x) + /* 31/(6*sqrt(10)) */ 1.6338434577536627)*x;
+);
+
+function lfo_sin()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // _lfo_sin(t * 2*$pi);
+  t = (t * /* 12*sqrt(10)/5 */ 7.5894663844041104 - /* 6*sqrt(10)/5 */ 3.7947331922020552) * (abs(t - 0.5) - 0.5);
+  (abs(t) + /* 31/(6*sqrt(10)) */ 1.6338434577536627)*t;
+);
+
+// Cosine [DC = 0; RMS = 1/sqrt(2)]
+
+function lfo_cos_precise()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  cos(t * /* 2*$pi */ 6.2831853071795865);
+);
+
+function _lfo_cos(x)
+(
+  x >= 0 ? x -= /* $pi/2 */ 1.5707963267948966 : x += /* 3*$pi/2 */ 4.7123889803846899;
+
+  // -_lfo_sin(x);
+  x = (abs(x) * /* -3*sqrt(10)/(5*$pi^2) */ -0.19224342932038953 + /* 3*sqrt(10)/(5*$pi) */ 0.60395054525384442) * (abs(x - $pi) - $pi);
+  (abs(x) + /* 31/(6*sqrt(10)) */ 1.6338434577536627)*x;
+);
+
+function lfo_cos()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // -_lfo_sin(t * 2*$pi - $pi/2);
+  t = (abs(t - 0.25) * /* -12*sqrt(10)/5 */ -7.5894663844041104 + /* 6*sqrt(10)/5 */ 3.7947331922020552) * (abs(t - 0.75) - 0.5);
+  (abs(t) + /* 31/(6*sqrt(10)) */ 1.6338434577536627)*t;
+);
+
+// Stepped sine [DC = 0; RMS = 1/sqrt(2)]
+
+function lfo_sinn()
+  instance(n)
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // Stepped sine
+  n >= 2 ? (
+    _lfo_sin(((t * n * 2 + 0.5)|0) * $pi / n);
+  ) :
+
+  // Square [gain = 1/sqrt(2)]
+  // n <= 1 ? (
+    t < 0.5 ? /* 1/sqrt(2) */ 0.70710678118654752 : /* -1/sqrt(2) */ -0.70710678118654752;
+  // );
+);
+
+// Half-wave rectified sine [RMS = sqrt(2*pw*(1 - 8*pw/pi^2))]
+
+function lfo_half()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  (t < 0.5 ? (
+    // _lfo_sin(t * 2*$pi) * 2;
+    t = (t * /* -24/sqrt(5) */ -10.733126291998991 + /* 12/sqrt(5) */ 5.3665631459994953)*t;
+    (t + /* 31/(6*sqrt(5)) */ 2.3106035767497827)*t;
+  ) : 0) - 1;
+
+  // Alternate definition
+
+  // lfo1.lfo_setdt(dt);
+  // lfo1.lfo_sync(t);
+
+  // lfo2.lfo_setdt(2*dt);
+  // lfo2.lfo_sync(2*t + 0.75);
+
+  // lfo1.lfo_sin() + (lfo2.lfo_full() - 1) * 0.5;
+);
+
+function lfo_half_dc()
+(
+  /* 2/$pi - 1 */ -0.36338022763241866;
+);
+
+function lfo_half2()
+  instance(pw)
+  local(t)
+(
+  t = pw * 0.5 + this.t + 0.75;
+  this.lfo_inc();
+
+  ((t -= t|0) < pw ? (
+    // _lfo_sin(t * $pi / pw) * 2;
+    t = (t - pw) * t * /* -6/sqrt(5) */ -2.6832815729997476 / sqr(pw);
+    (t + /* 31/(6*sqrt(5)) */ 2.3106035767497827)*t;
+  ) : 0) - 1;
+);
+
+function lfo_half2_dc()
+  instance(pw)
+(
+  pw * /* 4/$pi */ 1.2732395447351627 - 1;
+);
+
+// Full-wave rectified sine [RMS = sqrt(2 - 16/pi^2)]
+
+function lfo_full()
+  local(t)
+(
+  t = this.t + 0.25;
+  this.lfo_inc();
+
+  t -= t|0;
+
+  // _lfo_sin(t * $pi) * 2 - 1;
+  t = (t * /* -6/sqrt(5) */ -2.6832815729997476 + /* 6/sqrt(5) */ 2.6832815729997476)*t;
+  (t + /* 31/(6*sqrt(5)) */ 2.3106035767497827)*t - 1;
+);
+
+function lfo_full_dc()
+(
+  /* 4/$pi - 1 */ 0.27323954473516269;
+);
+
+// Pulse sine [RMS = sqrt(1 - 4/pi^2)]
+
+function lfo_sinp()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  (t < 0.5 ? (
+    // _lfo_sin(t * $pi) * 2;
+    t = (t * /* -6/sqrt(5) */ -2.6832815729997476 + /* 6/sqrt(5) */ 2.6832815729997476)*t;
+    (t + /* 31/(6*sqrt(5)) */ 2.3106035767497827)*t;
+  ) : 0) - 1;
+);
+
+function lfo_sinp_dc()
+(
+  /* 2/$pi - 1 */ -0.36338022763241866;
+);
+
+// Saw pulse [RMS = 1/sqrt(2)]
+
+function lfo_sawp()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  (t < 0.5 ? (
+    // 1 - _lfo_cos(t * 2*$pi);
+    t = (abs(0.25 - t) * /* 12*sqrt(10)/5 */ 7.5894663844041104 - /* 6*sqrt(10)/5 */ 3.7947331922020552) * (0.25 - t);
+    (abs(t) + /* 31/(6*sqrt(10)) */ 1.6338434577536627)*t + 1;
+  ) : 0) - 1;
+);
+
+function lfo_sawp_dc()
+(
+  -0.5;
+);
+
+// Alternating sine [DC = 0; RMS = 0.5]
+
+function lfo_alt()
+  local(t)
+(
+  t = this.t * 2;
+  this.lfo_inc();
+
+  t < 1 ? (
+    // _lfo_sin(t * 2*$pi);
+    t = (t * /* 12*sqrt(10)/5 */ 7.5894663844041104 - /* 6*sqrt(10)/5 */ 3.7947331922020552) * (abs(t - 0.5) - 0.5);
+    (abs(t) + /* 31/(6*sqrt(10)) */ 1.6338434577536627)*t;
+  );
+  // 0 otherwise
+);
+
+// Camel sine [RMS = sqrt(1 - 4/pi^2)]
+
+function lfo_camel()
+  local(t)
+(
+  t = this.t * 2;
+  this.lfo_inc();
+
+  (t < 1 ? abs(
+    // _lfo_sin(t * 2*$pi) * 2;
+    t = (t * /* 24/sqrt(5) */ 10.733126291998991 - /* 12/sqrt(5) */ 5.3665631459994953) * (abs(t - 0.5) - 0.5);
+    (abs(t) + /* 31/(6*sqrt(5)) */ 2.3106035767497827)*t;
+  ) : 0) - 1;
+);
+
+function lfo_camel_dc()
+(
+  /* 2/$pi - 1 */ -0.36338022763241866;
+);
+
+// Alternating camel sine [RMS = sqrt(0.5 - 1/pi^2)]
+
+function lfo_camela()
+  local(t, x, y)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  x = t+t;
+  x -= x|0;
+
+  // y = _lfo_sin(x * 2*$pi);
+  x = (x * /* 12*sqrt(10)/5 */ 7.5894663844041104 - /* 6*sqrt(10)/5 */ 3.7947331922020552) * (abs(x - 0.5) - 0.5);
+  y = (abs(x) + /* 31/(6*sqrt(10)) */ 1.6338434577536627)*x;
+
+  t < 0.5 ? abs(y) : y;
+);
+
+function lfo_camela_dc()
+(
+  /* 1/$pi */ 0.31830988618379067;
+);
+
+// Bipolar camel sine [DC = 0; RMS = 1/sqrt(2)]
+
+function lfo_camel2()
+  local(t)
+(
+  t = this.t + 0.25;
+  this.lfo_inc();
+
+  t = abs(t - (t|0) - 0.5) * 2;
+
+  // _lfo_sin(t * 2*$pi);
+  t = (t * /* 12*sqrt(10)/5 */ 7.5894663844041104 - /* 6*sqrt(10)/5 */ 3.7947331922020552) * (abs(t - 0.5) - 0.5);
+  (abs(t) + /* 31/(6*sqrt(10)) */ 1.6338434577536627)*t;
+);
+
+// Bipolar squared sine [DC = 0; RMS = sqrt(6)/4]
+
+function lfo_sin2()
+(
+  (this.t < 0.5 ? 1 : -1) * sqr(this.lfo_sin());
+);
+
+// Parabola [DC = 0; RMS = 2*sqrt(30)/15]
+
+function lfo_para()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  (t * 16 - 8) * (abs(t - 0.5) - 0.5);
+);
+
+// Higher order parabolas [DC = 0]
+
+/* function lfo_para3()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // RMS = sqrt(595)/35
+  t = abs((((t + 0.75)|0) - t) - 0.25);
+  (t * -32 + 24) * sqr(t) - 1;
+);
+
+function lfo_para4()
+  local(t, y)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // RMS = 8*sqrt(2170)/525
+  t < 0.5 ? y = -t : y = t = 1 - t;
+  ((t * (-256/5) + 256/5) * sqr(t) - 32/5) * y;
+);
+
+function lfo_para5()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // RMS = sqrt(106414)/462
+  t = abs((((t + 0.75)|0) - t) - 0.25);
+  ((t * 64 - 80) * sqr(t) + 20) * sqr(t) - 1;
+);
+
+// Silly order parabolas (sine wave approximations) [DC = 0]
+
+function lfo_para6()
+  local(t, y)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // RMS = 32*sqrt(16399383)/183183
+  t < 0.5 ? y = -t : y = t = 1 - t;
+  (((t * (4096/61) - 6144/61) * sqr(t) + 2560/61) * sqr(t) - 384/61) * y;
+);
+
+function lfo_para7()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // RMS = sqrt(664641835)/36465
+  t = abs((((t + 0.75)|0) - t) - 0.25);
+  (((t * (-1024/17) + 1792/17) * sqr(t) - 1120/17) * sqr(t) + 336/17) * sqr(t) - 1;
+);
+
+function lfo_para8()
+  local(t, y)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // RMS = 128*sqrt(77847694210)/50504025
+  t < 0.5 ? y = -t : y = t = 1 - t;
+  ((((t * (-65536/1385) + 131072/1385) * sqr(t) - 114688/1385) * sqr(t) + 57344/1385) * sqr(t) - 8704/1385) * y;
+);
+
+function lfo_para9()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // RMS = sqrt(102507516058090)/14318590
+  t = abs((((t + 0.75)|0) - t) - 0.25);
+  ((((t * (1024/31) - 2304/31) * sqr(t) + 2688/31) * sqr(t) - 2016/31) * sqr(t) + 612/31) * sqr(t) - 1;
+);
+
+// etc. etc. */
+
+// Circle [DC = 0; RMS = sqrt(6)/3]
+
+function lfo_circ()
+(
+  (this.t < 0.5 ? 1 : -1) * sqrt(abs(this.lfo_para()));
+);
+
+// Cycloid [RMS = sqrt(8/3 - pi^2/4)]
+
+function lfo_arc()
+  local(t)
+(
+  t = this.t + 0.25;
+  this.lfo_inc();
+
+  t -= t|0;
+  sqrt(t - sqr(t)) * 4 - 1;
+);
+
+function lfo_arc_dc()
+(
+  /* $pi/2 - 1 */ 0.57079632679489662;
+);
+
+// Triangle [DC = 0; RMS = 1/sqrt(3)]
+
+function lfo_tri()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  abs((((t + 0.75)|0) - t) * 4 - 1) - 1;
+);
+
+// Hyper triangular wave [RMS = sqrt(2/(exp(2) - 1))]
+
+function lfo_hyptri()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  exp((t < 0.5 ? t : 1 - t) * 4) * /* 2/(exp(2) - 1) */ 0.31303528549933130 - /* (2/(exp(2) - 1) + 1) */ 1.3130352854993313;
+
+  // Alternate definition
+
+  // lfo.lfo_setdt(dt);
+  // lfo.lfo_sync(t + 0.75);
+
+  // (exp(lfo.lfo_tri()) - exp(-1)) / (exp(1) - exp(-1)) * 2 - 1;
+
+  // Order 3 approximation [DC =~ -0.31084096804291879; RMS =~ 0.55951113796240010]
+
+  // t >= 0.5 ? t = 1 - t;
+  // (sqr(t) * 9.9469109773734018 + 1.5132722556566496)*t - 1;
+
+  // Order 4 approximation [DC =~ -0.31300787979294141; RMS =~ 0.55964836788895956]
+
+  // t >= 0.5 ? t = 1 - t;
+  // ((sqr(t) * 9.6985510782066698 + 3.1478411298375923)*t + 1.2137605503053701)*t - 1;
+);
+
+function lfo_hyptri_dc()
+(
+  /* -2/(exp(2) - 1) */ -0.31303528549933130;
+);
+
+// Stepped triangle [DC = 0; RMS = sqrt(int((n + 1)/2) / n)]
+
+function lfo_trin()
+  instance(n)
+  local(t, y)
+(
+  t = 0.25 / n + 0.25 + this.t;
+  this.lfo_inc();
+
+  y = (((t -= t|0) * n * 2)|0) * 2 / n;
+  t < 0.5 ? y - 1 : 3 - y;
+);
+
+// Modified triangle [DC = 0; RMS = 1/sqrt(3)]
+
+function lfo_tri2()
+  instance(pw)
+  local(t)
+(
+  t = pw * 0.5 + this.t;
+  this.lfo_inc();
+
+  ((t -= t|0) < pw ? t / pw : (t - 1) / (pw - 1)) * 2 - 1;
+);
+
+// Triangular pulse [RMS = sqrt(4/3*pw - pw^2)]
+
+function lfo_trip()
+  instance(pw)
+  local(t)
+(
+  t = pw * 0.5 + this.t + 0.75;
+  this.lfo_inc();
+
+  (t -= t|0) < pw ? 1 - abs(t * 4 / pw - 2) : -1;
+
+  // Alternate definition
+
+  // lfo1.lfo_setdt(dt);
+  // lfo1.lfo_sync(t - 0.25*pw + 0.25);
+
+  // lfo2.lfo_setdt(dt);
+  // lfo2.lfo_sync(t + 0.25*pw + 0.25);
+
+  // lfo1.lfo_setpw(1 - 0.5*pw);
+  // lfo2.lfo_setpw(lfo1.pw);
+
+  // lfo1.pw * (lfo1.lfo_tri2() - lfo2.lfo_tri2());
+);
+
+function lfo_trip_dc()
+  instance(pw)
+(
+  pw - 1;
+);
+
+// Trapezoid [DC = 0; RMS = sqrt(1/3 + 2/3*pw)]
+
+function lfo_trap()
+(
+  min(max(-1, this.lfo_tri() * 2), 1);
+
+  // Alternate definition
+
+  // lfo1.lfo_setdt(dt);
+  // lfo1.lfo_sync(t - 0.125);
+
+  // lfo2.lfo_setdt(dt);
+  // lfo2.lfo_sync(t + 0.125);
+
+  // lfo1.lfo_tri() + lfo2.lfo_tri();
+);
+
+function lfo_trap2()
+  instance(pw)
+(
+  min(max(-1, this.lfo_tri() / max(1 - pw, 0.000001)), 1);
+
+  // Alternate definition
+
+  // lfo1.lfo_setdt(dt);
+  // lfo1.lfo_sync(t - 0.25*pw);
+
+  // lfo2.lfo_setdt(dt);
+  // lfo2.lfo_sync(t + 0.25*pw);
+
+  // 0.5 * (lfo1.lfo_tri() + lfo2.lfo_tri()) / (1 - pw);
+);
+
+// Square [DC = 0; RMS = 1]
+
+function lfo_sqr()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  (t < 0.5) * 2 - 1;
+
+  // Alternate definition
+
+  // lfo1.lfo_setdt(dt);
+  // lfo1.lfo_sync(t);
+
+  // lfo2.lfo_setdt(dt);
+  // lfo2.lfo_sync(t + 0.5);
+
+  // lfo1.lfo_saw() - lfo2.lfo_saw();
+);
+
+// Low-pass filtered square [DC = 0]
+
+function lfo_lpsqr()
+  instance(fc, exp_fc)
+  local(t, y)
+(
+  // Normalized [RMS = sqrt(coth(pi*fc/2) * (coth(pi*fc/2) - 2/(pi*fc)))]
+
+  t = this.t;
+  this.lfo_inc();
+
+  t < 0.5 ? (
+    y = 2;
+  ) : (
+    y = -2;
+    t -= 0.5;
+  );
+
+  // y*((exp(-2*pi*fc*t) - 1) / (exp(-pi*fc) - 1) - 0.5)
+  ((exp(t * fc * /* -2*$pi */ -6.2831853071795865) - 1) / (exp_fc - 1) - 0.5) * y;
+);
+
+/* function lfo_lpsqr_nonorm()
+  instance(dt, fc, exp_fc)
+  local(t, y)
+(
+  // Non-normalized [RMS = sqrt(coth(pi*fc/2) * (coth(pi*fc/2) - 2/(pi*fc)) * tanh(pi*fc/2)^2)]
+
+  t = dt * 0.5 + this.t;
+  this.lfo_inc();
+
+  t -= t|0;
+
+  t < 0.5 ? (
+    y = 2;
+  ) : (
+    y = -2;
+    t -= 0.5;
+  );
+
+  // y*((exp(-2*pi*fc*t) - 1) / (exp(-pi*fc) - 1) - 0.5) * tanh(pi*fc/2)
+  ((exp(t * fc * -2*$pi) - 1) / (exp_fc - 1) - 0.5) * (1 - exp_fc) / (1 + exp_fc) * y;
+); */
+
+// Low-pass filtered square approximations [DC = 0]
+
+function lfo_lpsqr2()
+  local(t)
+(
+  // "Triangle" [RMS = sqrt(105)/15]
+
+  t = this.t;
+  this.lfo_inc();
+
+  (abs(t * 2 - 1) * (t - 1) - t) * 4 + 3;
+);
+
+function lfo_lpsqr3()
+  local(t)
+(
+  // "Trapezoid" [RMS = 2/sqrt(7)]
+
+  t = this.t;
+  this.lfo_inc();
+
+  (t < 0.5 ? (
+    t = t * 2 - 1;
+    sqr(t)*t + 0.5;
+  ) : (
+    t = (1 - t) * 2;
+    sqr(t)*t - 0.5;
+  )) * 2;
+);
+
+function _lfo_lpsqr(n)
+  local(t)
+(
+  // RMS = sqrt(4/(2*n + 1) - 4/(n + 1) + 1)
+
+  t = this.t;
+  this.lfo_inc();
+
+  (t < 0.5 ? (
+    // 0.5 - pow(t * -2 + 1, n);
+    0.5 - exp(log(t * -2 + 1) * n);
+  ) : (
+    // pow((1 - t) * 2, n) - 0.5;
+    exp(log((1 - t) * 2) * n) - 0.5;
+  )) * 2;
+);
+
+// Integrated low-pass filtered square approximations [DC = 0]
+
+function lfo_intlpsqr2()
+  local(t)
+(
+  // RMS = sqrt(59 / (315 - 140*sqrt(2)))
+
+  // (32*t^3 - 48*t^2 + 12*t + 1) / (2*sqrt(2) - 1) = 0
+  t = this.t + 0.41503077834420436;
+  this.lfo_inc();
+
+  ((t -= t|0) < 0.5 ? ((-32*t + 48)*t - 12)*t - 1 : ((32*t - 96)*t + 84)*t - 21)
+  * /* 1/(2*sqrt(2) - 1) */ 0.54691816067802716;
+);
+
+function lfo_intlpsqr3()
+  local(t)
+(
+  // RMS = sqrt(164 / (45*(3*2^(2/3) - 2)^2))
+
+  // (64*t^4 - 128*t^3 + 96*t^2 - 16*t - 2) / (3*2^(2/3) - 2) = 0
+  t = this.t + 0.37399153968783991;
+  this.lfo_inc();
+
+  ((t -= t|0) < 0.5 ? (((64*t - 128)*t + 96)*t - 16)*t - 2 : (((-64*t + 256)*t - 384)*t + 240)*t - 50)
+  * /* 1/(3*2^(2/3) - 2) */ 0.36202985209916914;
+);
+
+// Half-wave low-pass filtered pulse
+
+function lfo_hwlowp()
+  instance(pw, fc)
+  local(t, x)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  t < pw ? 1 : (
+    // -2*(exp(-2*pi*fc*(t - pw)) - 1) / (exp(-2*pi*fc*(1 - pw)) - 1) + 1
+    x = fc * /* 2*$pi */ 6.2831853071795865;
+    (exp((pw - t) * x) - 1) / (exp((pw - 1) * x) - 1) * -2 + 1;
+  );
+);
+
+function lfo_hwlowp_dc()
+  instance(pw, fc)
+  local(x)
+(
+  pw < 1 && fc > 0 ? (
+    // pw + 1/(pi*fc) - (pw - 1)*coth(pi*fc*(pw - 1))
+    x = exp((pw - 1) * fc * /* 2*$pi */ 6.2831853071795865);
+    (1 + x) / (1 - x) * (pw - 1) + 1/(fc * $pi) + pw;
+  ) : pw;
+);
+
+/* function lfo_hwlowp_nonorm()
+  instance(pw, fc)
+  local(t)
+(
+  // Non-normalized
+
+  t = this.t;
+  this.lfo_inc();
+
+  t < pw ? 1 : (
+    // -2*(exp(-2*pi*fc*(t - pw)) - 1) / (exp(-2*pi) - 1) + 1
+    exp((pw - t) * fc * 2*$pi) * -2/(exp(-2*$pi) - 1) - (-2/(exp(-2*$pi) - 1) - 1);
+  );
+
+  // Alternate definition
+
+  // t < dt ? lp.lp = 1;
+  // t < pw ? 1 : lp.rc_lp(-1);
+);
+
+function lfo_hwlowp_nonorm_dc()
+  instance(pw, fc)
+  local(x)
+(
+  fc > 0 ? (
+    // pw + (pi*fc*(pw - 1) - exp(2*pi*(fc*(pw - 1) + 1)) + exp(2*pi)*(pi*fc*(pw - 1) + 1)) / ((exp(2*pi) - 1)*pi*fc)
+    x = (pw - 1) * fc * $pi;
+    (exp(x+x + 2*$pi) - x * (exp(2*$pi) + 1) - exp(2*$pi)) / (fc * (1 - exp(2*$pi)) * $pi) + pw;
+  ) : 1;
+); */
+
+// High-pass filtered square wave [DC = 0]
+
+function lfo_hpsqr()
+  instance(fc)
+  local(t, y)
+(
+  // Normalized [RMS = sqrt((1 - exp(-2*pi*fc)) / (2*pi*fc))]
+
+  t = this.t;
+  this.lfo_inc();
+
+  t < 0.5 ? (
+    y = 1;
+  ) : (
+    y = -1;
+    t -= 0.5;
+  );
+
+  // y * exp(-2*pi*fc*t)
+  exp(t * fc * /* -2*$pi */ -6.2831853071795865) * y;
+);
+
+/* function lfo_hpsqr_nonorm()
+  instance(fc, exp_fc)
+  local(t, y)
+(
+  // Non-normalized [RMS = sqrt((1 - exp(-2*pi*fc)) / (2*pi*fc) * (tanh(pi*fc/2) + 1)^2)]
+
+  t = this.t;
+  this.lfo_inc();
+
+  t < 0.5 ? (
+    y = 1;
+  ) : (
+    t -= 0.5;
+    y = -1;
+  );
+
+  // y*exp(-2*pi*fc*t) * (tanh(pi*fc/2) + 1)
+  y * exp(t * fc * -2*$pi) * ((1 - exp_fc) / (1 + exp_fc) + 1);
+); */
+
+// Square wave minus fundamental [DC = 0; RMS = sqrt(1 - 8/pi^2)]
+
+function lfo_sqrm1()
+  local(t, x)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // (t < 0.5) * 2 - 1 - _lfo_sin(t * 2*$pi) * 4/$pi;
+  x = (t * /* 24*sqrt(10)/(5*$pi) */ 4.8316043620307554 - /* 12*sqrt(10)/(5*$pi) */ 2.4158021810153777) * (abs(t - 0.5) - 0.5);
+  ((abs(x) * /* -$pi/2 */ -1.5707963267948966 - /* 31/(6*sqrt(10)) */ 1.6338434577536627)*x + (t < 0.5)) * 2 - 1;
+);
+
+// Modified square [DC = 0; RMS = sqrt(pw)]
+
+function lfo_sqr2()
+  instance(pw)
+  local(t)
+(
+  t = pw * -0.25 + this.t + 0.25;
+  this.lfo_inc();
+
+  (t = (t - (t|0)) * 2) < 1 ? (
+    1 - t <= pw;
+  ) : (
+    -(2 - t <= pw);
+  );
+
+  // Alternate definition
+
+  // lfo1.lfo_setdt(dt);
+  // lfo1.lfo_sync(t + 0.75 + 0.25*pw);
+
+  // lfo2.lfo_setdt(dt);
+  // lfo2.lfo_sync(t + 0.25 - 0.25*pw);
+
+  // (lfo1.lfo_sqr() + lfo2.lfo_sqr()) * 0.5;
+);
+
+// Rectangle [RMS = sqrt(4*pw - 4*pw^2)]
+
+function lfo_rect()
+  instance(pw)
+  local(t)
+(
+  t = /* pw * 0.5 + */ this.t /* + 0.75 */;
+  this.lfo_inc();
+
+  // t -= t|0;
+
+  (t < pw) * 2 - 1;
+
+  // Alternate definition
+
+  // lfo1.lfo_setdt(dt);
+  // lfo1.lfo_sync(t + 0.5 + 1 - pw);
+
+  // lfo2.lfo_setdt(dt);
+  // lfo2.lfo_sync(t + 0.5);
+
+  // lfo1.lfo_saw() - lfo2.lfo_saw();
+);
+
+function lfo_rect_dc()
+  instance(pw)
+(
+  pw * 2 - 1;
+);
+
+// Sawtooth [DC = 0; RMS = 1/sqrt(3)]
+
+function lfo_saw()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  (((t + 0.5)|0) - t) * -2;
+);
+
+// Ramp [DC = 0; RMS = 1/sqrt(3)]
+
+function lfo_ramp()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  t * -2 + 1;
+);
+
+// Integrated sawtooth [RMS = 4*sqrt(5)/15]
+
+function lfo_intsaw()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  ((t * -2 + 1) * (t >= 0.5) + sqr(t)) * 8 - 1;
+);
+
+function lfo_intsaw_dc()
+(
+  /* -1/3 */ -0.33333333333333333;
+);
+
+// Cubic sawtooth [DC = 0; RMS = 3*sqrt(70)/35]
+
+function lfo_cubsaw()
+  local(t)
+(
+  t = (this.t >= 0.5) - this.t;
+  this.lfo_inc();
+
+  (sqr(t) - 0.25)*t * /* 12*sqrt(3) */ 20.784609690826528;
+);
+
+// Sine sawtooth [DC = 0; RMS = 1/sqrt(2)]
+
+function lfo_sinsaw()
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // _lfo_sin((0.5 - t) * $pi);
+  t = (abs(t - 0.5) * /* 3*sqrt(10)/5 */ 1.8973665961010276 - /* 3*sqrt(10)/5 */ 1.8973665961010276) * (t - 0.5);
+  (abs(t) + /* 31/(6*sqrt(10)) */ 1.6338434577536627)*t;
+);
+
+// High-pass filtered sawtooth [RMS = sqrt((pi*fc*coth(pi*fc) - 1) / (pi*fc)^2)]
+
+function lfo_hpsaw()
+  instance(fc, exp_fc)
+  local(t)
+(
+  t = this.t + 0.5;
+  this.lfo_inc();
+
+  // 2*(exp(-2*pi*fc*(t - floor(t))) - 1) / (exp(-2*pi*fc) - 1) - 1
+  (exp((t - (t|0)) * fc * /* -2*$pi */ -6.2831853071795865) - 1) / (sqr(exp_fc) - 1) * 2 - 1;
+);
+
+function lfo_hpsaw_dc()
+  instance(fc)
+(
+  // Approximation
+  ((fc * 14.3 + 11.6) * fc + 8.044) * fc / (((fc * 14.3 + 16.39) * fc + 11.26) * fc + 7.686);
+);
+
+function lfo_hpsaw_dc_precise()
+  instance(fc)
+(
+  // coth(pi*fc) - 1/(pi*fc)
+  fc > 0 ? -2 / (exp(fc * /* -2*$pi */ -6.2831853071795865) - 1) - /* 1/$pi */ 0.31830988618379067 / fc - 1 : 0;
+);
+
+// High-pass filtered sawtooth approximation
+
+function lfo_hpsaw6()
+  local(t)
+(
+  // RMS = 12*sqrt(13)/91
+
+  t = 1.5 - this.t;
+  this.lfo_inc();
+
+  t -= t|0;
+  sqr(sqr(t)*t) * -2 + 1;
+);
+
+function lfo_hpsaw6_dc()
+(
+  /* 5/7 */ 0.71428571428571429;
+);
+
+function _lfo_hpsaw(n)
+  local(t)
+(
+  // RMS = sqrt(4*n^2 / ((n + 1)^2*(2*n + 1)))
+
+  t = 1.5 - this.t;
+  this.lfo_inc();
+
+  /* (t - (t|0))^n */ exp(log(t - (t|0)) * n) * -2 + 1;
+);
+
+function _lfo_hpsaw_dc(n)
+(
+  -2 / (n + 1) + 1;
+);
+
+// Sawtooth minus fundamental [DC = 0; RMS = sqrt(1/3 - 2/pi^2)]
+
+function lfo_sawm1()
+  local(t, x)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  // (((t + 0.5)|0) - t) * -2 - _lfo_sin(t * 2*$pi) * 2/$pi;
+  ((((t + 0.5)|0) - t) * $pi + _lfo_sin(t * /* 2*$pi */ 6.2831853071795865)) * /* -2/$pi */ -0.63661977236758134;
+);
+
+// Stepped sawtooth [DC = 0; RMS = sqrt((1 + 2/n) / 3)]
+
+function lfo_sawn()
+  instance(n)
+  local(t)
+(
+  t = this.t + 0.5;
+  this.lfo_inc();
+
+  (((n + 1) * (t - (t|0)))|0) / n * 2 - 1;
+);
+
+// Half-wave rectified sawtooth [RMS = sqrt(4/3*pw - pw^2)]
+
+function lfo_hwsaw()
+  instance(pw)
+  local(t)
+(
+  t = this.t + pw + 0.5;
+  this.lfo_inc();
+
+  ((t -= t|0) < pw ? t * 2/pw : 0) - 1;
+);
+
+function lfo_hwsaw_dc()
+  instance(pw)
+(
+  pw - 1;
+);
+
+// Hard sync sawtooth
+
+function lfo_hssaw()
+  instance(fc)
+  local(t)
+(
+  t = this.t + 0.5;
+  this.lfo_inc();
+
+  t = (t - (t|0)) * fc;
+  (t - (t|0)) * 2 - 1;
+);
+
+function lfo_hssaw_dc()
+  instance(fc)
+  local(x)
+(
+  fc > 0 ? (
+    x = fc - ceil(fc);
+    (sqr(x) + x) / fc;
+  ) : -1;
+);
+
+// Logit approximation [DC = 0; RMS = 1/sqrt(7)]
+
+function lfo_logit3()
+  local(t)
+(
+  t = this.t + 0.5;
+  this.lfo_inc();
+
+  t -= t|0;
+  ((t * 8 - 12)*t + 6)*t - 1;
+);
+
+// Staircase [RMS = 2/3*sqrt(pw - pw^2 + 1)]
+
+function lfo_stairs()
+  local(t)
+(
+  t = this.t * 4;
+  this.lfo_inc();
+
+  (t|0) * /* -2/3 */ -0.66666666666666667 + 1;
+
+  // Alternate definition
+
+  // lfo1.lfo_setdt(dt);
+  // lfo1.lfo_sync(t);
+
+  // lfo2.lfo_setdt(2*dt);
+  // lfo2.lfo_sync(2*t);
+
+  // (lfo1.lfo_sqr() + lfo2.lfo_sqr() * 0.5) * 2/3;
+);
+
+function lfo_stairs3()
+  instance(pw)
+  local(t)
+(
+  t = this.t * 2;
+  this.lfo_inc();
+
+  t < 1 ? (
+    t < pw ? 1 : /* 1/3 */ 0.33333333333333333;
+  ) : (
+    t < pw + 1 ? /* -1/3 */ -0.33333333333333333 : -1;
+  );
+
+  // Alternate definition
+
+  // lfo1.lfo_setdt(dt);
+  // lfo1.lfo_sync(t);
+
+  // lfo2.lfo_setdt(2*dt);
+  // lfo2.lfo_setpw(pw);
+  // lfo2.lfo_sync(2*t);
+
+  // (lfo1.lfo_sqr() + lfo2.lfo_rect() * 0.5) * 2/3;
+);
+
+function lfo_stairs3_dc()
+  instance(pw)
+(
+  pw * /* 2/3 */ 0.66666666666666667 - /* 1/3 */ 0.33333333333333333;
+);
+
+// Uneven staircase [DC = 0; RMS = 1/sqrt(2)]
+
+function lfo_stairs2()
+  instance(pw)
+  local(t)
+(
+  t = this.t * 2;
+  this.lfo_inc();
+
+  t - 1 < pw ? (t < pw) : -1;
+
+  // Alternate definition
+
+  // lfo1.lfo_setdt(dt);
+  // lfo1.lfo_sync(t);
+
+  // lfo2.lfo_setdt(2*dt);
+  // lfo2.lfo_setdt(pw);
+  // lfo2.lfo_sync(2*t);
+
+  // (lfo1.lfo_sqr() + lfo2.lfo_rect()) * 0.5;
+);
+
+function lfo_stairs2_dc()
+  instance(pw)
+(
+  pw - 0.5;
+);
+
+// Hammond 88 8000 000 [DC = 0; RMS =~ 0.48997485416305741]
+
+function lfo_ham()
+  local(t, y)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  t < 0.5 ? (
+    y = 0.079975130992322374;
+  ) : (
+    y = -0.079975130992322374;
+    t = 1 - t;
+  );
+
+  (t < 0.25 ? (
+    t < /* 1/6 */ 0.16666666666666667 ? (((28224*t - 10368)*t + 140)*t + 186)*t :
+    (((-18432*t + 20736)*t - 7816)*t + 1110)*t - 41;
+  ) : (
+    t < /* 1/3 */ 0.33333333333333333 ? (((-27648*t + 29952)*t - 11352)*t + 1726)*t - 82 :
+    (((19008*t - 32256)*t + 19932)*t - 5306)*t + 514;
+  )) * y;
+);
+
+// Sample and hold noise [DC = 0; RMS = 1/sqrt(3)]
+
+function lfo_sh()
+  instance(dt, sh)
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  t < dt ? sh = rand(2) - 1 : sh;
+);
+
+// Sample and hold X
+
+function lfo_sh2(x)
+  instance(dt, sh)
+  local(t)
+(
+  t = this.t;
+  this.lfo_inc();
+
+  t < dt ? sh = x : sh;
+);
+
+function lfo_yawn() ( 0 );
+
+// Deprecated
+
+function lfo_setfc_precise(freq) ( this.lfo_setfc(freq); );
+
+function _lfo_exp(x)
+(
+  // Approximation exp(x) =~ (1 + x/p)^p, where p = 2^n.
+  // n = 8;
+  abs(x) < /* (2 << n) - 2*$pi */ 505.71681469282041 ? (
+    x = x * /* 1/(1 << n) */ 0.00390625 + 1;
+    loop(/* n */ 8, x *= x); x;
+  ) : (
+    exp(x);
+  );
+);

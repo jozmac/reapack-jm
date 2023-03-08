@@ -1,0 +1,201 @@
+desc:ADSR envelope
+
+// Copyright (C) 2013-2017 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+/* Example
+
+   desc:Mono synth with ADSR
+
+   slider1:3<0,5000,1>Attack (ms)
+   slider2:1000<1,15000,1>Decay (ms)
+   slider3:-12.0<-120.0,24.0,1.0>Sustain (dB)
+   slider4:500<0,5000,1>Release (ms)
+
+   import Tale/adsr.jsfx-inc
+   import Tale/midi_queue.jsfx-inc
+   import Tale/poly_blep.jsfx-inc
+
+   @slider
+
+   adsr.adsr_seta(slider1 * 0.001);
+   adsr.adsr_setd(slider2 * 0.001);
+   adsr.adsr_sets(exp(log(10)/20 * slider3));
+   adsr.adsr_setr(slider4 * 0.001);
+
+   @sample
+
+   while(midi.midiq_recv()) (
+     midi.msg1 &= 0xF0;
+
+     // Note On
+     midi.msg1 == 0x90 && midi.msg3 ? (
+       osc.poly_setf(note = midi.msg2, 440);
+       // Attack
+       adsr.adsr_a(0.5 * midi.msg3 / 128);
+     ) :
+
+     // Note Off
+     midi.msg1 == 0x80 || midi.msg1 == 0x90 ? (
+       // Release
+       midi.msg2 == note ? adsr.adsr_r();
+     );
+   );
+
+   // Process ADSR envelope and apply it to oscillator.
+   adsr.adsr_process() ? spl0 = spl1 = adsr.env * osc.poly_saw();
+
+   Setting Functions
+
+    * adsr_seta(time) -- Attack
+    * adsr_setd(time) -- Decay
+    * adsr_sets(gain) -- Sustain
+    * adsr_setr(time) -- Release
+      Example: adsr.adsr_seta(0.003);
+      Sets the ADSR envelope time (specified in seconds) or the gain
+      [0.0..1.0] factor, and returns the coefficient or the gain factor.
+
+   Processing Functions
+
+    * adsr_a(scale) -- Attack
+      Example: adsr.adsr_a(1.0);
+      Starts processing the ADSR envelope, scaling it to [0.0..scale], and
+      returns the state.
+
+    * adsr_d()      -- Decay
+    * adsr_s()      -- Sustain
+    * adsr_r()      -- Release
+      Example: adsr.adsr_r();
+      Continues processing the ADSR envelope, and returns the state.
+
+    * adsr_process()
+      Example: state = adsr.adsr_process();
+      Processes the ADSR envelope, and returns its state.
+
+      Note: You should call this function from the @sample section.
+
+    * adsr_reset()
+      Example: adsr.adsr_reset();
+      Resets the ADSR envelope, and returns the state.
+
+   Instance Variables
+
+    * state
+      Example: released = !adsr.state;
+      The current state (1=attack, 2=decay, 4=sustain, 8=release, 0=off).
+
+    * env
+      Example: spl0 *= adsr.env;
+      The scaled ADSR envelope output.
+
+    * scale
+      Example: adsr2.adsr_a(adsr1.scale);
+      The current scale factor.
+
+*/
+
+@init
+
+function _adsr_set(time)
+(
+  1 / (0.2 * time * srate + 1);
+);
+
+function adsr_seta(time)
+  instance(a)
+(
+  a = _adsr_set(time);
+);
+
+function adsr_setd(time)
+  instance(d)
+(
+  d = _adsr_set(time);
+);
+
+function adsr_sets(gain)
+  instance(s)
+(
+  s = gain;
+);
+
+function adsr_setr(time)
+  instance(r)
+(
+  r = _adsr_set(time);
+);
+
+function adsr_reset()
+  instance(state, env)
+(
+  state = env = 0;
+);
+
+function adsr_r()
+  instance(state, r)
+(
+  r < 1 ? (
+    state = 8;
+  ) : (
+    this.adsr_reset();
+  );
+);
+
+function adsr_s()
+  instance(state, s, env, scale)
+(
+  env = scale * s;
+  state = 4;
+);
+
+function adsr_d()
+  instance(state, d)
+(
+  d < 1 ? (
+    state = 2;
+  ) : (
+    this.adsr_s();
+  );
+);
+
+function adsr_a(scale)
+  instance(state, a, env)
+(
+  this.scale = scale;
+
+  a < 1 ? (
+    state = 1;
+  ) : (
+    env = scale;
+    this.adsr_d();
+  );
+);
+
+function adsr_process()
+  instance(state, a, d, s, r, env, scale)
+(
+  state ? (
+
+    // Decay
+    state == 2 ? (
+      env += d * (scale * s - env);
+      abs(env - scale * s) <= scale * 0.000001 ? this.adsr_s();
+    ) :
+
+    // Release
+    state == 8 ? (
+      env += r * (0 - env);
+      abs(env) <= scale * 0.000001 ? this.adsr_reset();
+    ) :
+
+    // Attack
+    state == 1 ? (
+      env += a * (scale - env);
+      abs(env - scale) <= scale * exp(-5) ? this.adsr_d();
+    );
+  );
+
+  state;
+);

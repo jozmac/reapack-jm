@@ -1,0 +1,621 @@
+desc:Collection of window functions
+
+// Copyright (C) 2015-2017 Theo Niessink <theo@taletn.com>
+// This work is free. You can redistribute it and/or modify it under the
+// terms of the Do What The Fuck You Want To Public License, Version 2,
+// as published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
+
+// Window functions from Wikipedia (unless noted otherwise).
+// http://en.wikipedia.org/wiki/Window_function
+
+/* Example
+
+   desc:Low-pass windowed FIR filter
+   slider1:1000<20,20000,1>Cutoff (Hz)
+   slider2:1<0,1,1{Rectangle,Blackman}>Window
+
+   import Tale/window.jsfx-inc
+
+   @init
+
+   fir_len = floor(64 / 44100 * srate + 0.5);
+
+   in_ptr = in_buf = 0;
+   fir_buf = in_buf + fir_len * 2;
+
+   pdc_bot_ch = 0; pdc_top_ch = 2;
+   pdc_delay = floor(fir_len / 2);
+
+   @slider
+
+   // Source: http://www.labbookpages.co.uk/audio/firWindowing.html
+
+   m = fir_len - 1;
+   ft = min(0.5, slider1 / srate);
+
+   n = avg = 0;
+   loop(fir_len,
+     // Low-pass filter.
+     lpf = n != m/2 ? sin(2*$pi*ft*(n - m/2)) / ($pi*(n - m/2)) : 2*ft;
+
+     // Apply window.
+     slider2 >= 0.5 ? lpf *= wnd_blackman(n, fir_len);
+     avg += lpf;
+
+     fir_buf[n] = lpf;
+     n += 1;
+   );
+
+   scale = 1/avg;
+
+   @sample
+
+   // Buffer input.
+   (in_ptr -= 1) < in_buf ? (
+     in_ptr = in_buf + fir_len;
+     memcpy(in_ptr + 1, in_buf, m);
+   );
+   in_ptr[] = 0.5*(spl0 + spl1);
+
+   // Convolve with FIR filter.
+   sum = n = 0;
+   loop(fir_len,
+     sum += fir_buf[n] * in_ptr[n];
+     n += 1;
+   );
+
+   spl0 = spl1 = sum * scale;
+
+   Window Functions
+
+    * wnd_rect(i, n)                      -- Rectangular
+    * wnd_tri(i, n, l)                    -- Triangular
+    * wnd_bartlett(i, n)                  -- Bartlett
+    * wnd_parzen(i, n)                    -- Parzen
+    * wnd_welch(i, n)                     -- Welch
+
+    * wnd_hann(i, n)                      -- Hann
+    * wnd_hamming(i, n[, alpha, beta])    -- Hamming (default: alpha=0.54, beta=0.46)
+
+    * wnd_cos(i, n, a0..a2/a3/a4)         -- Higher-order generalized cosine
+    * wnd_blackman(i, n[, alpha])         -- Blackman (default: alpha=0.16)
+    * wnd_nuttall(i, n)                   -- Nuttall
+    * wnd_blackman_nuttall(i, n)          -- Blackman-Nuttall
+    * wnd_blackman_harris(i, n)           -- Blackman-Harris
+    * wnd_flat_top(i, n)                  -- SRS flat top
+    * wnd_rife_vincent1(i, n, order)      -- Rife-Vincent class I
+    * wnd_rife_vincent2(i, n, order, rho) -- Rife-Vincent class II
+    * wnd_rife_vincent3(i, n, order)      -- Rife-Vincent class III
+
+    * wnd_pow_cos(i, n, alpha)            -- Power-of-cosine
+    * wnd_cos(i, n)                       -- Cosine
+    * wnd_bohman(i, n)                    -- Bohman
+
+    * wnd_gauss(i, n, sigma)              -- Gaussian
+    * wnd_gauss_conf(i, n, sigma)         -- Confined Gaussian
+    * wnd_gauss(i, n, sigma, p)           -- Generalized normal
+    * wnd_tukey(i, n, alpha)              -- Tukey
+    * wnd_planck_taper(i, n, eps)         -- Planck-taper
+    * wnd_kaiser(i, n, alpha)             -- Kaiser
+    * wnd_dolph_chebyshev(i, n, alpha)    -- Dolph-Chebyshev
+    * wnd_poisson(i, n, alpha)            -- Poisson
+
+    * wnd_bartlett_hann(i, n)             -- Bartlett-Hann
+    * wnd_planck_bessel(i, n, eps, alpha) -- Planck-Bessel
+    * wnd_hann_poisson(i, n, alpha)       -- Hann-Poisson
+
+    * wnd_lanczos(i, n)                   -- Lanczos
+    * wnd_cauchy(i, n, alpha)             -- Cauchy
+    * wnd_connes(i, n, alpha)             -- Connes
+      Example: y = wnd_blackman(0, 1024);
+      Returns the normalized window function for integers i = [0..n-1],
+      n >= 16.
+
+   Miscellaneous Functions
+
+    * _wnd_i0(x)
+      Example: y = _wnd_i0(3*$pi);
+      Approximates the zero-th order modified Bessel function of the first
+      kind.
+
+    * _wnd_kaiser(i, n, alpha)
+      Example: y = _wnd_kaiser(0, 1024, 3);
+      Returns the non-normalized Kaiser window function. To normalize divide
+      by _wnd_i0($pi*alpha).
+
+*/
+
+@init
+
+// Rectangular (aka Dirichlet)
+
+function wnd_rect(i, n)
+(
+  1;
+);
+
+// Triangular
+
+// l == n || l == n+1 || l = n-1
+
+function wnd_tri(i, n, l)
+(
+  1 - abs((2*i - (n - 1)) / l);
+);
+
+// Bartlett (aka Fejer)
+
+// n >= 3
+
+function wnd_bartlett(i, n)
+(
+  // wnd_tri(i, n, n - 1);
+  1 - abs(2*i / (n - 1) - 1);
+);
+
+// Parzen (aka de la Vallee Poussin)
+
+function wnd_parzen(i, n) 
+(
+  n *= 0.5;
+  i = abs(i - (n - 0.5));
+
+  i < 0.5*n ? (
+    i = i / n;
+    1 - 6*i*i * (1 - i);
+  ) : (
+    i = 1 - i / n;
+    2*i*i*i;
+  );
+);
+
+// Welch (aka Riesz)
+
+function wnd_welch(i, n)
+(
+  1 - sqr(2*i / (n - 1) - 1);
+);
+
+// Generalized Hamming
+
+// alpha >= 0.5 && alpha <= 1.0, beta = 1.0 - alpha
+
+function wnd_hamming(i, n, alpha, beta)
+(
+  alpha - beta * cos(2*$pi * i / (n - 1));
+);
+
+// Hann (aka Hanning)
+
+function wnd_hann(i, n)
+(
+  // wnd_hamming(i, n, 0.5, 0.5);
+  0.5 * (1 - cos(2*$pi * i / (n - 1)));
+);
+
+// Hamming
+
+function wnd_hamming(i, n)
+(
+  wnd_hamming(i, n, 0.54, 0.46); // Original
+  // wnd_hamming(i, n, 25/46, 21/46); // Exact
+  // wnd_hamming(i, n, 0.53836, 0.46164); // Optimal
+);
+
+// Higher-order generalized cosine
+
+function wnd_cos(i, n, a0, a1, a2)
+(
+  i *= 2*$pi / (n - 1);
+  a0 - a1 * cos(i) + a2 * cos(2*i);
+);
+
+function wnd_cos(i, n, a0, a1, a2, a3)
+(
+  i *= 2*$pi / (n - 1);
+  a0 - a1 * cos(i) + a2 * cos(2*i) - a3 * cos(3*i);
+);
+
+function wnd_cos(i, n, a0, a1, a2, a3, a4)
+(
+  i *= 2*$pi / (n - 1);
+  a0 - a1 * cos(i) + a2 * cos(2*i) - a3 * cos(3*i) + a4 * cos(4*i);
+);
+
+// Blackman
+
+// alpha >= -0.25 && alpha <= 0.25
+
+function wnd_blackman(i, n, alpha)
+(
+  // wnd_cos(i, n, 0.5 * (1 - alpha), 0.5, 0.5 * alpha);
+  i *= 2*$pi / (n - 1);
+  0.5 * (1 - cos(i) - alpha * (1 - cos(2*i)));
+);
+
+function wnd_blackman(i, n)
+(
+  // wnd_blackman(i, n, 0.16); // Approximation
+  // wnd_cos(i, n, 7938/18608, 9240/18608, 1430/18608); // Exact
+
+  // Approximation
+  i *= 2*$pi / (n - 1);
+  0.42 - 0.5 * cos(i) + 0.08 * cos(2*i);
+);
+
+// Nuttall
+
+function wnd_nuttall(i, n)
+(
+  wnd_cos(i, n, 0.355768, 0.487396, 0.144232, 0.012604);
+);
+
+// Blackman-Nuttall
+
+function wnd_blackman_nuttall(i, n)
+(
+  wnd_cos(i, n, 0.3635819, 0.4891775, 0.1365995, 0.0106411);
+);
+
+// Blackman-Harris
+
+function wnd_blackman_harris(i, n)
+(
+  wnd_cos(i, n, 0.35875, 0.48829, 0.14128, 0.01168);
+);
+
+// Flat top
+
+function wnd_flat_top(i, n)
+(
+  // SRS flat top from Wikipedia.
+  // http://en.wikipedia.org/wiki/Window_function#Flat_top_window
+  wnd_cos(i, n, 1/4.636, 1.93/4.636, 1.29/4.636, 0.388/4.636, 0.028/4.636);
+
+  // Alternate flat top coefficients from:
+  // http://janroman.dhis.org/AFI/Python/spectrum/src/spectrum/window.py
+  // wnd_cos(i, n, 0.21557895, 0.41663158, 0.277263158, 0.083578947, 0.006947368);
+  // wnd_cos(i, n, 1/4.6402, 1.93/4.6402, 1.29/4.6402, 0.388/4.6402, 0.0322/4.6402);
+);
+
+// Rife-Vincent class I
+
+function wnd_rife_vincent1(i, n, order)
+  local(scale, sum, prod, j, k)
+(
+  // order == 1 ? wnd_hann(i, n) :
+  // order == 2 ? wnd_cos(i, n, 0.375, 0.5, 0.125) :
+  // order == 3 ? wnd_cos(i, n, 0.3125, 0.46875, 0.1875, 0.03125) :
+  // order == 4 ? wnd_cos(i, n, 0.2734375, 0.4375, 0.21875, 0.0625, 0.0078125);
+
+  // Source: http://www.mathworks.com/matlabcentral/fileexchange/46092-window-utilities/content/rifevwin.m
+
+  i *= 2*$pi / (n - 1);
+  scale = sum = 0;
+  j = 1;
+  loop(order,
+    prod = k = 1;
+    loop(j,
+      prod *= (order - k + 1) / (order + k);
+      k += 1;
+    );
+    scale += prod;
+    j & 1 ? prod = -prod;
+    sum += prod * cos(i*j);
+    j += 1;
+  );
+  (1 + 2*sum) / (1 + 2*scale);
+);
+
+// Rife-Vincent class II
+
+// rho = 10^(dB / 20)
+
+function wnd_rife_vincent2(i, n, order, rho)
+  local(lambda, sig2, scale, sum, prod, j, k)
+(
+  rho = 1/rho;
+  lambda = 1/$pi * log(rho + sqrt(sqr(rho) - 1)); // acosh(rho)/$pi
+  sig2 = sqr(order + 1) / (sqr(lambda) + sqr(order + 0.5));
+
+  i *= 2*$pi / (n - 1);
+  scale = sum = j = 1;
+  loop(order,
+    prod = k = 1;
+    loop(order,
+      prod *= 1 - sqr(j) / (sig2 * (sqr(lambda) + sqr(k - 0.5)));
+      k != j ? prod /= 1 - sqr(j) / sqr(k);
+      k += 1;
+    );
+    scale += abs(prod);
+    sum -= prod * cos(i*j);
+    j += 1;
+  );
+  sum / scale;
+);
+
+// Rife-Vincent class III
+
+function wnd_rife_vincent3(i, n, order)
+  local(scale, sum, prod, j, k)
+(
+  order == 1 ? wnd_hann(i, n) :
+  /* order == 2 ? wnd_blackman(i, n) : */ (
+
+  i *= 2*$pi / (n - 1);
+  scale = sum = 0;
+  j = 1;
+  loop(order >= 3 ? order -= 2 : 0,
+    prod = k = 1;
+    loop(j,
+      prod *= (order - k + 1) / (order + k);
+      k += 1;
+    );
+    scale += prod;
+    j & 1 ? prod = -prod;
+    sum += prod * cos(i*j);
+    j += 1;
+  );
+  (1 + 2*sum) / (1 + 2*scale) * (1/2.3937 - 1.19685/2.3937 * cos(i) + 0.19685/2.3937 * cos(2*i));
+));
+
+// Power-of-cosine
+
+// alpha >= 0
+
+function wnd_pow_cos(i, n, alpha)
+(
+  sin($pi * i / (n - 1))^alpha;
+);
+
+// Cosine (aka sine)
+
+function wnd_cos(i, n)
+(
+  // wnd_pow_cos(i, n, 1);
+  sin($pi * i / (n - 1));
+);
+
+// Bohman
+
+function wnd_bohman(i, n)
+( 
+  // Source: http://janroman.dhis.org/AFI/Python/spectrum/src/spectrum/window.py
+  i = abs(2*i / (n - 1) - 1);
+  (1 - i) * cos($pi * i) + sin($pi * i) / $pi;
+);
+
+// Gaussian
+
+// sigma > 0.0 && sigma <= 0.5
+
+function wnd_gauss(i, n, sigma)
+(
+  n = 0.5 * (n - 1);
+  exp(-0.5 * sqr((i - n) / (sigma * n)));
+);
+
+// Confined Gaussian (approximation)
+
+function _wnd_g(x, n, sigma)
+(
+  exp(-sqr((x - 0.5*(n - 1)) / (2*sigma)));
+);
+
+function wnd_gauss_conf(i, n, sigma)
+(
+  sigma *= n;
+  _wnd_g(i, n, sigma) - _wnd_g(-0.5, n, sigma) * (_wnd_g(i + n, n, sigma) + _wnd_g(i - n, n, sigma)) / (_wnd_g(-0.5 + n, n, sigma) + _wnd_g(-0.5 - n, n, sigma));
+);
+
+// Generalized normal
+
+// p > 0 && !(p & 1)
+
+function wnd_gauss(i, n, sigma, p)
+(
+  n = 0.5 * (n - 1);
+  exp(-(((i - n) / (sigma * n))^p));
+);
+
+// Tukey
+
+// alpha > 0.0 && alpha <= 1.0
+
+function wnd_tukey(i, n, alpha)
+  local(m)
+(
+  n -= 1;
+  alpha *= 0.5;
+  m = alpha * n;
+
+  /* i >= 0 && */ i < m ? 0.5 * (1 + cos($pi * (i / m - 1))) :
+  i <= n - m ? 1 :
+  /* i <= n ? */ 0.5 * (1 + cos($pi * (i / m - 1/alpha + 1)));
+);
+
+// Planck-taper
+
+// eps >= 0.0 && eps < 0.5
+
+function wnd_planck_taper(i, n, eps)
+  local(z)
+(
+  n -= 1;
+
+  /* i >= 0 && */ i < eps * n ? z = 2 * i/n :
+  i < (1 - eps) * n ? n = 0 :
+  /* i <= (n - 1) ? */ z = 2*(1 - i/n);
+
+  n ? 1/(exp(2*eps * (1/z + 1/(z - 2*eps))) + 1) : 1;
+);
+
+// Kaiser (aka Kaiser-Bessel)
+
+// alpha >= 0.0
+
+function _wnd_i0(x)
+  local(x2, fact, y, i)
+(
+  x2 = x = 0.25*x*x;
+  fact = y = i = 1;
+  loop(20,
+    y += x / (fact*fact);
+    x *= x2;
+    fact *= (i += 1);
+  );
+  y;
+);
+
+function _wnd_kaiser(i, n, alpha)
+(
+  _wnd_i0($pi * alpha * sqrt(1 - sqr(2*i / (n - 1) - 1)));
+);
+
+function wnd_kaiser(i, n, alpha)
+(
+  _wnd_kaiser(i, n, alpha) / _wnd_i0($pi * alpha);
+);
+
+// Dolph-Chebyshev
+
+function wnd_dolph_chebyshev(i, n, alpha)
+  local(beta, scale, sum, j, m, x, y)
+(
+  // Source: http://practicalcryptography.com/miscellaneous/machine-learning/implementing-dolph-chebyshev-window/
+  alpha = exp(log(10) * alpha);
+
+  // beta = cosh(1/(n - 1) * acosh(alpha))
+  beta = exp(1/(n - 1) * log(alpha + sqrt(sqr(alpha) - 1)));
+  beta = 0.5*(beta + 1/beta);
+
+  // Really, really slow!
+  scale = sum = 0;
+  j = 1;
+  m = (n & 1 ? n - 1 : n) / 2;
+  loop(m,
+    x = $pi * j/n;
+    y = beta * cos(x);
+
+    // Chebyshev polynomial of first kind.
+    abs(y) <= 1 ? (
+      y = cos((n - 1) * acos(y));
+    ) : (
+      // y = cosh((n - 1) * acosh(y))
+      y = exp((n - 1) * log(y + sqrt(sqr(y) - 1)));
+      y = 0.5*(y + 1/y);
+    );
+
+    scale += y;
+    sum += y * cos(2*x * (i - m));
+    j += 1;
+  );
+  (alpha + 2*sum) / (alpha + 2*scale);
+);
+
+// Poisson (exponential)
+
+// alpha >= 0.0
+
+function wnd_poisson(i, n, alpha)
+(
+  // Source: http://janroman.dhis.org/AFI/Python/spectrum/src/spectrum/window.py
+  exp(-2*abs(n * (i / (n - 1) - 0.5)) / n * alpha);
+);
+
+// Bartlett-Hann
+
+function wnd_bartlett_hann(i, n)
+(
+  i /= n - 1;
+  0.62 - 0.48 * abs(i - 0.5) - 0.38 * cos(2*$pi * i);
+);
+
+// Planck-Bessel
+
+function wnd_planck_bessel(i, n, eps, alpha)
+(
+  wnd_planck_taper(i, n, eps) * wnd_kaiser(i, n, alpha);
+);
+
+// Hann-Poisson (aka Poisson-Hanning)
+
+function wnd_hann_poisson(i, n, alpha)
+(
+  // wnd_hann(i, n) * wnd_poisson(i, n, alpha)
+  i /= n - 1;
+  0.5 * (1 - cos(2*$pi * i)) * exp(-2*abs(n * (i - 0.5)) / n * alpha);
+);
+
+// Cauchy
+
+// alpha >= 0.0
+
+function wnd_cauchy(i, n, alpha)
+(
+  // Source: http://janroman.dhis.org/AFI/Python/spectrum/src/spectrum/window.py
+  1/(1 + sqr(2*alpha * (i / (n - 1) - 0.5)));
+);
+
+// Lanczos (aka Riemann)
+
+function wnd_lanczos(i, n)
+  local(x)
+(
+  x = $pi * (2*i / (n - 1) - 1);
+  x < 0 || x > 0 ? sin(x)/x : 1;
+);
+
+// Connes
+
+// alpha >= 1
+
+function wnd_connes(i, n, alpha)
+(
+  // Source: https://reference.wolfram.com/language/ref/ConnesWindow.html
+  alpha = sqr(alpha);
+  sqr(-4*sqr(i / (n - 1) - 0.5) + alpha) / sqr(alpha);
+);
+
+// Legacy
+
+function wnd_gaussian(i, n, sigma) ( wnd_gauss(i, n, sigma) );
+function wnd_gaussian(i, n, sigma, p) ( wnd_gauss(i, n, sigma, p) );
+function wnd_rife_vincent(i, n, order) ( wnd_rife_vincent1(i, n, order) );
+
+function wnd_tri_avg(n, l) ( l == n + 1 ? 0.5 + 0.5 / (2 * ((n / 2)|0) + 1) : l == n-1 ? 0.5 - 0.5 / (2 * (((n + 1) / 2)|0) - 1) : l == n ? ( n & 1 ? 0.5 + 0.5 / sqr(n) : 0.5 ) );
+function wnd_bartlett_avg(n) ( 0.5 - 0.5 / (2 * (((n + 1) / 2)|0) - 1) );
+function wnd_parzen_avg(n) ( n & 1 ? 0.375 + 0.625 / sqr(sqr(n)) : n & 3 ? 0.375 - 2 / sqr(sqr(n)) : 0.375 );
+function wnd_welch_avg(n) ( 2/3 - 2/3 / (n - 1) );
+function wnd_hamming_avg(n, alpha, beta) ( /* n < 3 ? alpha - beta : */ alpha - beta / n );
+function wnd_hann_avg(n) ( wnd_hamming_avg(n, 0.5, 0.5) );
+function wnd_hamming_avg(n) ( wnd_hamming_avg(n, 0.54, 0.46) );
+function wnd_cos_avg(n, a0, a1, a2) ( /* n < 3 ? a0 - a1 + a2 : n < 4 ? a0 - 1/3 * a1 + a2 : */ a0 - (a1 - a2) / n );
+function wnd_cos_avg(n, a0, a1, a2, a3) ( /* n < 3 ? a0 - a1 + a2 - a3 : n < 4 ? a0 - 1/3 * (a1 + a3) + a2 : n < 5 ? a0 - 0.25 * (a1 - a2) - a3 : */ a0 - (a1 - a2 + a3) / n );
+function wnd_cos_avg(n, a0, a1, a2, a3, a4) ( /* n < 3 ? a0 - a1 + a2 - a3 + a4 : n < 4 ? a0 - 1/3 * (a1 + a3) + a2 + a4 : n < 5 ? a0 - 0.25 * (a1 - a2 - a4) - a3 : n < 6 ? a0 - 0.2 * (a1 - a2 + a3) + a4 : */ a0 - (a1 - a2 + a3 - a4) / n );
+function wnd_blackman_avg(n, alpha) ( /* n < 3 ? 0 : n < 4 ? 1/3 : */ 0.5 * (1 - alpha) * (1 - 1/n) );
+function wnd_blackman_avg(n) ( /* n < 3 ? 0 : n < 4 ? 1/3 : */ 0.42 - 0.42/n );
+function wnd_nuttall_avg(n) ( wnd_cos_avg(n, 0.355768, 0.487396, 0.144232, 0.012604) );
+function wnd_blackman_nuttall_avg(i, n) ( wnd_cos_avg(n, 0.3635819, 0.4891775, 0.1365995, 0.0106411) );
+function wnd_blackman_harris_avg(n) (  wnd_cos_avg(n, 0.35875, 0.48829, 0.14128, 0.01168) );
+function wnd_flat_top_avg(n) ( wnd_cos_avg(n, 1/4.636, 1.93/4.636, 1.29/4.636, 0.388/4.636, 0.028/4.636) );
+function wnd_bartlett_hann_avg(n) ( 0.12 - 0.12/n );
+
+function wnd_rife_vincent_avg(n, order)
+  local(scale, sum, prod, j, k)
+(
+  scale = sum = 0;
+  j = 1;
+  loop(order,
+    prod = k = 1;
+    loop(j,
+      prod *= (order - k + 1) / (order + k);
+      k += 1;
+    );
+    scale += prod;
+    j & 1 ? prod = -prod;
+    sum += prod;
+    j += 1;
+  );
+  (1 + 2*sum / n) / (1 + 2*scale);
+);

@@ -3,10 +3,7 @@
   <category name="Utility">
     <reapack name="Channel Mixer [JM].jsfx" type="effect">
       <version name="0.0.0">
-        <source file=".jsfx">https://github.com/wozek320/reapack-jm/blob/a94c6fa59d5437b6b64b6f4f6d2901a4b91ede02/Channel%20Mixer%20%5BJM%5D</source>
-      </version>
-      <version name="0.1.0">
-        <source file=".jsfx">https://github.com/leafac/reaper/raw/70dbcab08a5183cbc458c9ba2aa3cdd19569e7e3/Effects/leafac_Volume%20(Gain)%20(Trim)%20(Mixer%20Control%20Panel%20-%20MCP)%20(Track%20Control%20Panel%20-%20TCP).jsfx</source>
+        <source file="Channel Mixer [JM].jsfx">https://raw.githubusercontent.com/wozek320/reapack-jm/a94c6fa59d5437b6b64b6f4f6d2901a4b91ede02/Channel%20Mixer%20%5BJM%5D</source>
       </version>
     </reapack>
   </category>

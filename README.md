@@ -804,7 +804,7 @@ RefreshWindow() -- start the magic
 Add the following repository to [ReaPack](https://reapack.com):
 
 ```
-https://github.com/leafac/reaper/raw/main/index.xml
+https://raw.githubusercontent.com/wozek320/reapack-jm/master/index.xml
 ```
 
 If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E) (in particular, 11:26).

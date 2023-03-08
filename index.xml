@@ -3,7 +3,7 @@
   <category name="Utility">
     <reapack name="Channel Mixer [JM].jsfx" type="effect">
       <version name="0.0.0">
-        <source file="Channel Mixer [JM].jsfx">https://raw.githubusercontent.com/wozek320/reapack-jm/a94c6fa59d5437b6b64b6f4f6d2901a4b91ede02/Channel%20Mixer%20%5BJM%5D</source>
+        <source file="Channel Mixer [JM].jsfx">https://raw.githubusercontent.com/wozek320/reapack-jm/master/Effects/Channel%20Mixer%20%5BJM%5D</source>
       </version>
     </reapack>
   </category>

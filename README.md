@@ -807,7 +807,7 @@ Add the following repository to [ReaPack](https://reapack.com):
 https://raw.githubusercontent.com/wozek320/reapack-jm/master/index.xml
 ```
 
-If you’re new to this, check [this video]([https://youtu.be/gVbMbqGSB7E](https://youtu.be/gVbMbqGSB7E?t=367)).
+If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Multicam Editing
 

@@ -1,0 +1,167 @@
+desc:Chebyshev Saturator [JM]
+options: gfx_hz = 60;
+
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output
+
+slider1:0<-1,1,0.001>1
+slider2:0<-1,1,0.001>2
+slider3:0<-1,1,0.001>3
+slider4:0<-1,1,0.001>4
+slider5:0<-1,1,0.001>5
+slider6:0<-1,1,0.001>6
+slider7:0<-1,1,0.001>7
+slider8:0<-1,1,0.001>8
+slider9:0<-1,1,0.001>9
+
+slider10:0<0,1,1{Off,On}>Harm Mode
+slider11:0<0,1,0.00001>Harm
+slider12:0<-1,1,0.00001>Odd
+slider13:0<-1,1,0.00001>Even
+slider14:0<-1,1,0.00001>All
+slider15:0<0,1,1{Off,On}>1 Lead
+
+slider20:1<0,4,0.00001>Drive
+
+slider30:0<0,1,1{Off,On}>Rectify
+slider31:0<0,1,1{Off,On}>DC Filterz
+
+@init
+itm1=itm2=otm1=otm2=0;
+
+@slider
+slider_show(slider11,slider10);
+slider_show(slider12,slider10);
+slider_show(slider13,slider10);
+slider_show(slider14,slider10);
+slider_show(slider15,slider10);
+
+slider15 ? (x = slider1):(x = 1);
+drive = slider20;
+
+slider10 ? (
+slider2 = x/(2-1*slider11)*slider13*slider14;
+slider3 = x/(3-2*slider11)*slider12*slider14;
+slider4 = x/(4-3*slider11)*slider13*slider14;
+slider5 = x/(5-4*slider11)*slider12*slider14;
+slider6 = x/(6-5*slider11)*slider13*slider14;
+slider7 = x/(7-6*slider11)*slider12*slider14;
+slider8 = x/(8-7*slider11)*slider13*slider14;
+slider9 = x/(9-8*slider11)*slider12*slider14;
+);
+
+h1 = slider1;
+h2 = slider2;
+h3 = slider3;
+h4 = slider4;
+h5 = slider5;
+h6 = slider6;
+h7 = slider7;
+h8 = slider8;
+h9 = slider9;
+
+rectify  = slider30;
+filterdc = slider31;
+
+@sample
+spl0 *= drive;
+spl1 *= drive;
+rectify ? (
+  rect0 = rect1 = 1;
+  rect0 *= sign(spl0);
+  rect1 *= sign(spl1);
+):(rect0 = rect1 = 1);
+
+/*
+s20 = spl0^2;
+s21 = spl1^2;
+s30 = spl0^3;
+s31 = spl1^3;
+s40 = spl0^4;
+s41 = spl1^4;
+s50 = spl0^5;
+s51 = spl1^5;
+s60 = spl0^6;
+s61 = spl1^6;
+s70 = spl0^7;
+s71 = spl1^7;
+s80 = spl0^8;
+s81 = spl1^8;
+s90 = spl0^9;
+s91 = spl1^9;
+//*/
+
+//*
+s20 = 2*spl0^2 - 1;
+s21 = 2*spl1^2 - 1;
+s30 = 4*spl0^3 - 3*spl0;
+s31 = 4*spl1^3 - 3*spl1;
+s40 = 8*spl0^4 - 8*spl0^2 + 1;
+s41 = 8*spl1^4 - 8*spl1^2 + 1;
+s50 = 16*spl0^5 - 20*spl0^3 + 5*spl0;
+s51 = 16*spl1^5 - 20*spl1^3 + 5*spl1;
+s60 = 32*spl0^6 - 48*spl0^4 + 18*spl0^2 - 1;
+s61 = 32*spl1^6 - 48*spl1^4 + 18*spl1^2 - 1;
+s70 = 64*spl0^7 - 112*spl0^5 + 56*spl0^3 - 7*spl0;
+s71 = 64*spl1^7 - 112*spl1^5 + 56*spl1^3 - 7*spl1;
+s80 = 128*spl0^8 - 256*spl0^6 + 160*spl0^4 - 32*spl0^2 + 1;
+s81 = 128*spl1^8 - 256*spl1^6 + 160*spl1^4 - 32*spl1^2 + 1;
+s90 = 256*spl0^9 - 576*spl0^7 + 432*spl0^5 - 120*spl0^3 + 9*spl0;
+s91 = 256*spl1^9 - 576*spl1^7 + 432*spl1^5 - 120*spl1^3 + 9*spl1;
+//*/
+
+
+
+spl0 = rect0 * (h1*spl0 + h2*s20 + h3*s30 + h4*s40 + h5*s50 + h6*s60 + h7*s70 + h8*s80 + h9*s90)/drive; 
+spl1 = rect1 * (h1*spl1 + h2*s21 + h3*s31 + h4*s41 + h5*s51 + h6*s61 + h7*s71 + h8*s81 + h9*s91)/drive; 
+
+filterdc ? (
+  otm1=0.999*otm1 + spl0 - itm1; itm1=spl0; spl0=otm1;
+  otm2=0.999*otm2 + spl1 - itm2; itm2=spl1; spl1=otm2;
+);
+
+
+
+@gfx
+  t = slider4;
+  gfx_clear = 0;
+  gfx_a = 1;
+
+  gfxw2 = gfx_w * 0.5;
+  gfxh2 = gfx_h * 0.5;
+
+  gfx_r=.5; gfx_g=0; gfx_b=0;
+  gfx_x=0; gfx_y=gfxh2;
+  gfx_lineto(gfx_w,gfxh2,0);
+  gfx_x=gfxw2; gfx_y=0;
+  gfx_lineto(gfxw2,gfx_h,0);
+  n = -1;
+  nadd = 2 / gfx_w;
+  x = 0;
+  loop( gfx_w,
+    //n *= drive;
+    //y = (h1*n + h2*(n^2) + h3*(n^3) + h4*(n^4) + h5*(n^5) + h6*(n^6) + h7*(n^7) + h8*(n^8) + h9*(n^9))/drive;
+    y = (
+    h1*n + 
+    h2*(2*n^2 - 1) +
+    h3*(4*n^3 - 3*n) +
+    h4*(8*n^4 - 8*n^2 + 1) +
+    h5*(16*n^5 - 20*n^3 + 5*n) +
+    h6*(32*n^6 - 48*n^4 + 18*n^2 - 1) +
+    h7*(64*n^7 - 112*n^5 + 56*n^3 - 7*n) +
+    h8*(128*n^8 - 256*n^6 + 160*n^4 - 32*n^2 + 1) +
+    h9*(256*n^9 - 576*n^7 + 432*n^5 - 120*n^3 + 9*n))/drive;
+    
+    
+    gfx_x = x;
+    gfx_y = ( gfxh2 - (y * gfxh2) );
+    gfx_setpixel(1,1,1); 
+    n += nadd;
+    x += 1;
+    ((b>0) && (n>0)) ? t += ((a - t) / b);
+  );
+  
+  gfx_set(1,1,1,0.2);
+  gfx_line(0,gfx_h,gfx_w,0);

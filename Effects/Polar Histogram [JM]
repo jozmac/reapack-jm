@@ -1,0 +1,1028 @@
+desc:Polar Histogram [JM]
+options: gfx_hz = 60;
+
+//slider1:50<0,100,1>Width
+//slider2:5<0,10,1>Height
+//slider3:5<0,10,1>X
+//slider4:10<0,64,1>Y
+slider5:0<0,1,0.0001>-BG Color
+slider6:0.75<0,1,0.01>-Alpha
+slider7:12<0,360,1>-Hue
+slider8:0.75<0,1,0.01>-Saturation
+slider9:1<0,1,0.01>-Value
+
+slider10:64<0,1024,1>Bins
+slider11:0<-1,1,0.0001>-AVG
+slider12:0.2<0,1,0.0001>-STD
+slider13:1<0,1,0.0001>-Hight
+
+slider16:1<0,1,1{Off,On}>-dB scale
+slider17:16<0,32,1>-Bit Depth
+
+slider30:1<0,64,1>-Horiz Lines
+slider31:0<0,1,0.001>-Scale Y
+slider32:0<0,1,0.001>Scale X
+//slider33:0<0,1,0.001>Attenuate
+slider33:0<0,1,0.001>Bin Decay
+slider34:0<0,1,1{Off,On}>-Gaussian
+slider35:0<0,1,1{Off,On}>-Difference
+slider36:1<0,1,1{Off,On}>Squared Mode
+slider37:1<0,1,1{Off,On}>Vectorscope
+
+import Tale/window.jsfx-inc
+
+in_pin:left input
+in_pin:right input
+options: no_meter;
+
+@init
+log10_2 = log10(2.0);
+pi = $pi;
+pi2 = 2*$pi;
+sqrt2pi = sqrt(2.0*$pi);
+sqrt2 = sqrt(2);
+Angle = 2*$pi/16;
+rotCosAngle = cos(Angle);
+rotSinAngle = sin(Angle);
+gfx_ext_retina=1.0;
+//ext_nodenorm=1;
+//ext_noinit=1;
+//gfx_clear=-1;
+//gfx_clear=0;
+//count = 0;
+minabs0 = minabs1 = 1;
+
+
+//buffer_length = srate/100;
+buffer_length = srate/4; /// Set to /8 and check missed samples
+//buffer_length = 1024;
+buffer_index = 0;
+freemem = (input_buffer     = freemem) + buffer_length*2;
+freemem = (input_buffer_cpy = freemem) + buffer_length*2;
+freemem = (pdf_buffer = freemem) + 2^10;
+freemem = (pdffast_buffer = freemem) + 2^10;
+freemem = (pdfpeak_buffer = freemem) + 2^10;
+
+function log2(x)
+(
+    log(x) / log(2);
+);
+
+function dbtoa(db)
+(
+    pow(10.0, db * 0.05);
+);
+
+function atodb(amp)
+(
+    20.0 * log10(amp);
+);
+
+function wrap(input mini maxi)
+(
+    while (input < mini) (
+        input += mini;
+    );
+    while (input >= maxi) (
+        input -= maxi;
+    );
+    input;
+);
+
+function clip(input mini maxi)
+(
+    max(min(input, maxi), mini);
+);
+
+function scale(x xmin xmax ymin ymax ex) //midi slider (0-127 linear) to a frequency scale (20-20000 exponential).
+(
+    x -= xmin;
+    x /= (xmax - xmin);
+    x ^= ex;
+    x *= (ymax - ymin);
+    x + ymin;
+);
+
+function moveto (x,y) (
+  gfx_x = x; gfx_y = y;
+);
+
+function moveby (x,y) (
+  gfx_x += x; gfx_y += y;
+);
+
+function movetopolar (x,y,radius,angle) (
+  gfx_x = x+sin(angle)*radius;
+  gfx_y = y-cos(angle)*radius;
+);
+
+function movebypolar (x,y,radius,angle) (
+  gfx_x += x+sin(angle)*radius;
+  gfx_y += y-cos(angle)*radius;
+);
+
+function linepolar (x,y,radius,angle,aa) (
+  gfx_line(x,y,x+sin(angle)*radius,y-cos(angle)*radius,aa);
+);
+
+function linetopolar (radius,angle,aa) (
+  gfx_lineto(gfx_x + sin(angle)*radius,gfx_y - cos(angle)*radius,aa);
+);
+
+function HSBtoRGB(hue,saturation,value,alpla) 
+ local (r,g,b,h,f,v,p,q,t) 
+( 
+   ( hue > 360) ? ( hue = hue % 360;) 
+   :( hue < 0 ) ? ( hue = hue % 360 ;); 
+   saturation = min ( max(saturation,0),1); 
+   v = floor( 255 * value); 
+   v = min ( max(v,0),255); 
+   (saturation == 0)? 
+   ( 
+   r = v ; g = v; b = v; 
+   ):( 
+   h = floor( hue / 60); 
+   f = hue / 60-h; 
+   p = floor( v * (1-saturation)); 
+   p = min ( max(p,0),255); 
+   q = floor( v * (1-f * saturation)); 
+   q = min ( max(q,0),255); 
+   t = floor( v * (1-(1-f) * saturation)); 
+   t = min ( max(t,0),255); 
+   (h==0)?(r=v;g=t;b=p;) 
+   :(h==1)?(r=q;g=v;b=p;) 
+   :(h==2)?(r=p;g=v;b=t;) 
+   :(h==3)?(r=p;g=q;b=v;) 
+   :(h==4)?(r=t;g=p;b=v;) 
+   :(h==5)?(r=v;g=p;b=q;) 
+   :( r=v;g=t;b=p;); 
+   ); 
+   this.r = r; 
+   this.g = g; 
+   this.b = b; 
+   this.a = a; 
+   //gfx_r = r/255;
+   //gfx_g = g/255;
+   //gfx_b = b/255;
+   gfx_set(r/255, g/255, b/255, a);
+); 
+
+@slider
+w = slider1;
+h = slider2;
+x = slider3;
+y = slider4;
+
+b = slider5;
+a = slider6;
+h = slider7;
+s = slider8;
+v = slider9;
+
+n = slider10+1;
+average = slider11;
+std = slider12;
+hight = slider13;
+dBscale = slider16;
+bitDepth = slider17;
+attenuate = (1-slider33);
+gaussian = slider34;
+difference = slider35;
+squared_mode = slider36;
+vectorscope = slider37;
+
+horiz = slider30;
+scaley = 1-slider31;
+scalex = 1-slider32;
+//scaley = slider31;
+//scalex = slider32;
+
+
+@block
+
+
+@sample
+
+max0 = max(max0,spl0);
+max1 = max(max1,spl1);
+min0 = min(min0,spl0);
+min1 = min(min1,spl1);
+spl0 ? minabs0 = min(minabs0,abs(spl0));
+spl1 ? minabs1 = min(minabs1,abs(spl1));
+
+//*
+squared_mode ? (
+  ch0 = rotCosAngle*spl0-rotSinAngle*spl1;
+  ch1 = rotSinAngle*spl0+rotCosAngle*spl1;
+  spl0 = ch0;
+  spl1 = ch1;
+  
+  x = (spl1 - spl0);
+  y = (spl0 + spl1);
+  xx = x*x;
+  yy = y*y;
+  xy = x*y;
+  //xy_inv_mag = 1/sqrt(xx + yy);
+  xy_inv_mag = 1/sqrt(2*(xx + yy));
+  spl0 = (yy - xx)*xy_inv_mag;
+  spl1 = 2*xy*xy_inv_mag;
+  
+  //spl0 = atan2(spl1,spl0)/pi;
+);
+//*/
+
+
+/*
+    mag = pow(10, reference_db/20);
+    cx = imgW*0.5;
+    cy = imgH*0.5;
+    cr = min(imgW, imgH)*0.45/2;
+    x = cx + x*cr/mag;
+    y = cy - y*cr/mag;
+//*/
+
+/*
+dBscale ? (
+  !spl0 ? (
+    spl0 = 0;
+  ):(
+    //spl0 = sign(spl0) * log10(2^bitDepth * abs(spl0))/(bitDepth*log10_2);
+    spl0 = sign(spl0) * abs(spl0)^scalex;
+  );
+  
+  !spl1 ? (
+    spl1 = 0;
+  ):(
+    //spl1 = sign(spl1) * log10(2^bitDepth * abs(spl1))/(bitDepth*log10_2);
+    spl1 = sign(spl1) * abs(spl1)^scalex;
+  );
+);
+//*/
+
+
+//spl0 = atan2(spl1,spl0)/pi - 0.25; spl0 < 0 ? (spl0+2);
+
+/*
+      x = (spl1 - spl0);
+      y = (spl0 + spl1);
+      //display_mode_squared ? (
+        xx = x*x;
+        yy = y*y;
+        xy = x*y;
+        xy_inv_mag = 1/sqrt(xx + yy);
+        spl0 = (yy - xx)*xy_inv_mag;
+        spl1 = 2*xy*xy_inv_mag;
+      //);
+//*/
+
+/*
+      x = (buffer1[i] - buffer0[i]);
+      y = (buffer0[i] + buffer1[i]);
+      display_mode_squared ? (
+        xx = x*x;
+        yy = y*y;
+        xy = x*y;
+        xy_inv_mag = 1/sqrt(xx + yy);
+        y = (yy - xx)*xy_inv_mag;
+        x = 2*xy*xy_inv_mag;
+      );
+//*/ 
+      
+      
+/*
+    spl0 ? (spl0 = sign(spl0) * abs(spl0)^scalex):(spl0 = 0);
+    spl1 ? (spl1 = sign(spl1) * abs(spl1)^scalex):(spl1 = 0);
+//*/
+
+
+//abs(spl0)>0.000000000000001 ? (input_buffer[buffer_index*2  ] = spl0;):(input_buffer[buffer_index*2  ] = 0);
+//abs(spl1)>0.000000000000001 ? (input_buffer[buffer_index*2+1] = spl1;):(input_buffer[buffer_index*2+1] = 0);
+input_buffer[buffer_index*2  ] = spl0;
+input_buffer[buffer_index*2+1] = spl1;
+sum0 += spl0;
+sum1 += spl1;
+avg0 = sum0/count;
+avg1 = sum1/count;
+avg = (avg0+avg1)/2;
+
+
+
+//buffer_index += 1;
+buffer_index = (buffer_index + 1)%buffer_length;
+count += 1;
+
+
+@gfx
+//back = 0.317; back_a = 1;
+//b = 0.0;
+gfx_set(b,b,b,1);
+gfx_rect(0,0,gfx_w,gfx_h);
+
+
+/// dB lines ///
+gfx_set(0.5,1,0.5,0.6);
+gfxw2 = gfx_w/2;
+gfxh2 = gfx_h/2;
+centre = min(gfxw2,gfxh2);
+gfx_x = gfxw2; gfx_y = gfxh2;
+gfx_setpixel(0.5,1,0.5);
+//gfx_line(centre,0,centre,gfx_h);
+gfx_set(1,1,1,0.3);
+//gfx_set(0,0,0,1);
+i = 0;
+//loop(12,
+loop(16,
+  shift = centre/((2^i)^scalex);
+  gfx_circle(gfxw2,gfxh2,shift);
+  i+=1;
+);
+
+gfx_set(1,1,1,0.6);
+i = 8;
+loop(4,
+  shift = centre/((2^i)^scalex);
+  gfx_circle(gfxw2,gfxh2,shift);
+  i+=8;
+);
+
+//*
+gfx_set(1,1,1,0.8);
+i = 64;
+loop(1,
+  shift = centre/((2^i)^scalex);
+  gfx_circle(gfxw2,gfxh2,shift);
+  i+=8;
+);
+//*/
+
+centre > 125 ? (
+  //gfx_set(0.5,0.5,1,0.2);
+  gfx_set(1,1,1,0.1);
+  //centre = gfx_w/2;
+  i = 0;
+  //loop(64,
+  loop(13,
+    shift = centre/((10^i)^scalex);
+    gfx_circle(gfxw2,gfxh2,shift);
+    i+=0.05;
+  );
+);
+
+centre > 256 ? (
+  //gfx_set(0.5,0.5,1,0.1);
+  gfx_set(1,1,1,0.1);
+  //centre = gfx_w/2;
+  i = 0;
+  //loop(64,
+  loop(21,
+    shift = centre/((10^i)^scalex);
+    gfx_circle(gfxw2,gfxh2,shift);
+    i+=0.005;
+  );
+);
+
+/* /// one sample level ///
+gfx_set(1-b,1-b,1-b,1);
+i = 1;
+loop(horiz,
+  oneheight = gfx_h*(i/maxspl)^scaley;
+  //gfx_line(0,oneheight,gfx_w,oneheight);
+  //gfx_circle(gfxw2,gfxh2,oneheight);
+  i+=1;
+);
+//*/
+
+
+
+//* /// Clear buffer ///
+mouse_cap ? (
+  memset(pdf_buffer, 0, n*2);
+  memset(pdffast_buffer, 0, n*2);
+  memset(pdfpeak_buffer, 0, n*2);
+  count = count0 = count1 = count01 = sum0 = sum1 = sum00 = sum11 = min0 = min1 = max0 = max1 = 0;
+  minabs0 = minabs1 = 1;
+  oldscalex = scalex;
+);
+//*/
+
+/// Bin decay ///
+i = 0;
+loop(n*2,
+  pdf_buffer[i] *= attenuate;
+  i += 1;
+);
+
+
+/* /// Distribute values ///
+buffer_index_buffer = buffer_index;
+buffer_index_max = max(buffer_index_max,buffer_index);
+buffer_index = 0;
+memcpy(input_buffer_cpy, input_buffer, buffer_length*2);
+//memset(input_buffer, 2, buffer_length*2);
+  j = 0;
+  loop(buffer_index_buffer,
+    i = 0;
+    loop(n,
+      ((input_buffer_cpy[j*2  ] >= ((2*i)/n)-1) && (input_buffer_cpy[j*2  ] <= ((2*(i+1))/n)-1)) ? (pdf_buffer[i  ] += 1);
+      ((input_buffer_cpy[j*2+1] >= ((2*i)/n)-1) && (input_buffer_cpy[j*2+1] <= ((2*(i+1))/n)-1)) ? (pdf_buffer[i+n] += 1);
+      i += 1;
+    );
+    j += 1;
+  );
+//*/
+
+//* /// Distribute values ///
+buffer_index_buffer = buffer_index;
+buffer_index_max = max(buffer_index_max,buffer_index);
+buffer_index = 0;
+memcpy(input_buffer_cpy, input_buffer, buffer_length*2);
+//memset(input_buffer, 2, buffer_length*2);
+  j = 0;
+  loop(buffer_index_buffer,
+    i = 0;
+    loop(n,
+      L = input_buffer_cpy[j*2  ];
+      R = input_buffer_cpy[j*2+1];
+      mag = sqrt(L^2+R^2);
+      ang = atan2(R,L)/pi;
+      //((L >= ((2*i)/n)-1) && (L <= ((2*(i+1))/n)-1)) ? (pdf_buffer[i  ] += 1);
+      //((R >= ((2*i)/n)-1) && (R <= ((2*(i+1))/n)-1)) ? (pdf_buffer[i+n] += 1);
+      //((ang >= ((2*(i-1/2))/(n-1))-1) && (ang <= ((2*(i+1/2))/(n-1))-1)) ? (pdf_buffer[i  ] += mag);
+      ((ang >= ((2*(i-1/2))/(n-1))-1) && (ang <= ((2*(i+1/2))/(n-1))-1)) ? (
+        (pdf_buffer[i] += mag);
+        (pdffast_buffer[i] += mag);
+        (pdfpeak_buffer[i] = max(mag,pdfpeak_buffer[i]));
+      );
+      i += 1;
+    );
+    j += 1;
+  );
+//*/
+
+/// Bin decay ///
+i = 0;
+loop(n*2,
+  pdffast_buffer[i] *= 0.75;
+  i += 1;
+);
+
+/* /// Distribute values ///
+  j = 0;
+  loop(buffer_index_buffer,
+    i = 0;
+    loop(n,
+      L = input_buffer_cpy[j*2  ];
+      R = input_buffer_cpy[j*2+1];
+      mag = sqrt(L^2+R^2);
+      ang = atan2(R,L)/pi;
+      ((ang >= ((2*(i-1/2))/(n-1))-1) && (ang <= ((2*(i+1/2))/(n-1))-1)) ? (pdffast_buffer[i  ] += mag);
+      i += 1;
+    );
+    j += 1;
+  );
+//*/
+
+
+//*   
+  /// Calculate max values ///
+  i = 0;
+  maxspl = 0;
+  loop(n,
+    //maxspl = max(maxspl,pdf_buffer[i]);
+    maxspl < pdf_buffer[i] ? (maxspl = pdf_buffer[i]; maxbin = i);
+    i += 1;
+  );
+//*/
+
+//*   
+  /// Calculate max fast values ///
+  i = 0;
+  maxsplfast = 0;
+  loop(n,
+    //maxspl = max(maxspl,pdf_buffer[i]);
+    maxsplfast < pdffast_buffer[i] ? (maxsplfast = pdffast_buffer[i]; maxbinfast = i);
+    i += 1;
+  );
+//*/
+
+//*   
+  /// Calculate max peak values ///
+  i = 0;
+  maxsplpeak = 0;
+  loop(n,
+    //maxspl = max(maxspl,pdf_buffer[i]);
+    maxsplpeak < pdfpeak_buffer[i] ? (maxsplpeak = pdfpeak_buffer[i]; maxbinpeak = i);
+    i += 1;
+  );
+//*/
+
+/*  
+  i = 0;
+  maxspl0 = 0;
+  loop(n,
+    //maxspl = max(maxspl,pdf_buffer[i]);
+    maxspl0 < pdf_buffer[i] ? (maxspl0 = pdf_buffer[i]; maxbin0 = i);
+    i += 1;
+  );
+  
+  i = 0;
+  maxspl1 = 0;
+  loop(n,
+    //maxspl = max(maxspl,pdf_buffer[i]);
+    maxspl1 < pdf_buffer[i+n] ? (maxspl1 = pdf_buffer[i+n]; maxbin1 = i);
+    i += 1;
+  );
+  
+  //maxspl0 < maxspl1 ? (height0 = maxspl0/maxspl1; height1 = 1):(height1 = maxspl1/maxspl0; height0 = 1);
+//*/
+
+//*      /// Vectorscope ///
+vectorscope ? (
+  i = 0;
+  loop(buffer_index_buffer,
+    point_angle = atan2(input_buffer_cpy[i*2],input_buffer_cpy[i*2+1])-7*pi/4;
+    point_radius = sqrt(sqr(input_buffer_cpy[i*2])+sqr(input_buffer_cpy[i*2+1]))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+    gfx_a = 0.5;
+    gfx_setpixel(1,1,1);
+    i+=1;
+  );
+);
+//*/
+
+
+//*     /// Mean Goniometer ///
+  gfx_set(1,1,1,1,0); 
+  HSBtoRGB(70,0.75,1,a);
+  i = 1;
+  //buff = (-pdf_buffer[i]+1)^(scalex);
+  buff = (((pdf_buffer[0]+pdf_buffer[n-1])/maxspl))^(scalex);
+  movetopolar(gfxw2,gfxh2,buff*centre,pi-pi/4);
+  //movetopolar(gfxw2,gfxh2,0,pi-pi/4);
+  firstx=gfx_x; firsty=gfx_y;
+  oldx=gfx_x; oldy=gfx_y;
+  loop(n-2,
+  //loop(n,
+    //buff = pdf_buffer[i]^(1/scalex);
+    buff = ((pdf_buffer[i]/maxspl))^(scalex);
+    //xval = (1-buff/maxspl);
+    //movetopolar(gfxw2,gfxh2,buff/maxspl*centre,i*pi2/(n-1)-pi/4+pi);
+    movetopolar(gfxw2,gfxh2,buff*centre,i*pi2/(n-1)-pi/4+pi);
+    //movetopolar(gfxw2,gfxh2,buff/maxspl*centre,i*pi2/n+pi);
+    gfx_line(oldx,oldy,gfx_x,gfx_y);
+    //gfx_setpixel(1,1,1);
+    oldx=gfx_x; oldy=gfx_y;
+    //lineptoolar (xval,i*pi2/n,aa);
+    //gfx_rectto(floor((gfx_w*(i+1))/n),(gfx_h*(1-pdf_buffer[i]/maxspl)^(scaley)));
+    //gfx_rectto(floor((gfx_w*(i+1))/n),(gfx_h*xval*(1/xval)^(scaley)));
+    //buff ? gfx_rectto(floor((gfx_w*(i+1))/n),gfx_h-(gfx_h*((-xval+1)^scaley)-1));
+    //gfx_rect(floor(((gfx_w*i)/n)),0,gfx_w/n,floor(gfx_h*(1-i[]/maxspl)));
+    i += 1;
+  );
+  gfx_line(oldx,oldy,firstx,firsty);
+//*/
+
+
+//*      /// Fast Goniometer ///
+  gfx_set(1,1,1,1,0); 
+  HSBtoRGB(220,0.75,1,a);
+  i = 1;
+  buff = (((pdffast_buffer[0]+pdffast_buffer[n-1])/maxsplfast))^(scalex);
+  movetopolar(gfxw2,gfxh2,buff*centre,pi-pi/4);
+  firstx=gfx_x; firsty=gfx_y;
+  oldx=gfx_x; oldy=gfx_y;
+  loop(n-2,
+    buff = ((pdffast_buffer[i]/maxsplfast))^(scalex);
+    movetopolar(gfxw2,gfxh2,buff*centre,i*pi2/(n-1)-pi/4+pi);
+    gfx_line(oldx,oldy,gfx_x,gfx_y);
+    oldx=gfx_x; oldy=gfx_y;
+    i += 1;
+  );
+  gfx_line(oldx,oldy,firstx,firsty);
+//*/
+
+//*      /// Peak Goniometer ///
+  gfx_set(1,1,1,1,0); 
+  HSBtoRGB(0,0.75,1,a);
+  i = 1;
+  //buff = (((pdfpeak_buffer[0]+pdfpeak_buffer[n-1])/maxsplpeak))^(scalex);
+  //buff = (((pdfpeak_buffer[0])/maxsplpeak))^(scalex);
+  buff = (((pdfpeak_buffer[n-1])/maxsplpeak))^(scalex);
+  movetopolar(gfxw2,gfxh2,buff*centre,pi-pi/4);
+  firstx=gfx_x; firsty=gfx_y;
+  oldx=gfx_x; oldy=gfx_y;
+  loop(n-2,
+    buff = ((pdfpeak_buffer[i]/maxsplpeak))^(scalex);
+    movetopolar(gfxw2,gfxh2,buff*centre,i*pi2/(n-1)-pi/4+pi);
+    gfx_line(oldx,oldy,gfx_x,gfx_y);
+    oldx=gfx_x; oldy=gfx_y;
+    i += 1;
+  );
+  gfx_line(oldx,oldy,firstx,firsty);
+//*/
+
+  
+/*
+  function movetopolar (x,y,radius,angle) (
+    gfx_x = x+sin(angle)*radius;
+    gfx_y = y-cos(angle)*radius;
+  );
+  function movebypolar (x,y,radius,angle) (
+    gfx_x += x+sin(angle)*radius;
+    gfx_y += y-cos(angle)*radius;
+  );
+  function linepolar (x,y,radius,angle,aa) (
+    gfx_line(x,y,x+sin(angle)*radius,y-cos(angle)*radius,aa);
+  );
+  function linetopolar (radius,angle,aa) (
+    gfx_lineto(gfx_x + sin(angle)*radius,gfx_y - cos(angle)*radius,aa);
+  );
+//*/
+
+/*/
+  /// Draw Histogram ///
+  //!frame ? (
+  gfx_set(1,1,1,1,0); 
+  HSBtoRGB(220,0.75,1,a);
+  i = 0;
+  loop(n,
+    gfx_x = floor((gfx_w*i)/n);
+    gfx_y = gfx_h;
+    buff = pdf_buffer[i];
+    xval = (1-buff/maxspl);
+    //gfx_rectto(floor((gfx_w*(i+1))/n),(gfx_h*(1-pdf_buffer[i]/maxspl)^(scaley)));
+    //gfx_rectto(floor((gfx_w*(i+1))/n),(gfx_h*xval*(1/xval)^(scaley)));
+    buff ? gfx_rectto(floor((gfx_w*(i+1))/n),gfx_h-(gfx_h*((-xval+1)^scaley)-1));
+    //gfx_rect(floor(((gfx_w*i)/n)),0,gfx_w/n,floor(gfx_h*(1-i[]/maxspl)));
+    i += 1;
+  );
+  //gfx_mode = 2;
+  
+  
+  //gfx_set(1,0.2,0.2,0.7); 
+  HSBtoRGB(h,s,v,a);
+  //gfx_mode = 1;
+  //gfx_a = -0.5;
+  i = 0;
+  loop(n,
+    gfx_x = floor((gfx_w*i)/n);
+    gfx_y = gfx_h;
+    buff = pdf_buffer[i+n];
+    xval = (1-buff/maxspl);
+    //gfx_rectto(floor((gfx_w*(i+1))/n),gfx_h*(1-pdf_buffer[i+n]/maxspl)^(1/scaley));
+    buff ? gfx_rectto(floor((gfx_w*(i+1))/n),gfx_h-(gfx_h*((-xval+1)^scaley)-1));
+    //gfx_rect(floor(((gfx_w*i)/n)),0,gfx_w/n,floor(gfx_h*(1-i[]/maxspl)));
+    i += 1;
+  );
+  
+
+//* ///Draw Diff Histogram ///
+difference ? (
+  //gfx_set(1,0.2,0.2,0.7); 
+  //HSBtoRGB(145,0.75,1,a);
+  HSBtoRGB(50,0.75,1,a);
+  gfx_mode = 1;
+  gfx_a = -1;
+  i = 0;
+  loop(n,
+    gfx_x = floor((gfx_w*i)/n);
+    gfx_y = gfx_h;
+    buff = pdf_buffer[i]-pdf_buffer[i+n];
+    xval = (1-buff/maxspl);
+    //gfx_rect(floor(((gfx_w*i)/n)),0,gfx_w/n,floor(gfx_h*(1-i[]/maxspl)));
+    buff > 0 ? gfx_rectto(floor((gfx_w*(i+1))/n),gfx_h-(gfx_h*((-xval+1)^scaley)-1));
+    i += 1;
+  );
+  
+  //gfx_set(1,0.2,0.2,0.7); 
+  HSBtoRGB(235,0.75,1,a);
+  gfx_mode = 1;
+  gfx_a = -1;
+  i = 0;
+  loop(n,
+    gfx_x = floor((gfx_w*i)/n);
+    gfx_y = gfx_h;
+    buff = pdf_buffer[i+n]-pdf_buffer[i];
+    xval = (1-buff/maxspl);
+    //gfx_rect(floor(((gfx_w*i)/n)),0,gfx_w/n,floor(gfx_h*(1-i[]/maxspl)));
+    //gfx_rectto(floor((gfx_w*(i+1))/n),gfx_h*(1-(pdf_buffer[i+n]-pdf_buffer[i])/maxspl));
+    buff > 0 ? gfx_rectto(floor((gfx_w*(i+1))/n),gfx_h-(gfx_h*((-xval+1)^scaley)-1));
+    i += 1;
+  );
+);
+//*/
+
+
+
+
+
+
+  //gfx_clear = 0;
+  //gfx_set(1,1,1,1);
+  w2 = gfx_w * 0.5;
+  //h2 = gfx_h * 0.5;
+  h2 = gfx_h;
+  
+/*   /// Manual Gaussian ///
+
+  gfx_r=.5; gfx_g=0; gfx_b=0;
+  gfx_x=0; gfx_y=h2;
+  gfx_lineto(gfx_w,h2,0);
+  gfx_x=w2; gfx_y=0;
+  //gfx_lineto(w2,gfx_h,0);
+  i = -1;
+  nadd = 2 / gfx_w;
+  x = 0;
+  gfx_set(1,1,1,1);
+  oldx = -1; oldy = 0;
+  loop(gfx_w,
+    //( y = a*n*(1-(n*1));  );
+    ( y = hight*exp(-1/2*((i-average)/std)^2);  );
+    gfx_x = x;
+    gfx_y = ( h2 - (y * h2) );
+    //gfx_setpixel(0,0,1); 
+    gfx_line(gfx_x,gfx_y,oldx,oldy,1);
+    oldx = gfx_x;
+    oldy = gfx_y;
+    i += nadd;
+    x += 1;
+  );
+//*/
+
+std00 < std11 ? (scalestd = std00):(scalestd = std11);
+/*   /// Auto Gaussian ///
+gaussian && scalex==1 ? (
+  gfx_x=0; gfx_y=h2;
+  gfx_lineto(gfx_w,h2,0);
+  gfx_x=w2; gfx_y=0;
+  i = -1;
+  nadd = 2 / gfx_w;
+  x = 0;
+  gfx_set(0,0,1,1);
+  oldx = -1; oldy = 0;
+  loop(gfx_w,
+    //( y = a*n*(1-(n*1));  );
+    //( y = 1/sqrt2pi*exp(-1/2*((i-avg0)/std0)^2);  );
+    //( y = height0*exp(-1/2*((i-avg0)/std0)^2);  );
+    ( y = scalestd/std00*exp(-1/2*((i-avg00)/std00)^2);  );
+    //( y = exp(-1/2*((i-avg00)/std00)^2);  );
+    gfx_x = x;
+    gfx_y = ( h2 - (y^scaley * h2) );
+    //gfx_setpixel(0,0,1); 
+    gfx_line(gfx_x,gfx_y,oldx,oldy,1);
+    oldx = gfx_x;
+    oldy = gfx_y;
+    i += nadd;
+    x += 1;
+  );
+  
+  gfx_x=0; gfx_y=h2;
+  gfx_lineto(gfx_w,h2,0);
+  gfx_x=w2; gfx_y=0;
+  i = -1;
+  nadd = 2 / gfx_w;
+  x = 0;
+  gfx_set(1,0,0,1);
+  oldx = -1; oldy = 0;
+  loop(gfx_w,
+    //( y = a*n*(1-(n*1));  );
+    //( y = 1/(sqrt2pi*std1) * exp(-1/2*((i-avg1)/std1)^2);  );
+    //( y = height1*exp(-1/2*((i-avg1)/std1)^2);  );
+    ( y = scalestd/std11*exp(-1/2*((i-avg11)/std11)^2);  );
+    //( y = multi*exp(-1/2*((i-avg11)/std11)^2);  );
+    gfx_x = x;
+    gfx_y = ( h2 - (y^scaley * h2) );
+    //gfx_setpixel(0,0,1); 
+    gfx_line(gfx_x,gfx_y,oldx,oldy,1);
+    oldx = gfx_x;
+    oldy = gfx_y;
+    i += nadd;
+    x += 1;
+  );
+  
+);
+
+
+//*/
+
+/*
+  /// Std lines ///
+  gfx_set(0.2,0.2,1,1);
+  i = 1;
+  loop(3,
+    std_h = gfx_h-gfx_h*(scalestd/(std00*i)*exp(-1/2*((std00*i-avg00)/(std00))^2))^scaley;
+    gfx_line((avg00-std00*i)*gfx_w/2+gfx_w/2,std_h,(avg00+std00*i)*gfx_w/2+gfx_w/2,std_h);
+    i+=1;
+  );
+  gfx_set(1,0.2,0.2,1); 
+  i = 1;
+  loop(3,
+    std_h = gfx_h-gfx_h*(scalestd/std11*exp(-1/2*((std11*i-avg11)/std11)^2))^scaley;
+    gfx_line((avg11-std11*i)*gfx_w/2+gfx_w/2,std_h,(avg11+std11*i)*gfx_w/2+gfx_w/2,std_h);
+    i+=1;
+  );
+
+  gfx_set(0.2,0.2,1,1);
+    std_h = gfx_h-gfx_h*(scalestd/std00*exp(-1/2*((std00-avg00)/std00)^2))^scaley;
+    gfx_line((avg00-std00)*gfx_w/2+gfx_w/2,std_h,(avg00+std00)*gfx_w/2+gfx_w/2,std_h);
+    std_h = gfx_h-gfx_h*(scalestd/std00*exp(-1/2*((std00*2-avg00)/std00)^2))^scaley;
+    gfx_line((avg00-std00*2)*gfx_w/2+gfx_w/2,std_h,(avg00+std00*2)*gfx_w/2+gfx_w/2,std_h);
+    std_h = gfx_h-gfx_h*(scalestd/std00*exp(-1/2*((std00*3-avg00)/std00)^2))^scaley;
+    gfx_line((avg00-std00*3)*gfx_w/2+gfx_w/2,std_h,(avg00+std00*3)*gfx_w/2+gfx_w/2,std_h);
+  gfx_set(1,0.2,0.2,1); 
+    std_h = gfx_h-gfx_h*(scalestd/std11*exp(-1/2*((std11-avg11)/std11)^2))^scaley;
+    gfx_line((avg11-std11)*gfx_w/2+gfx_w/2,std_h,(avg11+std11)*gfx_w/2+gfx_w/2,std_h);
+    std_h = gfx_h-gfx_h*(scalestd/std11*exp(-1/2*((std11*2-avg11)/std11)^2))^scaley;
+    gfx_line((avg11-std11*2)*gfx_w/2+gfx_w/2,std_h,(avg11+std11*2)*gfx_w/2+gfx_w/2,std_h);
+    std_h = gfx_h-gfx_h*(scalestd/std11*exp(-1/2*((std11*3-avg11)/std11)^2))^scaley;
+    gfx_line((avg11-std11*3)*gfx_w/2+gfx_w/2,std_h,(avg11+std11*3)*gfx_w/2+gfx_w/2,std_h);
+//*/
+
+
+/*   /// Max value line ///
+  gfx_set(1,1,1,1,0);
+  gfx_x=w2 + ((maxbin%(n))-n/2)*gfx_w/n; 
+  gfx_y=0;
+  gfx_lineto(gfx_x,gfx_h,0);
+//*/
+
+/*   /// Max value line ///
+  gfx_set(1,1,1,1,0);
+  gfx_x=w2 + (maxbin-n/2)*gfx_w/n; 
+  gfx_y=0;
+  gfx_lineto(gfx_x,gfx_h,0);
+  
+  gfx_set(1,0,0,1,0);
+  gfx_x=w2 + ((maxbin-n)-n/2)*gfx_w/n; 
+  gfx_y=0;
+  gfx_lineto(gfx_x,gfx_h,0);
+//*/
+
+/*   /// Avg value line ///
+  gfx_set(1,1,1,1,0);
+  gfx_x=w2 + avg*gfx_w/n; 
+  gfx_y=0;
+  gfx_lineto(gfx_x,gfx_h,0);
+//*/
+
+
+i = 0;
+count0 = count1 = pdf0 = pdf1 = sum00 = sum11 = 0;
+loop(n,
+  pdf0 = pdf_buffer[i  ];
+  pdf1 = pdf_buffer[i+n];
+  sum00 += (((2*(i+1/2))/n)-1)*pdf0;
+  sum11 += (((2*(i+1/2))/n)-1)*pdf1;
+  count0 += pdf0;
+  count1 += pdf1;
+  i+=1;
+);
+
+avg00 = sum00/count0;
+avg11 = sum11/count1;
+count01 = (count0+count1)/2;
+
+
+//*   /// Std value ///
+i = 0;
+sigma = sigma0 = sigma1 = sigma00 = sigma11 =  0;
+loop(n,
+//  ((input_buffer[j*2  ] >= ((2*i)/n)-1) && (input_buffer[j*2  ] <= ((2*(i+1))/n)-1)) ? (pdf_buffer[i  ] += 1);
+//  ((input_buffer[j*2+1] >= ((2*i)/n)-1) && (input_buffer[j*2+1] <= ((2*(i+1))/n)-1)) ? (pdf_buffer[i+n] += 1);
+  sigma0 += pdf_buffer[i  ]*(((2*i/n)-1)-avg0)^2;
+  sigma1 += pdf_buffer[i+n]*(((2*i/n)-1)-avg1)^2;
+  sigma00 += pdf_buffer[i  ]*(((2*i/n)-1)-avg00)^2;
+  sigma11 += pdf_buffer[i+n]*(((2*i/n)-1)-avg11)^2;
+  i+=1;
+);
+//std = sqrt((sigma0+sigma1)/count);
+std0 = sqrt(sigma0/count);
+std1 = sqrt(sigma1/count);
+std00 = sqrt(sigma00/count0);
+std11 = sqrt(sigma11/count1);
+//std0 = sqrt(sigma0/count*sqrt(2));
+//std1 = sqrt(sigma1/count*sqrt(2));
+//slider12 = std;
+//slider11 = avg;
+//average = avg;
+//*/
+
+
+/*
+x = 1;
+y = 32;
+a = 16;
+b = 5;
+n = 0;
+i = 0;
+ix = 0;
+iy = 0;
+
+loop(y,
+  ix = 0;
+  loop(x,
+    
+    i[] != 0 ? 
+    (gfx_x = a + ix*10 + ix*a - floor(abs(log10(bits[i])))*8):
+    (gfx_x = a + ix*10 + ix*a);
+    gfx_y = b + iy*gfx_texth + iy*b + 32;
+    //gfx_printf("%i - %f", x, x[]);
+    //gfx_printf("%i", id);
+    //gfx_x = 50;
+    //gfx_printf("%f", id[]);
+    gfx_drawnumber(i[],n);
+    
+    
+    i += 1;
+    ix += 1;
+  );
+  iy += 1;
+);
+//*/
+
+
+/*
+gfx_set(1, 1, 1, 1);
+spacing = 10;
+gfx_x = 10; gfx_y = 5;
+gfx_printf(" Time: %d", count/srate); gfx_x = 10;gfx_y += spacing;
+gfx_printf(" Peak: %d", maxspl);      gfx_x = 10;gfx_y += spacing;
+gfx_printf(" Spls: %d", count);       gfx_x = 10;gfx_y += spacing;
+gfx_y += spacing;
+gfx_printf("L Avg: %f", avg0);        gfx_x = 10;gfx_y += spacing;
+gfx_printf("R Avg: %f", avg1);        gfx_x = 10;gfx_y += spacing;
+gfx_y += spacing;
+gfx_printf("L Std: %f", std0);        gfx_x = 10;gfx_y += spacing;
+gfx_printf("R Std: %f", std1);        gfx_x = 10;gfx_y += spacing;
+//*/
+
+gfx_set(1-b,1-b,1-b,1);
+spacing = 10;
+//*
+//gfx_h > 300 ? (
+gfx_x = 10; gfx_y = 5;
+//gfx_printf(" Peak: %d", maxspl);      gfx_x=10;gfx_y+=spacing;
+//gfx_printf(" Spls: %d", count);       gfx_x=10;gfx_y+=spacing;
+
+//gfx_printf("L Avg: %f", avg0);        gfx_x=10;gfx_y+=spacing;
+//gfx_printf("R Avg: %f", avg1);        gfx_x=10;gfx_y+=spacing;
+//gfx_printf("L Std: %f", std0);        gfx_x=10;gfx_y+=spacing;
+//gfx_printf("R Std: %f", std1);        gfx_x=10;gfx_y+=spacing;
+gfx_printf(" Time: %d", count/srate); gfx_x=10;gfx_y+=spacing;
+gfx_printf("L Max: %4.2f", atodb(abs(max0))); gfx_x=10;gfx_y+=spacing;
+gfx_printf("R Max: %4.2f", atodb(abs(max1))); gfx_x=10;gfx_y+=spacing;
+gfx_printf("L Min: %4.2f", atodb(abs(min0))); gfx_x=10;gfx_y+=spacing;
+gfx_printf("R Min: %4.2f", atodb(abs(min1))); gfx_x=10;gfx_y+=spacing;
+//gfx_printf("L Min: %4.1f", atodb(minabs0)/6); gfx_x=10;gfx_y+=spacing;
+//gfx_printf("R Min: %4.1f", atodb(minabs1)/6); gfx_x=10;gfx_y+=spacing;
+//);
+//*/
+
+
+
+// cursor cross + readout
+mouse_x>0 && mouse_x<gfx_w && mouse_y>0 && mouse_y<gfx_h? (
+  //gfx_set(1,1,1,0.3);gfx_line(0,mouse_y,gfx_w,mouse_y,1);gfx_line(mouse_x,0,mouse_x,gfx_h,1);
+  //gfx_set(1,1,1,1);
+  //center_dist = sqrt(((mouse_x-gfxw2)/gfxw2)^2+((mouse_y-gfxh2)/gfxh2)^2)^(1/scalex);
+  //center_angle = ((atan2((mouse_x-gfxw2),(mouse_y-gfxh2)))/pi);
+  x_dist = (mouse_x-gfxw2)/centre;
+  y_dist = (mouse_y-gfxh2)/centre;
+  center_dist = sqrt(x_dist^2 + y_dist^2)^(1/scalex);
+  center_angle = ((atan2(x_dist,y_dist))/pi);
+  gfx_x=gfx_w-160;gfx_y = 5;
+  gfx_printf("     Bit: %d", (-20.0*log10(center_dist))/6);
+  gfx_x=gfx_w-160;gfx_y+=spacing;
+  //gfx_printf("dB value: %4.1f", 20.0*log10(abs((2*mouse_x/gfx_w)-1)^(1/scalex)));
+  gfx_printf("dB value: %4.1f", 20.0*log10(center_dist));
+  gfx_x=gfx_w-160;gfx_y+=spacing;
+  //gfx_printf(" value: %f", (2*mouse_x/gfx_w)-1);
+  //gfx_printf("   value: %f", sign((2*mouse_x/gfx_w)-1)*(abs((2*mouse_x/gfx_w)-1))^(1/scalex));
+  gfx_printf("   value: %f", center_dist^(1/scalex));
+  gfx_x=gfx_w-160;gfx_y+=spacing;
+  gfx_printf("   angle: %3.0f", 180*sign(center_angle)*(1-abs(center_angle)) );
+  
+);
+//  shift = centre/((2^i)^scalex);
+//  gfx_line(centre+shift,0,centre+shift,gfx_h);
+//  gfx_line(centre-shift,0,centre-shift,gfx_h);
+
+/*     /// Peak value lines /// 
+gaussian?(
+gfx_set(0,0,1,1);
+gfx_line(centre+min0*gfx_w/2,0,centre+min0*gfx_w/2,gfx_h);
+gfx_line(centre+max0*gfx_w/2,0,centre+max0*gfx_w/2,gfx_h);
+gfx_set(1,0,0,1);
+gfx_line(centre+min1*gfx_w/2,0,centre+min1*gfx_w/2,gfx_h);
+gfx_line(centre+max1*gfx_w/2,0,centre+max1*gfx_w/2,gfx_h);
+);
+//*/
+gfx_set(1,1,1,0.2);
+div = 8;
+i = 0;
+loop(div,
+  moveto(gfxw2,gfxh2);
+  linetopolar(centre-1,i*pi2/div,0);
+  i+=1;
+);

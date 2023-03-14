@@ -1,0 +1,123 @@
+desc:STFT-Based Complex Template [JM]
+// Geraint Luff's STFT template modification
+//options: gfx_hz = 60;
+
+in_pin:input A
+in_pin:input B
+//in_pin:input C
+//in_pin:input D
+out_pin:output A
+out_pin:output B
+//out_pin:output C
+//out_pin:output D
+//out_pin:none
+
+import Tale/window.jsfx-inc
+import Tale/complex.jsfx-inc
+import _JM/STFT.jsfx-inc
+import _JM/jm.jsfx-inc
+
+slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
+slider62:4<1,30,1{Rectangle,Triangle,Parzen,Welch,Hann,Hamming,Blackman,Nuttall,Blackman-Nuttall,Blackman-Harris,SRS Flat Top,Rife-Vincent I,Rife-Vincent II,Rife-Vincent III,Cosine,Bohman,Gaussian,Confined Gaussian,Tukey,Planck-taper,Kaiser 2.0,Kaiser 3.0,Dolph-Chebyshev,Poisson 1.0,Poisson 6.9,Bartlett-Hann,Planck-Bessel,Hann-Poisson,Lanczos,Cauchy,Connes}>Window
+slider63:overlap_factor=4<1,32,1>Overlap factor
+//slider64:smoothing_time_const=100<0,10000,1>Smoothing τ [ms]
+
+@slider
+
+  //smoothing_coeff = 1-exp(-1/abs(srate*smoothing_time_const*0.001));
+  window_type = (slider62 + 1.5)|0;
+
+@block
+  
+  //stft_block(overlap_factor=4); // Default window_type == Hann
+  stft_block(overlap_factor, window_type);
+  
+  pdc_delay = fft_size; 
+  pdc_bot_ch = 0; 
+  pdc_top_ch = 2;
+
+@init
+
+  MAX_FFT_SIZE = 32768;
+  
+  freemem = 0;
+  // allocate fft buffers first - FFT/IFFT must NOT cross a 65,536 item boundary
+  freemem = (fft_buffer = freemem) + MAX_FFT_SIZE*2; 
+  freemem = (window_buffer = freemem) + MAX_FFT_SIZE;
+  
+  buffer_length = srate;
+  buffer_index = 0;
+  freemem = (input_buffer = freemem) + buffer_length*2;
+  freemem = (output_buffer = freemem) + buffer_length*2;
+  
+
+  function stft_process(fft_buffer, fft_size) local(fft_bin,fft_bin2) (
+    fft_bin = 0; // FFT bin number
+    loop(fft_size/2,
+      fft_bin2 = fft_size - fft_bin;
+      
+      A.cplx_set(fft_buffer[2*fft_bin  ] + fft_buffer[2*fft_bin2  ],  fft_buffer[2*fft_bin+1] - fft_buffer[2*fft_bin2+1]);
+      B.cplx_set(fft_buffer[2*fft_bin+1] + fft_buffer[2*fft_bin2+1], -fft_buffer[2*fft_bin  ] + fft_buffer[2*fft_bin2  ]);
+      
+      //*
+      fft_bin > 1000*fft_size/srate ? (
+        A.re = 0;
+        A.im = 0;
+        B.re = 0;
+        B.im = 0;
+      );
+      //*/
+  
+      // Re-fold back into complex spectrum
+      fft_buffer[2*fft_bin   ] = ( A.re - B.im)*0.5;
+      fft_buffer[2*fft_bin+1 ] = ( A.im + B.re)*0.5;
+      fft_buffer[2*fft_bin2  ] = ( A.re + B.im)*0.5;
+      fft_buffer[2*fft_bin2+1] = (-A.im + B.re)*0.5;
+  
+      fft_bin += 1;
+    );
+    fft_buffer[fft_size] = fft_buffer[fft_size+1] = 0; // Remove energy at nyquist
+  );
+  
+
+@sample
+
+  input_buffer[buffer_index*2  ] = spl0;
+  input_buffer[buffer_index*2+1] = spl1;
+  
+  fft_counter += 1;
+  fft_counter >= fft_interval ? (
+    fft_counter = 0;
+  
+    stft_in();
+    
+    //////////////////////////////////////////////////////////////////////
+  
+    
+    // Process buffer
+    fft(fft_buffer, fft_size);
+    fft_permute(fft_buffer, fft_size);
+  
+    stft_process(fft_buffer, fft_size);
+  
+    fft_ipermute(fft_buffer, fft_size);
+    ifft(fft_buffer, fft_size);
+    
+    //memcpy(fft_bufferC,fft_buffer,fft_size*2);
+    
+    //////////////////////////////////////////////////////////////////////
+    
+    stft_OA();
+  );
+  
+  
+  stft_out();
+  
+  
+
+
+@gfx
+
+  plot(fft_buffer, fft_size*2, 2, 0, -fft_size, fft_size);
+  //plot(fft_bufferC, fft_size*2);
+  plot(window_buffer, fft_size, 1, 0, -2, 2);

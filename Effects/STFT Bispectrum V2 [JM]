@@ -1,0 +1,383 @@
+desc:STFT Bispectrum V2 [JM]
+options: gfx_hz = 60;
+
+/slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
+//slider1:fft_size_index=2<0,6,1{256,512,1024,2048,4096,8192,16384>FFT size
+slider1:fft_size_index=2<0,6,1{256,512,1024,2048>FFT size
+slider10:height=1<0,10,0.001>-Height
+slider11:width=1<0,2,0.001>-Width
+slider12:scx=1<0,1,0.001>-Scale X
+slider13:shx=0<-1,0,0.001>-Shift X
+slider14:blur=0<0,1,0.00001>-Time Blur
+slider15:analysis_decay_factor=0.8<0,1,0.00001>Analysis Decay Factor
+//slider13:magnitude=0<0,1,{Off,On}>Magnitude
+slider16:overlap=1<1,16,1>-Overlap
+
+slider20:export=0<0,1,1{Off,On}>-Export
+
+options:maxmem=XYZ
+
+
+in_pin:left input
+in_pin:right input
+out_pin:none
+
+@init
+
+//MAX_FFT_SIZE = 32768;
+MAX_FFT_SIZE = 1024;
+//MAX_FFT_SIZE = 512;
+
+freemem = 0;
+//freemem = (fft_buffer = freemem) + MAX_FFT_SIZE*2;
+freemem = (window_buffer = freemem) + MAX_FFT_SIZE;
+
+//freemem = (phase_buffer = freemem) + MAX_FFT_SIZE*2;
+//freemem = (l_mag_buffer = freemem) + MAX_FFT_SIZE*2;
+//freemem = (r_mag_buffer = freemem) + MAX_FFT_SIZE*2;
+freemem = (fft_bufferA = freemem) + MAX_FFT_SIZE*2;
+freemem = (fft_bufferB = freemem) + MAX_FFT_SIZE*2;
+
+//freemem = (fft_buffer = freemem) + MAX_FFT_SIZE^2/4;
+freemem = (fft_buffer = freemem) + (MAX_FFT_SIZE^2)*2;
+freemem = (delay_bufferSum = freemem) + MAX_FFT_SIZE^2;
+//freemem = (export_buffer = freemem) + MAX_FFT_SIZE;
+
+buffer_length = srate;
+buffer_index = 0;
+freemem = (input_buffer = freemem) + buffer_length*4;
+//freemem = (output_buffer = freemem) + buffer_length*2;
+
+
+
+function window(r) local(s, s2, gaussian_width, x) (
+  // When squared, the Hann window adds up perfectly for overlap >= 4, so it's suitable for perfect reconstruction
+  (0.5 - 0.5*cos(r*2*$pi))/sqrt(0.375);
+);
+
+fft_size = 0;
+
+@block
+
+overlap_factor = overlap;
+fft_size = 256<<fft_size_index;
+fft_interval = fft_size/overlap_factor;
+fft_scaling_factor = 1/overlap_factor/fft_size;
+
+fft_size != prev_fft_size ? (
+  //setup_stft_state(fft_size, prev_fft_size == 0);
+  prev_fft_size = fft_size;
+  // Fill window buffer
+  i = 0;
+  loop(fft_size,
+    r = (i + 0.5)/fft_size;
+    window_buffer[i] = window(r);
+    i += 1;
+  );
+);
+
+//pdc_delay = fft_size;
+//pdc_bot_ch = 0;
+//pdc_top_ch = 2;
+
+@slider
+//export = slider20;
+
+@sample
+pass = 0;
+input_buffer[buffer_index*2  ] = spl0;
+input_buffer[buffer_index*2+1] = spl1;
+
+fft_counter += 1;
+
+buffer_index = (buffer_index + 1)%buffer_length;
+
+
+@gfx
+function calc_color(mv, col*) globals(over24)
+(
+  col.r=col.g=col.b=0;
+  
+  mv <= -96  ? 
+  (
+    mv>-168 ? (
+      mv <= -144 ? ( col.b = (mv+168)*over24*0.25) :
+      mv <= -120 ? ( col.g = (mv+144)*over24*0.25; col.b = 0.25; ) :
+                   ( col.g=0.25+(mv+120)*over24*0.5; col.b = 0.25-(mv+120)*over24*0.25) 
+    );
+  ) : (
+    mv <= -72 ? ( col.r = (mv+96)*over24; col.g = 0.75; ) :
+    mv <= -48 ? ( col.r = 1; col.g = 0.75-(mv+72)*over24*0.75; ) :
+    mv <= -24 ? ( col.r = 1; col.b = (mv+48)*over24; ) :
+    mv <= 0 ? ( col.r=col.b=1; col.g=(mv+24)*over24; ) :
+      col.r=col.g=col.b=1;
+  );    
+);
+
+
+fft_counter >= fft_interval ? (
+  fft_counter = 0;
+
+  // Copy input to buffer
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    i2 < 0 ? i2 += buffer_length;
+    
+    /*
+    //delay_index = buffer_index - fft_size + i + 1;
+    fft_bufferA[i*2] = input_buffer[2*i2]*window_buffer[i];
+    fft_bufferA[i*2 + 1] = 0;
+    fft_bufferB[i*2] = input_buffer[2*i2 + 1]*window_buffer[i];
+    fft_bufferB[i*2 + 1] = 0;
+    //*/
+    
+    //*
+    //delay_index = buffer_index - fft_size + i + 1;
+    fft_bufferA[i*2] = (input_buffer[2*i2]+input_buffer[2*i2 + 1])/2*window_buffer[i];
+    fft_bufferA[i*2 + 1] = 0;
+    //*/
+
+    i += 1;
+  );
+
+  // Process buffer
+  fft(fft_bufferA, fft_size);
+  //fft(fft_bufferB, fft_size);
+  fft_permute(fft_bufferA, fft_size);
+  //fft_permute(fft_bufferB, fft_size);
+  
+  /*
+  i = 0;
+  k = 0;
+  while (i < fft_size) (
+  //while (i < MAX_FFT_SIZE^2 / 4) (
+    //rA = fft_bufferA[2*i];
+    //iA = fft_bufferA[2*i + 1];
+    //rB = fft_bufferB[2*i];
+    //iB = fft_bufferB[2*i + 1];
+    
+    r1 = fft_bufferA[2*i];
+    i1 = fft_bufferA[2*i + 1];
+    
+    j = 0;
+    while(j<i && j+i<fft_size)(
+      r2  = fft_bufferA[2*j];
+      i2  = fft_bufferA[2*j + 1];
+      r12 = fft_bufferA[2*j + 2*i];
+      i12 = fft_bufferA[2*j + 2*i + 1];
+      
+      //fft_buffer[2*k  ] = (r1*r2*r12)-(i1*i2*r12)-(r1*i2*i12)-(i1*r2*i12); // Real Bispectrum
+      //fft_buffer[2*k+1] = (r1*i2*r12)+(i1*r2*r12)-(r1*r2*i12)+(i1*i2*i12); // Imag Bispectrum
+      
+      fft_buffer[k] = sqrt( ((r1*r2*r12)-(i1*i2*r12)-(r1*i2*i12)-(i1*r2*i12))^2 + ((r1*i2*r12)+(i1*r2*r12)-(r1*r2*i12)+(i1*i2*i12))^2 );
+      
+      k+=1;
+      j+=1;
+    );
+    
+    i += 1;
+  );
+  //*/
+  
+  //*
+  i = 0;
+  k = 0;
+  while (i < fft_size) (
+    r1 = fft_bufferA[2*i];
+    i1 = fft_bufferA[2*i + 1];
+    
+    j = 0;
+    //while(j < fft_size/2) (
+    //while(j<i && j+i<fft_size)
+    while(j<i && j+i<fft_size/2) ( ///////////////////////////////////////
+      r2  = fft_bufferA[2*j];
+      i2  = fft_bufferA[2*j + 1];
+      r3 = fft_bufferA[2*j + 2*i];
+      i3 = fft_bufferA[(2*j + 2*i) + 1];
+      
+      
+      //fft_buffer[k] = sqrt( ((r1*r2*r3)-(i1*i2*r3)+(r1*i2*i3)+(i1*r2*i3))^2 + ((r1*i2*r3)+(i1*r2*r3)-(r1*r2*i3)+(i1*i2*i3))^2 );
+      
+      fft_buffer[2*k  ] = fft_buffer[2*k  ]*analysis_decay_factor + ((r1*r2*r3)-(i1*i2*r3)+(r1*i2*i3)+(i1*r2*i3));
+      fft_buffer[2*k+1] = fft_buffer[2*k+1]*analysis_decay_factor + ((r1*i2*r3)+(i1*r2*r3)-(r1*r2*i3)+(i1*i2*i3));
+      
+      //fft_buffer[k] = sqrt( ((r1*r2)-(i1*i2))^2 + ((r1*i2)+(i1*r2))^2 );
+      //fft_buffer[k] = sqrt( ((r1*r3)+(i1*i3))^2 + ((r1*i3)-(i1*r3))^2 );
+      
+      k+=1;
+      j+=1;
+    );
+    
+    i += 1;
+  );
+  //*/
+  
+  //fft_ipermute(fft_bufferA, fft_size);
+  //ifft(fft_bufferA, fft_size);
+
+//*
+  //analysis_decay_hz = 1; /// 5-0
+  //analysis_decay_invsamples = analysis_decay_hz/srate;
+  //analysis_decay_samples = srate / analysis_decay_hz;
+  //analysis_decay_factor = analysis_decay_hz === 0 ? 1 : exp(-delay_fftinterval/analysis_decay_samples);
+
+  max_abs = 0;
+  max_phase = 1;
+  max_index = 0;
+  i = 0;
+  //loop(fft_size,
+  loop(MAX_FFT_SIZE^2,
+    //i2 = (i + fft_size/2 + floor(shx*fft_size/2))%fft_size;
+    i2 = (i + fft_size/2)%fft_size;
+    i2=i;
+    //value = delay_bufferSum[i2] = delay_bufferSum[i2]*analysis_decay_factor + fft_bufferA[2*i];
+    //value = delay_bufferSum[i] = delay_bufferSum[i]*analysis_decay_factor + fft_buffer[i];
+    value = delay_bufferSum[i] = sqrt(fft_buffer[2*i]^2+fft_buffer[2*i+1]^2);
+    //value = delay_bufferSum[i] = delay_bufferSum[i]*analysis_decay_factor + fft_bufferA[i];
+    i += 1;
+    
+    abs(value) >= max_abs ? (
+      i_wrapped = (i > fft_size/2) ? i - fft_size : i;
+    
+      (delay_peak_minsample == delay_peak_maxsample) || (
+        i_wrapped >= min(delay_peak_minsample, delay_peak_maxsample)
+        && i_wrapped <= max(delay_peak_minsample, delay_peak_maxsample)
+      ) ? (
+        max_abs = abs(delay_bufferSum[i2]);
+        max_index = i_wrapped;
+        max_phase = delay_bufferSum[i2] < 0 ? -1 : 1;
+      );
+    );
+    
+  );
+//*/ 
+
+  pass = 1;
+);
+
+/*
+export ? (
+  i = 0;
+  loop(fft_size,
+    export_buffer[i] = delay_bufferSum[i]/max_abs/2;
+    i += 1;
+  );
+  export_buffer_to_project(export_buffer,fft_size,1,srate,0);
+  export=0;
+  //export_buffer_to_project(buffer,length_samples,nch,srate,track_index[,flags,tempo,planar_pitch])
+);
+//*/
+
+gfx_r=gfx_g=gfx_b=0; gfx_a=(1-blur); // Time Blur
+gfx_x=gfx_y=0;
+gfx_rectto(gfx_w,gfx_h);
+
+gfx_clear=-1;
+//* /// Clear buffer ///
+mouse_cap || old_fft_size != fft_size ? (
+  gfx_clear=0;
+  memset(delay_bufferSum, 0, fft_size);
+  old_fft_size = fft_size;
+);
+//*/
+pass ? (gfx_flush):(gfx_wait);
+
+
+//*
+gfx_set(1,1,1,1);
+  i = 0;
+  k = 0;
+  while (i < fft_size) (
+
+    
+    j = 0;
+    //while(j < fft_size/2) (
+    //while(j<i && j+i<fft_size)
+    while(j<i && j+i<fft_size/2) ( /////////////////////////////////////////////
+      
+      //gfx_a = sqrt(delay_bufferSum[k])/30;
+      max_a = max(max_a,gfx_a);
+      gfx_x = i;
+      gfx_y = gfx_h - j;
+      
+      lscale=100/log(10);
+      mv = log(delay_bufferSum[k]/1000)*lscale;
+      calc_color(mv/6,drawc);
+      gfx_setpixel(drawc.r,drawc.g,drawc.b);
+      
+      //gfx_setpixel(1,1,1);
+      
+      k+=1;
+      j+=1;
+    );
+    
+    i += 1;
+  );
+//*/
+
+/*
+  i = 0;
+  k = 0;
+  while (i < fft_size) (
+
+    
+    j = 0;
+    while(j<i && j+i<fft_size)(
+      
+      fft_buffer[k] = sqrt( ((r1*r2*r12)-(i1*i2*r12)-(r1*i2*i12)-(i1*r2*i12))^2 + ((r1*i2*r12)+(i1*r2*r12)-(r1*r2*i12)+(i1*i2*i12))^2 );
+      gfx_x = 
+      gfx_a
+      
+      k+=1;
+      j+=1;
+    );
+    
+    i += 1;
+  );
+//*/
+
+
+
+/*
+//size = min(gfx_w,gfx_h)|0;
+//gfx_setpixel(1,1,1);
+gfx_set(1,1,1,1);
+display_size = floor(fft_size*scx);
+fft_size2 = fft_size*2;
+//scalex = width*gfx_w/fft_size;
+scalex = width*gfx_w/display_size;
+scaley = height*gfx_h/fft_size;
+
+
+  //z = mult*radius*gfx_h/2*(1/fft_size);
+  //old_x1=0;
+  old_x1=floor(shx*gfx_w);
+  i = 0;
+  loop(display_size,
+    
+    //phi = phase_buffer[i];
+
+    //l_mag = fft_buffer[i]*height*gfx_h/100; //r_mag = fft_buffer[2*i+1]*height*gfx_h*fft_size/2;
+    l_mag = delay_bufferSum[i+floor((fft_size - display_size)*0.5)]*height*gfx_h/2/max_abs; //r_mag = fft_buffer[2*i+1]*height*gfx_h*fft_size/2;
+    //l_mag = fft_bufferA[2*i]*height*gfx_h*fft_size/2; r_mag = fft_bufferA[2*i+1]*height*gfx_h*fft_size/2; // wierd bechaviour
+    //l_mag = fft_bufferA[i*2  ]*height*gfx_h/100;
+    //r_mag = fft_bufferA[i*2+1]*height*gfx_h/100;
+    
+    
+    //x1 = i*scalex;
+    x1 = i*scalex + floor(shx*gfx_w);
+    //x1 < 0 ? (x1+=gfx_w);
+    gfx_set(1,0,0);
+    gfx_line(x1, gfx_h-l_mag-gfx_h/2, old_x1, gfx_h-old_l_mag-gfx_h/2);
+    gfx_set(0,0,1);
+    gfx_line(x1, gfx_h-r_mag-gfx_h/2, old_x1, gfx_h-old_r_mag-gfx_h/2);
+    
+    old_x1 = x1;
+    old_l_mag = l_mag;
+    old_r_mag = r_mag;
+
+    i += 1;
+  );
+//*/

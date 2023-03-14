@@ -1,0 +1,828 @@
+desc:Vectorscope v4 [JM]
+options: gfx_hz = 60;
+
+//slider1:50<0,100,1>Width
+//slider2:5<0,10,1>Height
+//slider3:5<0,10,1>X
+//slider4:10<0,64,1>Y
+//slider5:0<0,1,0.0001>BG Color
+slider5:line_alpha=0.1<0,1,0.001>Line Alpha
+slider6:0.75<0,1,0.001>Alpha
+
+slider7:12<0,360,1>-Hue
+slider8:0.75<0,1,0.01>-Saturation
+slider9:1<0,1,0.01>-Value
+
+//slider10:64<0,1024,1>Bins
+slider11:0<-1,1,0.0001>-AVG
+slider12:0.2<0,1,0.0001>-STD
+slider13:1<0,1,0.0001>-Hight
+
+slider16:1<0,1,1{Off,On}>-dB scale
+slider17:16<0,32,1>-Bit Depth
+
+slider30:1<0,64,1>-Horiz Lines
+slider31:0<0,1,0.001>-Scale Y
+slider32:0<0,1,0.001>Scale X
+//slider33:0<0,1,0.001>Attenuate
+//slider33:0<0,1,0.001>Bin Decay
+//slider34:0<0,1,1{Off,On}>-Gaussian
+//slider35:0<0,1,1{Off,On}>-Difference
+slider36:0<0,1,1{Off,On}>Squared Mode
+slider37:grid=1<0,1,1{Off,On}>Grid
+
+slider40:r_dim=1<0,1,0.001>r Dim
+slider41:g_dim=1<0,1,0.001>g Dim
+slider42:b_dim=1<0,1,0.001>b Dim
+slider43:hue=1<0,1,0.001>Hue
+slider44:saturation=1<0,1,0.001>Saturation
+slider45:value=1<0,1,0.001>Value
+
+slider48:0.5<0,1,0.001> Blur
+
+slider51:mult=1<0,100,0.01> Multiplyer
+
+//slider50:radi=1<0,1,0.001> R
+//slider51:xpos=1<0,1,0.001> X
+//slider52:ypos=1<0,1,0.001> Y
+
+import Tale/oversample.jsfx-inc
+import Tale/window.jsfx-inc
+import sault/st-oversampler.jsfx-inc
+import Tale/rc_filter.jsfx-inc
+
+in_pin:left input
+in_pin:right input
+//options: no_meter;
+
+@init
+gfx_clear=0;
+log10_2 = log10(2.0);
+pi = $pi;
+pi2 = 2*$pi;
+sqrt2pi = sqrt(2.0*$pi);
+sqrt2 = sqrt(2);
+Angle = 2*$pi/16;
+rotCosAngle = cos(Angle);
+rotSinAngle = sin(Angle);
+gfx_ext_retina=1.0;
+//ext_nodenorm=1;
+//ext_noinit=1;
+//gfx_clear=-1;
+//gfx_clear=0;
+//count = 0;
+minabs0 = minabs1 = 1;
+glow = 1;
+
+m_ms = 3000;
+l.rc_sett(m_ms/1000);
+r.rc_sett(m_ms/1000);
+//*
+p_ms = 10000;
+decay = exp(-1.0/(p_ms*srate*0.001));
+
+amp_LO = 0.001;
+dB_LO = -60.0;
+ln10 = log(10);
+ln2 = log(2);
+
+
+// Expander Param
+attack = 10 ^ ( (10000 / srate) / 20 );
+release = 10 ^ ( (2 / srate) / 20 );
+//release = 10 ^ ( (slider7 / srate) / 20 );
+gain=1;
+
+
+function peak_dB (a) local (p, dB)
+(
+  a <= amp_LO ? p = dB_LO : dB = 8.6562*log(a);
+);
+
+function peak (sample) local (in) instance (p)
+(
+  in = abs(sample);
+  in > p ? p = in : p = p*decay;
+);
+
+function c_peak (amplitude,phase) local (in) instance (amp,pha)
+(
+  in = amplitude;
+  in > amp ? (amp = in; pha = phase) : amp = amp*decay;
+);
+//*/
+
+
+//buffer_length = srate/100;
+buffer_length = srate/4; /// Set to /8 and check missed samples
+//buffer_length = 1024;
+buffer_index = 0;
+freemem = (input_buffer     = freemem) + buffer_length*2;
+freemem = (input_buffer_cpy = freemem) + buffer_length*2;
+
+function log2(x)
+(
+    log(x) / log(2);
+);
+
+function dbtoa(db)
+(
+    pow(10.0, db * 0.05);
+);
+
+function atodb(amp)
+(
+    20.0 * log10(amp);
+);
+
+function wrap(input mini maxi)
+(
+    while (input < mini) (
+        input += mini;
+    );
+    while (input >= maxi) (
+        input -= maxi;
+    );
+    input;
+);
+
+function clip(input mini maxi)
+(
+    max(min(input, maxi), mini);
+);
+
+function scale(x xmin xmax ymin ymax ex) //midi slider (0-127 linear) to a frequency scale (20-20000 exponential).
+(
+    x -= xmin;
+    x /= (xmax - xmin);
+    x ^= ex;
+    x *= (ymax - ymin);
+    x + ymin;
+);
+
+function moveto (x,y) (
+  gfx_x = x; gfx_y = y;
+);
+
+function moveby (x,y) (
+  gfx_x += x; gfx_y += y;
+);
+
+function movetopolar (x,y,radius,angle) (
+  gfx_x = x+sin(angle)*radius;
+  gfx_y = y-cos(angle)*radius;
+);
+
+function movebypolar (x,y,radius,angle) (
+  gfx_x += x+sin(angle)*radius;
+  gfx_y += y-cos(angle)*radius;
+);
+
+function linepolar (x,y,radius,angle,aa) (
+  gfx_line(x,y,x+sin(angle)*radius,y-cos(angle)*radius,aa);
+);
+
+function linetopolar (radius,angle,aa) (
+  gfx_lineto(gfx_x + sin(angle)*radius,gfx_y - cos(angle)*radius,aa);
+);
+
+function HSBtoRGB(hue,saturation,value,alpla) 
+ local (r,g,b,h,f,v,p,q,t) 
+( 
+   ( hue > 360) ? ( hue = hue % 360;) 
+   :( hue < 0 ) ? ( hue = hue % 360 ;); 
+   saturation = min ( max(saturation,0),1); 
+   v = floor( 255 * value); 
+   v = min ( max(v,0),255); 
+   (saturation == 0)? 
+   ( 
+   r = v ; g = v; b = v; 
+   ):( 
+   h = floor( hue / 60); 
+   f = hue / 60-h; 
+   p = floor( v * (1-saturation)); 
+   p = min ( max(p,0),255); 
+   q = floor( v * (1-f * saturation)); 
+   q = min ( max(q,0),255); 
+   t = floor( v * (1-(1-f) * saturation)); 
+   t = min ( max(t,0),255); 
+   (h==0)?(r=v;g=t;b=p;) 
+   :(h==1)?(r=q;g=v;b=p;) 
+   :(h==2)?(r=p;g=v;b=t;) 
+   :(h==3)?(r=p;g=q;b=v;) 
+   :(h==4)?(r=t;g=p;b=v;) 
+   :(h==5)?(r=v;g=p;b=q;) 
+   :( r=v;g=t;b=p;); 
+   ); 
+   this.r = r; 
+   this.g = g; 
+   this.b = b; 
+   this.a = a; 
+   //gfx_r = r/255;
+   //gfx_g = g/255;
+   //gfx_b = b/255;
+   gfx_set(r/255, g/255, b/255, a);
+); 
+
+@slider
+blur = 1-slider48;
+freeze = 2;
+
+w = slider1;
+h = slider2;
+x = slider3;
+y = slider4;
+
+b = slider5;
+a = slider6;
+h = slider7;
+s = slider8;
+v = slider9;
+
+n = slider10+1;
+average = slider11;
+std = slider12;
+hight = slider13;
+dBscale = slider16;
+bitDepth = slider17;
+attenuate = (1-slider33);
+gaussian = slider34;
+difference = slider35;
+squared_mode = slider36;
+vectorscope = slider37;
+
+horiz = slider30;
+scaley = 1-slider31;
+scalex = 1-slider32;
+//scaley = slider31;
+//scalex = slider32;
+
+
+@block
+
+  // Triggers a display freeze when project is stopped 
+  // or paused in "Play/Pause" freeze mode. Responsive
+  // enough if this is switched in the @block section.
+  stopped = (freeze == 2 && play_state < 1) ? 1 : 0;
+
+
+@sample
+
+//spl0*=1/1.5;
+//spl1*=1/1.5;
+/*
+max0 = max(max0,spl0);
+max1 = max(max1,spl1);
+min0 = min(min0,spl0);
+min1 = min(min1,spl1);
+spl0 ? minabs0 = min(minabs0,abs(spl0));
+spl1 ? minabs1 = min(minabs1,abs(spl1));
+/*/
+
+(freeze != 1 && stopped = 1) ? (
+
+expansion=0;
+expansion ? (
+  maxsamples = max(abs(spl0),abs(spl1));
+  //gain > 1/maxsamples ? (gain /= attack; i = 0;):(i < srate*hold ? (i+=1):(gain *= release;) );
+  gain > 1/maxsamples ? (gain /= attack):(gain *= release);
+  spl0 *= gain;
+  spl1 *= gain;
+  mult = gain;
+):(spl0 *= mult; spl1 *= mult; gain = mult;);
+
+//*
+squared_mode ? (
+  ch0 = rotCosAngle*spl0-rotSinAngle*spl1;
+  ch1 = rotSinAngle*spl0+rotCosAngle*spl1;
+  spl0 = ch0;
+  spl1 = ch1;
+  
+  x = (spl1 - spl0);
+  y = (spl0 + spl1);
+  xx = x*x;
+  yy = y*y;
+  xy = x*y;
+  xy_inv_mag = 1/sqrt(2*(xx + yy));
+  spl0 = (yy - xx)*xy_inv_mag;
+  spl1 = 2*xy*xy_inv_mag;
+  
+  //spl0 = atan2(spl1,spl0)/pi;
+);
+//*/
+
+
+//*
+input_buffer[buffer_index*2  ] = spl0;
+input_buffer[buffer_index*2+1] = spl1;
+buffer_index = (buffer_index + 1)%buffer_length;
+//*/
+);
+
+@gfx
+gfx_dest  = -1;
+gfx_mode = 0;  // additive
+gfx_clear = 0; // black
+
+(mouse_cap) ? (
+  gfx_r=gfx_g=gfx_b=0; gfx_a=1;
+  gfx_x=gfx_y=0;
+  gfx_rectto(gfx_w,gfx_h);
+);
+
+
+
+
+
+
+/*
+//gfx_clear=-1;
+//gfx_r=gfx_g=gfx_b=0; gfx_a=blur; //Blur
+gfx_set(0,0,0,blur,0);
+//gfx_set(0,0,0,blur,0,1);
+gfx_x=gfx_y=0;
+gfx_rectto(gfx_w,gfx_h);
+//gfx_blit(1,1,0,0,0,gfx_w,gfx_h,0,0,gfx_w,gfx_h,0,0);
+//*/
+dim = 1-blur;
+//gfx_muladdrect(0,0,gfx_w,gfx_h, dim*r_dim, dim*g_dim, dim*b_dim);
+
+
+
+
+//* /// Distribute values ///
+buffer_index_buffer = buffer_index;
+buffer_index_max = max(buffer_index_max,buffer_index);
+buffer_index = 0;
+memcpy(input_buffer_cpy, input_buffer, buffer_length*2);
+
+    gfx_dest = 127;
+    gfx_setimgdim(127, gfx_w, gfx_h);
+    gfx_x = gfx_y = 0;
+    (freeze != 1 && stopped = 1) ?
+    //(freeze != 1 && stopped != 0) ?
+    (
+      //dim = (glow ? 0.925 : 0.98);
+      //dim = 0;
+      gfx_muladdrect(0,0,gfx_w,gfx_h, dim*r_dim, dim*g_dim, dim*b_dim);
+      //gfx_muladdrect(0,0,gfx_w,gfx_h, dim, dim, dim);
+    );
+//gfx_dest = 2;
+//gfx_setimgdim(2, gfx_w, gfx_h);
+//gfx_muladdrect(0,0,gfx_w,gfx_h, dim*r_dim, dim*g_dim, dim*b_dim);
+
+/*      /// Vectorscope ///
+//vectorscope ? (
+  //gfx_set(1,1,1);
+  //gfx_set(1, 1, 1, 0.75, 2);
+  //gfx_set(1,0.9,0.7);
+  i = 0;
+  loop(buffer_index_buffer,
+    s0 = input_buffer_cpy[i*2];
+    s1 = input_buffer_cpy[i*2+1];
+    
+    point_angle = atan2(s0,s1)-7*pi/4;
+    point_radius = sqrt(sqr(s0)+sqr(s1))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+    gfx_a = a;
+    //gfx_setpixel(1,1,1);
+    //gfx_setpixel(1,1,0.6);
+    gfx_circle(gfx_x,gfx_y,centre/600,1);
+
+    
+    //gfx_a = a*line_alpha;
+    //gfx_line(gfx_x,gfx_y,old_x,old_y);
+    //old_x = gfx_x;
+    //old_y = gfx_y;
+
+
+    CP.c_peak(point_radius,point_angle);
+    l.rc_lp(s0);
+    r.rc_lp(s1);
+
+    
+    
+    i+=1;
+  );
+  
+//*/
+
+/*
+squared_mode ? (
+      rad = floor(centre/40);
+      // Peak
+      gfx_x = gfxw2+cos(CP.pha)*centre*(CP.amp)^(scalex);
+      gfx_y = gfxh2-sin(CP.pha)*centre*(CP.amp)^(scalex);
+      //gfx_a = a;
+      //gfx_a = 1;
+      gfx_set(1,0.5,0.5,1);
+      gfx_circle(gfx_x,gfx_y,rad,0,1,1);
+      gfx_circle(gfx_x,gfx_y,rad+1,0,1,1);
+      gfx_setpixel(1,1,1);
+      //MCS
+      point_angle = atan2(l.lp,r.lp)-7*pi/4;
+      point_radius = sqrt(sqr(l.lp)+sqr(r.lp))/sqrt2;
+      gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+      gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+      //gfx_a = a;
+      //gfx_setpixel(1,1,1);
+      //gfx_set(0.5,1,0.5,1);
+      //gfx_set(1,1,1,1);
+      gfx_circle(gfx_x,gfx_y,rad,0,1,1);
+      gfx_circle(gfx_x,gfx_y,rad+1,0,1,1);
+      gfx_setpixel(1,1,1);
+);
+//*/
+
+
+/*      /// Vectorscope ///
+line_alpha ? (
+//vectorscope ? (
+  gfx_set(1,1,1,a*line_alpha);
+  //gfx_set(1,0.9,0.6,a*line_alpha);
+  //gfx_set(1, 0.9, 0.6, a*line_alpha, 2);
+  i = 0;
+  loop(buffer_index_buffer,
+    s1 = input_buffer_cpy[i*2];
+    s0 = input_buffer_cpy[i*2+1];
+    os0.os_up8(s0);
+    os1.os_up8(s1);
+    
+    
+    point_angle = atan2(os1.y0,os0.y0)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y0)+sqr(os1.y0))/sqrt2;
+    old_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    old_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+    
+    
+    point_angle = atan2(os1.y8,os0.y8)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y8)+sqr(os1.y8))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+    
+    //gfx_line(gfx_x,gfx_y,old_x,old_y);
+    old_x = gfx_x;
+    old_y = gfx_y;
+
+    point_angle = atan2(os1.y7,os0.y7)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y7)+sqr(os1.y7))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_line(gfx_x,gfx_y,old_x,old_y);
+    old_x = gfx_x;
+    old_y = gfx_y;
+
+    
+    point_angle = atan2(os1.y6,os0.y6)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y6)+sqr(os1.y6))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_line(gfx_x,gfx_y,old_x,old_y);
+    old_x = gfx_x;
+    old_y = gfx_y;
+
+    point_angle = atan2(os1.y5,os0.y5)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y5)+sqr(os1.y5))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_line(gfx_x,gfx_y,old_x,old_y);
+    old_x = gfx_x;
+    old_y = gfx_y;
+    
+    point_angle = atan2(os1.y4,os0.y4)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y4)+sqr(os1.y4))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_line(gfx_x,gfx_y,old_x,old_y);
+    old_x = gfx_x;
+    old_y = gfx_y;
+    
+    point_angle = atan2(os1.y3,os0.y3)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y3)+sqr(os1.y3))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_line(gfx_x,gfx_y,old_x,old_y);
+    old_x = gfx_x;
+    old_y = gfx_y;
+
+    point_angle = atan2(os1.y2,os0.y2)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y2)+sqr(os1.y2))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_line(gfx_x,gfx_y,old_x,old_y);
+    old_x = gfx_x;
+    old_y = gfx_y;
+    
+    point_angle = atan2(os1.y1,os0.y1)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y1)+sqr(os1.y1))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+ 
+    gfx_line(gfx_x,gfx_y,old_x,old_y);
+    old_x = gfx_x;
+    old_y = gfx_y;
+
+    point_angle = atan2(os1.y0,os0.y0)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y0)+sqr(os1.y0))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_line(gfx_x,gfx_y,old_x,old_y);
+    old_x = gfx_x;
+    old_y = gfx_y;
+    
+    i+=1;
+  );
+//);
+);
+//*/
+
+
+///*      /// Vectorscope ///
+//vectorscope ? (
+  circle_size = 1200;
+  //gfx_set(1,1,1,a*line_alpha);
+  //gfx_set(1,0.9,0.6,a*line_alpha);
+  //gfx_set(1, 0.9, 0.6, a*line_alpha);
+  //gfx_mode = 2;
+  HSBtoRGB(hue*360,saturation,value,a);
+  
+  i = 0;
+  loop(buffer_index_buffer,
+    s1 = input_buffer_cpy[i*2];
+    s0 = input_buffer_cpy[i*2+1];
+    os0.os_up8(s0);
+    os1.os_up8(s1);
+    
+    
+    point_angle = atan2(os1.y8,os0.y8)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y8)+sqr(os1.y8))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+    
+    //gfx_circle(gfx_x,gfx_y,centre/circle_size,1);
+
+    point_angle = atan2(os1.y7,os0.y7)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y7)+sqr(os1.y7))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_circle(gfx_x,gfx_y,centre/circle_size,1);
+
+    point_angle = atan2(os1.y6,os0.y6)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y6)+sqr(os1.y6))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_circle(gfx_x,gfx_y,centre/circle_size,1);
+
+    point_angle = atan2(os1.y5,os0.y5)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y5)+sqr(os1.y5))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_circle(gfx_x,gfx_y,centre/circle_size,1);
+    
+    point_angle = atan2(os1.y4,os0.y4)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y4)+sqr(os1.y4))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_circle(gfx_x,gfx_y,centre/circle_size,1);
+    
+    point_angle = atan2(os1.y3,os0.y3)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y3)+sqr(os1.y3))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_circle(gfx_x,gfx_y,centre/circle_size,1);
+    
+    point_angle = atan2(os1.y2,os0.y2)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y2)+sqr(os1.y2))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_circle(gfx_x,gfx_y,centre/circle_size,1);
+    
+    point_angle = atan2(os1.y1,os0.y1)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y1)+sqr(os1.y1))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+ 
+    gfx_circle(gfx_x,gfx_y,centre/circle_size,1);
+
+    point_angle = atan2(os1.y0,os0.y0)-7*pi/4;
+    point_radius = sqrt(sqr(os0.y0)+sqr(os1.y0))/sqrt2;
+    gfx_x = gfxw2+cos(point_angle)*centre*(point_radius)^(scalex);
+    gfx_y = gfxh2-sin(point_angle)*centre*(point_radius)^(scalex);
+
+    gfx_circle(gfx_x,gfx_y,centre/circle_size,1);
+    
+    
+    i+=1;
+  );
+//);
+//*/
+
+//gfx_muladdrect(0,0,gfx_w,gfx_h, 0.8, 1, 0.8);
+
+
+
+gfx_dest = -1;
+gfx_x = gfx_y = 0;
+gfx_set(1,1,1,1);
+gfx_a = (glow ? 0.7 : 1.0);
+//gfx_set(1,1,1,0.9);
+gfx_blit(127,1,0);
+
+//*
+// If the history display should "glow"
+    //glow ? (
+      // Blit currently unblurred image to off-screen buffer
+      gfx_dest = 100;
+      gfx_setimgdim(100, gfx_w, gfx_h);
+      gfx_a = 1.0; // full opacity before blurring
+      gfx_x = gfx_y = 0;
+      gfx_mode = 1;
+      gfx_blit(127,1,0);
+      
+      // Blur it a few times, more blur runs = faster decay.
+      gfx_x = gfx_y = 0;
+      gfx_blurto(gfx_w, gfx_h);
+      gfx_x = gfx_y = 0;
+      gfx_blurto(gfx_w, gfx_h);
+      gfx_x = gfx_y = 0;
+      gfx_blurto(gfx_w, gfx_h);
+      gfx_x = gfx_y = 0;
+      gfx_blurto(gfx_w, gfx_h);
+      
+      dim2 = 0.99; //dim2 = 0.95;
+      gfx_muladdrect(0,0,gfx_w,gfx_h, dim2, dim2, dim2);
+      
+      
+      // Switch to the main buffer and blit the now blurred
+      // visualization on top of what's already there, i.e.
+      // indicators and un-blurred visualization.
+      gfx_dest = -1;
+      gfx_a = 0.2;
+      gfx_x = gfx_y = 0;
+      gfx_blit(100,1,0);
+//    );
+//*/
+
+
+
+
+
+  
+  /*
+  a1 = 2*centre/gfxw2/sqrt2;
+  n = 0;
+  nstep = 1/gfx_h;
+  y = 0;
+  gfx_set(1,1,1,0.2);
+  loop(gfx_h,
+    x = a1 * n * (1 - (n * 1));
+    gfx_x = (gfx_w - (x * gfx_w))-gfxw2;
+    gfx_y = y;
+    gfx_setpixel(1,1,1);
+    n += nstep;
+    y += 1;
+  );
+  //*/
+  
+  
+  
+  /*
+  gfx_x = 0; gfx_y = gfx_h-gfx_h/12; 
+  pBitL > -32 ? gfx_drawstr("L");
+  pBitR > -32 ? gfx_drawstr("R");
+  pBitM > -32 ? gfx_drawstr("M");
+  pBitS > -32 ? gfx_drawstr("S");
+  //*/
+  
+  
+    /// dB lines ///
+    gfx_set(0.5,1,0.5,0.6);
+    gfxw2 = gfx_w/2;
+    gfxh2 = gfx_h/2;
+    centre = min(gfxw2,gfxh2);
+    
+  //*
+  grid ? ( 
+  
+    gfx_x = gfxw2; gfx_y = gfxh2;
+    gfx_setpixel(0.5,1,0.5);
+    
+    gfx_set(1,1,1,0.15);
+    i = 0;
+    //loop(12,
+    loop(16,
+      shift = centre/((2^i)^scalex);
+      gfx_circle(gfxw2,gfxh2,shift);
+      i+=1;
+    );
+    
+    i = 8;
+    loop(4,
+      shift = centre/((2^i)^scalex);
+      gfx_circle(gfxw2,gfxh2,shift);
+      i+=8;
+    );
+    
+    
+    i = 64;
+    loop(1,
+      shift = centre/((2^i)^scalex);
+      gfx_circle(gfxw2,gfxh2,shift);
+      i+=8;
+    );
+    
+    
+    centre > 125 ? (
+      i = 0;
+      loop(13,
+        shift = centre/((10^i)^scalex);
+        gfx_circle(gfxw2,gfxh2,shift);
+        i+=0.05;
+      );
+    );
+    
+    centre > 256 ? (
+      i = 0;
+      loop(21,
+        shift = centre/((10^i)^scalex);
+        i+=0.005;
+      );
+    );
+    
+    div = 8;
+    i = 0;
+    loop(div,
+      moveto(gfxw2,gfxh2);
+      linetopolar(centre-1,i*pi2/div,0);
+      i+=1;
+    );
+    
+    scalex == 1 ? (
+    gfx_a*=2;
+    i = 1;
+    old_x2 = gfxw2+centre;
+    old_y2 = gfxh2;
+    loop(4,
+      //debug = point_angle = atan2(0,-1);
+      point_angle = pi/2*i;
+      point_radius = 1;
+      gfx_x = gfxw2+cos(point_angle)*centre;
+      gfx_y = gfxh2-sin(point_angle)*centre;
+    
+      gfx_line(gfx_x,gfx_y,old_x2,old_y2);
+      old_x2 = gfx_x;
+      old_y2 = gfx_y;
+      i+=1;
+      );
+    );
+    
+  );
+  
+  //*/
+  
+  
+  ///*
+  spacing = 10;
+  gfx_set(1,1,1,1);
+  //gfx_dest = 2;
+  // cursor cross + readout
+  mouse_x>0 && mouse_x<gfx_w && mouse_y>0 && mouse_y<gfx_h? (
+    //gfx_set(1,1,1,0.3);gfx_line(0,mouse_y,gfx_w,mouse_y,1);gfx_line(mouse_x,0,mouse_x,gfx_h,1);
+    //gfx_set(1,1,1,1);
+    x_dist = (mouse_x-gfxw2)/centre;
+    y_dist = (mouse_y-gfxh2)/centre;
+    center_dist = sqrt(x_dist^2 + y_dist^2)^(1/scalex);
+    center_angle = ((atan2(x_dist,y_dist))/pi);
+    gfx_x=gfx_w-160;gfx_y = 5;
+    gfx_printf("     Bit: %d", (-20.0*log10(center_dist))/6);
+    gfx_x=gfx_w-160;gfx_y+=spacing;
+    //gfx_printf("dB value: %4.1f", 20.0*log10(abs((2*mouse_x/gfx_w)-1)^(1/scalex)));
+    gfx_printf("dB value: %4.1f", 20.0*log10(center_dist));
+    gfx_x=gfx_w-160;gfx_y+=spacing;
+    //gfx_printf(" value: %f", (2*mouse_x/gfx_w)-1);
+    //gfx_printf("   value: %f", sign((2*mouse_x/gfx_w)-1)*(abs((2*mouse_x/gfx_w)-1))^(1/scalex));
+    gfx_printf("   value: %f", center_dist^(1/scalex));
+    gfx_x=gfx_w-160;gfx_y+=spacing;
+    gfx_printf("   angle: %3.0f", 180*sign(center_angle)*(1-abs(center_angle)) );
+    
+    //gfx_set(1,1,1,0.3);
+    //gfx_circle(gfxw2,gfxh2,sqrt(((mouse_x-gfxw2))^2+((mouse_y-gfxh2))^2),0,1);
+    
+  );
+  //*/
+
+

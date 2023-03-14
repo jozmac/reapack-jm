@@ -1,0 +1,444 @@
+noindex: truetags: Saike - Basic pitch shifter
+version: 0.01
+author: Joep Vanlier
+changelog: initial commit
+license: MIT
+(C) Joep Vanlier 2020
+the pitch lib. :).
+
+desc:Thiran Delay [JM]
+
+//import saike_pitchlib.jsfx-inc
+import Tale/lfo.jsfx-inc
+
+
+slider1:0<0,10000,1>Absolute Delay [spls]
+slider2:0<0,10000,1>Integer Delay [spls]
+slider3:0<0,0.99999,0.01>Fractional Delay [spls]
+slider4:0<0,10000,1>Delay [ms]
+slider5:0<0,20000,1:sqr=2>Delay [Hz]
+slider6:0<0,1000,1>Delay [m]
+
+slider7:0<-1,1,0.01>Feedback
+slider8:0<-180,180,0.01>Rotate FB [°]
+slider9:0<0,1,{Disabled,Enabled}> Ping Pong
+slider10:0<0,100,0.0001>LFO Freq [Hz]
+slider11:0<0,100,0.01>LFO Depth [ms]
+slider12:0.5<0,1,0.01>Smooth Coeff (0 = Off)
+slider14:0<0,3,1{Normal,Invert Left,Invert Right,Invert Both}>FB Polarity Mode
+slider15:0<0,3,1{Normal,Invert Left,Invert Right,Invert Both}> Out Polarity Mode
+//slider16:0<0,3,1{[spls],[ms],[us],[Hz],[milimeters]}> Time Unit
+//slider16:0<0,1,1{Convert, Add}> Unit Mode
+//slider17:0<0,3,1{Normal,Invert Left,Invert Right,Invert Both}> Modulation Mode
+slider18:0<0,100,0.01>SC Depth [ms]
+slider19:0<0,1,1{Off,On}>PDC Compensate
+slider20:18<-50,50,1>-Temperature [°C]
+
+%slider30:0<0,1,1{Off,On}>Latency Compensation
+
+// TO-DO - surr [rotation] pong feedback, PDC compensation
+// 
+
+@init
+
+function calc () (
+
+  (oldms != slider4) ? (
+    oldms    = slider4;
+
+      old = oldl = srate*oldms/1000;
+      oldh  = old | 0;
+      oldl  = old - oldh;
+      oldhz = 1/(old+1)*(srate);
+      oldm = old/srate*(331.5+0.6*slider20);
+  
+    slider1 = old ;
+    slider2 = oldh;
+    slider3 = oldl;
+
+    slider5 = oldhz;
+    slider6 = oldm;
+  );
+
+  (oldhz != slider5) ? (
+    oldhz   = slider5;
+  
+      old   = 1/oldhz*(srate)-1;
+      oldh  = old | 0;
+      oldl  = old - oldh;
+      oldms = 1000*old/srate;
+      oldm = old/srate*(331.5+0.6*slider20);
+  
+    slider1 = old ;
+    slider2 = oldh;
+    slider3 = oldl;
+    slider4 = oldms;
+
+    slider6 = oldm;
+  );  
+
+  (oldm != slider6) ? (
+    oldm    = slider6;
+  
+      old   = oldm*srate/((331.5+0.6*slider20));
+      oldh  = old | 0;
+      oldl  = old - oldh;
+      oldhz = 1/(old+1)*(srate);
+      oldms = 1000*old/srate;
+  
+    slider1 = old;
+    slider2 = oldh;
+    slider3 = oldl;
+    slider4 = oldms;
+    slider5 = oldhz;
+  ); 
+  
+  (oldh != slider2) || (oldl != slider3) ? (
+    oldh    = slider2;
+    oldl    = slider3;
+  
+      old   = oldh + oldl;
+      oldh  = old | 0;
+      oldl  = old - oldh;
+      oldms = 1000*old/srate;
+      oldhz = 1/(old+1)*(srate);
+      oldm = old/srate*(331.5+0.6*slider20);
+  
+    slider1 = old ;
+  
+    slider4 = oldms;
+    slider5 = oldhz;
+    slider6 = oldm;
+  ); 
+  
+  old != slider1 ? (
+    oldh    = slider1;
+    oldh    = oldh | 0;
+
+      oldl  = oldh;
+      oldh  = oldh | 0;
+      oldl  = oldl - oldh;
+      old   = oldh + oldl;
+      oldms = 1000*old/srate;
+      oldhz = 1/(old+1)*(srate);
+      oldm  = old/srate*(331.5+0.6*slider20);
+ 
+    slider1 = old;
+    slider2 = oldh;
+    slider3 = oldl;
+    slider4 = oldms;
+    slider5 = oldhz;
+    slider6 = oldm;
+  );  
+);
+
+  old    = -1;
+  oldl   = -1;
+  oldh   = -1;
+  oldms  = -1;
+  oldhz  = -1;
+  oldm   = -1;
+  
+
+
+
+//pdcdelay = pdc_delay;
+
+function pitchlibInitBuffer(scopebuffer_in, scopebuffermax_in)
+  local()
+  global()
+  instance(scopeptr, scopebuffermax, scopebuffer, len)
+  (
+    scopebuffer     = scopebuffer_in;
+    scopebuffermax  = scopebuffermax_in;
+    len             = scopebuffermax_in - scopebuffer_in;
+    
+    scopeptr < scopebuffer ? (
+      scopeptr = scopebuffer
+    ) : ( scopeptr >= scopebuffermax ) ? scopebuffer
+  );
+ 
+function pitchlibReadBufferAt(dtime)
+  local(t, t2, offset,
+        tm1, tm2, tm3, tm4,
+        a0, a1, a2, a3, a4,
+        d0l, d1l, d2l, d3l, d4l,
+        d0r, d1r, d2r, d3r, d4r,
+        y1l, y1r, k)
+  global()
+  instance(scopeptr, readptr, scopebuffermax, scopebuffer, frac, outL, outR, len)
+  (
+    readptr   = scopeptr;
+    offset    = dtime - floor(dtime) + floor(dtime*.5)*2;
+    frac      = dtime * .5 - floor(dtime * .5);
+    readptr  -= floor(offset)+4;
+    readptr < scopebuffer ? readptr += len;
+    
+    
+
+    d1l = readptr[0];
+    d1r = readptr[1];
+    
+    (readptr += 2) >= scopebuffermax ? readptr -= len;
+        
+    d0l = readptr[0];
+    d0r = readptr[1];
+    
+    
+    //k = (1-(frac))/(1.01+(frac));
+    k = (1-(frac))/(1+(frac));
+    outL = k*(d0l-y1l)+d1l;
+    outR = k*(d0r-y1r)+d1r;
+    y1l = outL;
+    y1r = outR;
+    
+    
+    
+  );
+
+function pitchlibUpdateBuffer2(ll, rr)
+  local()
+  global()
+  instance(scopeptr, scopebuffermax, scopebuffer, len)
+  (
+    scopeptr[] = ll;
+    scopeptr[1] = rr;
+    scopeptr += 2;
+    scopeptr >= scopebuffermax ? scopeptr -= len;
+  );
+  
+  
+
+/*
+pdc_bot_ch=0;
+pdc_top_ch=2;
+pdc_delay=1035;
+*/
+
+location = 65536*4;
+bigbuffer = 65536*40;
+M.pitchlibInitBuffer(location, location + bigbuffer);
+
+function smooth_parameter(target)
+instance(s, coeff)
+global()
+local(y, v)
+(
+  v = coeff*(target - s);
+  y = v + s;
+  s = y + v;
+  y
+);
+
+function initialize_smoother(cutoff)
+instance(coeff)
+global(srate)
+local(g)
+( 
+  g = tan($pi*cutoff/srate);
+  coeff = g/(1+g);  
+);
+
+function interpolator_init(slider_idx)
+instance(next_val, idx, s)
+local()
+global()
+(
+  s = slider(slider_idx);
+  next_val = slider(slider_idx);
+  idx = slider_idx;
+);
+
+function interpolator_block()
+instance(delta, next_changepoint_t, next_val, idx)
+local(next_changepoint_y)
+global(samplesblock)
+(
+  next_changepoint_t = slider_next_chg(idx, next_changepoint_y);
+  next_changepoint_t > 0 ? 
+  (
+    next_val = slider(idx);
+  ) : (
+    next_changepoint_y = slider(idx);
+    next_changepoint_t = samplesblock;
+  );
+    
+  delta = (next_changepoint_y - next_val) / next_changepoint_t;
+);
+  
+function interpolate()
+instance(delta, next_changepoint_t, next_val, idx, coeff)
+local(current_value, next_changepoint_y)
+global(current_sample)
+(
+  current_value = next_val;
+  current_sample == next_changepoint_t ? 
+  (
+    delta = 0;
+    next_changepoint_t = slider_next_chg(idx, next_changepoint_y);
+    delta = next_changepoint_t > current_sample ? (next_changepoint_y - current_value) / (next_changepoint_t-current_sample) : 0;
+  );
+    
+  next_val = current_value + delta;
+    
+  coeff > 0 ? this.smooth_parameter(current_value) : current_value
+);
+
+function from_frequency(hz)
+local(octave, float_note, note, note_label, offset)
+global()
+(
+  note = log(hz / 261.6255653005986) / log(2);
+  octave = floor(note);
+  float_note = 12 * (note - octave);
+  note = floor(float_note + 0.5);
+  offset = float_note - note;
+  note_label = note < 1 ? "C-" : note < 2 ? "C#" : note < 3 ? "D-" : note < 4 ? "D#" : note < 5 ? "E-" : note < 6 ? "F-" : note < 7 ? "F#" : note < 8 ? "G-" : note < 9 ? "G#" : note < 10 ? "A-" : note < 11 ? "A#" : "B-";
+  sprintf(16, "%s%d (%+.2f ct)", note_label, octave + 4, offset)
+);
+
+//function get_coeff(ms) ( exp(1/(srate*ms)); );
+
+M_interpolator.interpolator_init(1); //init delay value interpolation
+LFO_interpolator.interpolator_init(10); //init LFO freq interpolation
+LFO_interpolator.initialize_smoother(0.5); //LFO interpolation coeff
+
+@slider
+calc(); 
+
+//delay = slider1;
+fb = slider7;
+rot=slider8*0.017453292;
+PinPon = slider9;
+LFOF = slider10;
+LFOD = slider11*srate/1000;
+FpolL = slider14 & 1 ? -1 : 1;
+FpolR = slider14 & 2 ? -1 : 1;
+OpolL = slider15 & 1 ? -1 : 1;
+OpolR = slider15 & 2 ? -1 : 1;
+unit = slider16;
+SCD = slider18*srate/1000;
+M_interpolator.initialize_smoother(slider12); //interpolation coeff
+latency_mode = slider19;
+
+@block
+M_interpolator.interpolator_block();
+LFO_interpolator.interpolator_block()
+
+@sample
+//*
+PinPon == 1 ? (
+  buff = spl0;
+  spl0 = spl1;
+  spl1 = buff;
+);
+//*/
+
+//t += 1/srate;
+//LFO = (0.5*sin(2 * $pi * (t * LFO_interpolator.interpolate()))+1) * LFOD;
+
+lfo.lfo_setf(LFO_interpolator.interpolate());
+LFO = (0.5*(lfo.lfo_sin())+0.5) * LFOD + ((spl2)/2+0.5) * SCD;
+
+
+//LFO = (0.5*(spl2+spl3)+1) * LFOD;
+
+x = M_interpolator.interpolate()+LFO;
+M = (x*2);
+
+//unit==1 ? M=M*srate/1000:
+//unit==2 ? M=M*srate/1000000:
+//unit==3 ? M=1/M*(srate*2):
+//unit==4 ? M=M*srate/((331.5+0.6*slider20/* [°C] */)*1000); 
+//latency_mode == 1 ? (M -= samplesblock);
+
+
+fbl = M.outL;
+fbr = M.outR;
+/*
+PinPon == 0 ? (
+  fbl = M.outL;
+  fbr = M.outR;
+):(
+  fbl = M.outR;
+  fbr = M.outL;
+);
+//*/
+
+// Rotation
+s0 = sign(fbl);
+s1 = sign(fbr);
+angle = atan( fbl / fbr );
+(s0 == 1 && s1 == -1) || (s0 == -1 && s1 == -1) ? angle += 3.141592654;
+s0 == -1 && s1 == 1 ? angle += 6.283185307;
+fbr == 0 ? fbl > 0 ? angle = 1.570796327 : angle = 4.71238898;
+fbl == 0 ? fbr > 0 ? angle = 0 : angle = 3.141592654;
+angle -= rot;
+radius = sqrt( sqr(fbl)+sqr(fbr) ) ;
+fbl = sin(angle)*radius;
+fbr = cos(angle)*radius;
+
+M.pitchlibUpdateBuffer2(spl0+fbl*fb*FpolL, spl1+fbr*fb*FpolR);
+//M < bigbuffer ? (
+//  M.pitchlibReadBufferAt(M);
+//  spl0 = M.outL*OpolL;
+//  spl1 = M.outR*OpolR;
+//);
+
+
+latency_mode ? (
+  M-samplesblock < 0 ? (Memo=0):(Memo=M-samplesblock);
+  M.pitchlibReadBufferAt(Memo);
+  spl0 = M.outL*OpolL;
+  spl1 = M.outR*OpolR;
+):(
+  M.pitchlibReadBufferAt(M);
+  spl0 = M.outL*OpolL;
+  spl1 = M.outR*OpolR;
+);
+
+
+
+@gfx
+gfx_set(0.945, 0.945, 0.945, 1);
+gfx_rect(0, 0, gfx_w, gfx_h);
+//gfx_set(125/256, 207/256, 1, 1);
+gfx_set(1, 1, 1, 5);
+gfx_x = 5; gfx_y = 5;
+gfx_printf("Incurred lag: %f spls / %d spls", M/2, bigbuffer);
+gfx_x = 5; gfx_y += 10;
+gfx_printf("Incurred lag: %f ms / %d ms", 1000 * M / (2*srate), 1000 * bigbuffer / (2*srate) );
+gfx_x = 5; gfx_y += 10;
+gfx_printf("Incurred lag: %f Hz", 1/M*(srate));
+gfx_x = 5; gfx_y += 10;
+gfx_printf("Incurred lag: %f mm", M/(2*srate)*((331.5+0.6*slider20/* [°C] */)*1000));
+gfx_x = 5; gfx_y += 10;
+gfx_printf("Incurred lag: %f m", M/(2*srate)*((331.5+0.6*slider20/* [°C] */)));
+gfx_x = 5; gfx_y += 10;
+gfx_printf("Sample Rate: %d Hz", srate);
+
+gfx_x = 5; gfx_y += 10;
+      //chroma = log(abs(srate/spls)*invC4)*invlog2;
+      //HSBtoRGB(360*chroma,1,1,1);
+      gfx_printf(from_frequency(srate/M*2););
+
+//gfx_x = 5; gfx_y = 65;
+//gfx_printf("Sample Rate: %d Hz", srate);
+
+
+function qplot(mem, x, y, sc)
+local(t, cy, lx, ly, x)
+global()
+(
+  t = 0;
+  cy = 0;
+  lx = 0;
+  ly = 0;
+  loop(3000,
+    cy = - sc * mem[t];
+    gfx_line(x-.1, y + ly, x, y + 30*cy);
+    x += .94;
+    t += 1;
+    ly = cy;
+  );
+);

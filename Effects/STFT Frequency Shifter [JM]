@@ -1,0 +1,529 @@
+desc:STFT Frequency Shifter [JM]
+
+slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
+slider2:12000<0,24000,1>Cutoff Frequency
+slider3:0<-1,1,0.001>Freq Multiplyer
+slider4:0<-20000,20000,10>Freq [Hz]
+
+slider5:0<-1,1,0.0001>Integrator Feedback
+slider6:0.01<-1,1,0.0001>-Tension
+slider7:1<0,1,{FB,w/o FB}>-Mode
+slider8:prefilter=1<0,1,{Off,On}>Prefiltering
+
+slider9:specInv=0<0,1,{Off,On}>Spectrum Inverter
+
+
+slider20:0.5<0,1,0.001>Smooth Coeff (0 = Off)
+
+TODO: Frequency Multiplyer
+
+    //Options
+    dPrecision = 2;             //Decimal places for numbers
+    dLeft = 5;                  //Debug window position in pixels
+    dTop = 5;                   //Debug window position in pixels
+    dRows = 5;                  //Row count for buffer data
+    dCols = 6;                  //Column count for buffer data
+dRowHeight = 20;            //Row height offset for buffer data
+    dColWidth = 80;             //Column width offset for buffer data
+    dMarginX = 5;               //Left margin in pixels
+    dMarginY = 5;               //Top margin in pixels
+    dBufferY = 30;              //Vertical offset for buffer data display
+
+slider50:dPrecission=2<0,10,1>-dPrecission---
+slider51:dLeft=5<0,1024,1>-dLeft---
+slider52:dTop=5<0,1024,1>-dTop---
+slider53:dRows=256<0,1024,1>-dRows
+slider54:dCols=512<0,1024,1>-dCols
+slider55:dRowHeight=1<1,100,1>-dRowHeight
+slider56:dColWidth=1<1,100,1>-dColWidth
+slider57:dMarginX=5<0,10,1>-dMarginX---
+slider58:dMarginY=5<0,10,1>-dMarginY---
+slider59:dBufferY=30<0,10,1>-dBufferY---
+slider60:dOffset=0<0,1000000,1>-dOffset
+slider61:dAlpha=1<1,100000,1>-dAlpha
+
+@init
+pi = $pi;
+anAngle = 0;
+srate2 = srate/2;
+
+rotate_real = cos(90*$pi/180);
+rotate_imag = sin(90*$pi/180);
+
+function smooth_parameter(target)
+instance(s, coeff)
+global()
+local(y, v)
+(
+  v = coeff*(target - s);
+  y = v + s;
+  s = y + v;
+  y
+);
+
+function initialize_smoother(cutoff)
+instance(coeff)
+global(srate)
+local(g)
+( 
+  g = tan($pi*cutoff/srate);
+  coeff = g/(1+g);  
+);
+
+function interpolator_init(slider_idx)
+instance(next_val, idx, s)
+local()
+global()
+(
+  s = slider(slider_idx);
+  next_val = slider(slider_idx);
+  idx = slider_idx;
+);
+
+function interpolator_block()
+instance(delta, next_changepoint_t, next_val, idx)
+local(next_changepoint_y)
+global(samplesblock)
+(
+  next_changepoint_t = slider_next_chg(idx, next_changepoint_y);
+  next_changepoint_t > 0 ? 
+  (
+    next_val = slider(idx);
+  ) : (
+    next_changepoint_y = slider(idx);
+    next_changepoint_t = samplesblock;
+  );
+    
+  delta = (next_changepoint_y - next_val) / next_changepoint_t;
+);
+  
+function interpolate()
+instance(delta, next_changepoint_t, next_val, idx, coeff)
+local(current_value, next_changepoint_y)
+global(current_sample)
+(
+  current_value = next_val;
+  current_sample == next_changepoint_t ? 
+  (
+    delta = 0;
+    next_changepoint_t = slider_next_chg(idx, next_changepoint_y);
+    delta = next_changepoint_t > current_sample ? (next_changepoint_y - current_value) / (next_changepoint_t-current_sample) : 0;
+  );
+    
+  next_val = current_value + delta;
+    
+  coeff > 0 ? this.smooth_parameter(current_value) : current_value
+);
+
+p1_interpolator.interpolator_init(3); // init interpolation
+p2_interpolator.interpolator_init(4); // init interpolation
+
+
+
+function process_stft_segment(fft_buffer, fft_size, cutoff) local(fft_bin, mag_L, mag_R, ang_L, ang_R, left_real, left_imag, right_real, right_imag, cutoff) (
+  fft_bin = 0; // FFT bin number
+  loop(fft_size/2,
+    //fft_bin2 = fft_bin ? (fft_size - fft_bin) : 0;
+    fft_bin2 = fft_size - fft_bin;
+    // Unfold complex spectrum into two real spectra
+    //cutoff = floor(cutoff);
+
+    //*
+    left_real = fft_buffer[2*fft_bin] + fft_buffer[2*fft_bin2];
+    left_imag = fft_buffer[2*fft_bin + 1] - fft_buffer[2*fft_bin2 + 1];
+    right_real = fft_buffer[2*fft_bin + 1] + fft_buffer[2*fft_bin2 + 1];
+    right_imag = -fft_buffer[2*fft_bin] + fft_buffer[2*fft_bin2];
+    //*/
+    
+    
+
+    // Pre-filtering
+    //*
+    prefilter ? (
+    cutoff > 0 ? (
+      fft_bin <= cutoff ? (
+        left_real = 0;
+        left_imag = 0;
+        right_real = 0;
+        right_imag = 0;
+      );
+    ):(
+      fft_bin >= fft_size/2+cutoff ? (
+        left_real = 0;
+        left_imag = 0;
+        right_real = 0;
+        right_imag = 0;
+      );
+    );
+    
+    fft_bin == 0 ? (
+    left_real = 0;
+    left_imag = 0;
+    right_real = 0;
+    right_imag = 0;
+    );
+    );
+    //*/
+    
+    
+    // rotate left phase
+    tmp_real = left_real;
+    tmp_imag = left_imag;
+    rot_left_real = tmp_real*rotate_real - tmp_imag*rotate_imag;
+    rot_left_imag = tmp_imag*rotate_real + tmp_real*rotate_imag;
+    // rotate right phase the other way
+    tmp_real = right_real;
+    tmp_imag = right_imag;
+    rot_right_real = tmp_real*rotate_real - tmp_imag*rotate_imag;
+    rot_right_imag = tmp_imag*rotate_real + tmp_real*rotate_imag;
+    
+
+    // Re-fold back into complex spectrum
+    fft_buffer[2*fft_bin] = (left_real - right_imag)*0.5;
+    fft_buffer[2*fft_bin + 1] = (left_imag + right_real)*0.5;
+    fft_buffer[2*fft_bin2] = (left_real + right_imag)*0.5;
+    fft_buffer[2*fft_bin2 + 1] = (-left_imag + right_real)*0.5;
+    
+    //fft_bin < fft_size/2 ? (
+    // Re-fold back into complex spectrum
+    shift_buffer[2*fft_bin] = (rot_left_real - rot_right_imag)*0.5;
+    shift_buffer[2*fft_bin + 1] = (rot_left_imag + rot_right_real)*0.5;
+    shift_buffer[2*fft_bin2] = (rot_left_real + rot_right_imag)*0.5;
+    shift_buffer[2*fft_bin2 + 1] = (-rot_left_imag + rot_right_real)*0.5;
+    //);
+    
+    //mag_L = sqrt(left_real^2 + left_imag^2);
+    //mag_R = sqrt(right_real^2 + right_imag^2);
+    //ang_L = atan2(left_imag, left_real);
+    //ang_R = atan2(right_imag, right_real);
+    
+    
+    
+    fft_bin += 1;
+    debug = fft_bin;
+  );
+);
+
+
+function setup_stft_state(fft_size, first_time) (
+  //////////////////////// Setup block
+  // This is called when playback starts, or when the FFT size is changed
+  0;
+  ////////////////////////
+);
+
+MAX_FFT_SIZE = 32768;
+//MAX_FFT_SIZE = 16384;
+
+freemem = 0;
+freemem = (fft_buffer = freemem) + MAX_FFT_SIZE*2;
+freemem = (window_buffer = freemem) + MAX_FFT_SIZE;
+
+buffer_length = srate;
+buffer_index = 0;
+freemem = (input_buffer = freemem) + buffer_length*2;
+freemem = (output_buffer = freemem) + buffer_length*2;
+freemem = (shift_buffer = freemem) + MAX_FFT_SIZE*2;
+freemem = (output_buffer2 = freemem) + buffer_length*2;
+
+function window(r) local(s, s2, gaussian_width, x) (
+  // When squared, the Hann window adds up perfectly for overlap >= 4, so it's suitable for perfect reconstruction
+  (0.5 - 0.5*cos(r*2*$pi))/sqrt(0.375);
+);
+
+fft_size = 0;
+
+
+@slider
+//specInv = slider4;
+p1_interpolator.initialize_smoother(slider20);  // interpolation coeff
+p2_interpolator.initialize_smoother(slider20);  // interpolation coeff
+
+
+@block
+fb = slider5;
+//fb = (2*floor(slider2)+1) * ((abs(slider2)-1)/(4*abs(slider2)+1)+1);
+tension = slider6;
+mode = slider7;
+p1_interpolator.interpolator_block();
+p2_interpolator.interpolator_block();
+
+overlap_factor = 4; // default 6
+fft_size = 256<<fft_size_index;
+fft_interval = fft_size/overlap_factor;
+fft_scaling_factor = 1/overlap_factor/fft_size;
+
+fft_size != prev_fft_size ? (
+  setup_stft_state(fft_size, prev_fft_size == 0);
+  prev_fft_size = fft_size;
+  // Fill window buffer
+  i = 0;
+  loop(fft_size,
+    r = (i + 0.5)/fft_size;
+    window_buffer[i] = window(r);
+    i += 1;
+  );
+);
+
+pdc_delay = fft_size;
+pdc_bot_ch = 0;
+pdc_top_ch = 4;
+
+@sample
+
+s0 = (spl0) + (last_spl0); // Integrator
+s1 = (spl1) + (last_spl1);
+mode == 0 ? (
+  last_spl0 = s0 * fb;
+  last_spl1 = s1 * fb;
+  spl0 = s0 * -((abs(fb)-1)/(tension * abs(fb)+1));
+  spl1 = s1 * -((abs(fb)-1)/(tension * abs(fb)+1));
+):(
+  last_spl0 = spl0 * fb;
+  last_spl1 = spl1 * fb;
+  spl0 = s0;
+  spl1 = s1;
+);
+
+
+step = p1_interpolator.interpolate() * p2_interpolator.interpolate();
+//*
+specInv ? (
+  x == 0 ? (
+    spl0=spl0*(-1);
+    spl1=spl1*(-1);
+    x = 1;
+  ):(
+    x = 0
+  );
+  //step = -step;
+);
+//*/
+
+input_buffer[buffer_index*2] = spl0;
+input_buffer[buffer_index*2 + 1] = spl1;
+
+fft_counter += 1;
+fft_counter >= fft_interval ? (
+  fft_counter = 0;
+
+  // Copy input to buffer
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    i2 < 0 ? i2 += buffer_length;
+
+    fft_buffer[2*i] = input_buffer[2*i2]*window_buffer[i];
+    fft_buffer[2*i + 1] = input_buffer[2*i2 + 1]*window_buffer[i];
+
+    i += 1;
+  );
+
+  // Process buffer
+  fft(fft_buffer, fft_size);
+  fft_permute(fft_buffer, fft_size);
+  //memcpy(shift_buffer, fft_buffer, fft_size);
+
+  step < 0 ? (slider2 = -step):(slider2 = srate/2-step);
+  cutoff = -fft_size*step/srate;
+  //cutoff = -step/(srate*fft_size);
+  process_stft_segment(fft_buffer, fft_size, cutoff);
+  
+  shift_buffer[fft_size] = 0;   /// Remove srate/2 tone from phase rotation
+  shift_buffer[fft_size+1] = 0;
+  
+  //*
+  fft_ipermute(fft_buffer, fft_size);
+  ifft(fft_buffer, fft_size);
+  fft_ipermute(shift_buffer, fft_size);
+  ifft(shift_buffer, fft_size);
+  //*/
+
+  // Add to output
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    (i2 < 0) ? i2 += buffer_length;
+
+    output_buffer[2*i2] += fft_buffer[2*i]*fft_scaling_factor*window_buffer[i];
+    output_buffer[2*i2 + 1] += fft_buffer[2*i + 1]*fft_scaling_factor*window_buffer[i];
+    
+    output_buffer2[2*i2] += shift_buffer[2*i]*fft_scaling_factor*window_buffer[i];
+    output_buffer2[2*i2 + 1] += shift_buffer[2*i + 1]*fft_scaling_factor*window_buffer[i];
+    
+
+    i += 1;
+  );
+);
+
+output_index = buffer_index - fft_size;
+output_index < 0 ? output_index += buffer_length;
+spl0 = output_buffer[output_index*2];
+spl1 = output_buffer[output_index*2 + 1];
+output_buffer[output_index*2] = 0; // clear the sample we just read
+output_buffer[output_index*2 + 1] = 0;
+spl2 = output_buffer2[output_index*2];
+spl3 = output_buffer2[output_index*2 + 1];
+output_buffer2[output_index*2] = 0; // clear the sample we just read
+output_buffer2[output_index*2 + 1] = 0;
+
+buffer_index = (buffer_index + 1)%buffer_length;
+
+
+//*
+
+  lCosAngle = cos(anAngle);
+  lSinAngle = sin(anAngle);
+
+ch0 = lCosAngle*spl0-lSinAngle*spl2;
+ch1 = lSinAngle*spl0+lCosAngle*spl2;
+ch2 = lCosAngle*spl1-lSinAngle*spl3;
+ch3 = lSinAngle*spl1+lCosAngle*spl3;
+
+anAngle -= pi*step/srate2;
+anAngle >= pi ? (anAngle -= 2*pi):(anAngle <= -pi ? (anAngle += 2*pi););
+slider1 = anAngle*360/(2*pi);
+
+//*
+spl0 = ch0;
+spl1 = ch2;
+spl2 = ch1;
+spl3 = ch3;
+//*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@gfx
+gfx_set(1, 1, 1, 1);
+gfx_x = 5;
+gfx_y = 5;
+//gfx_printf("Incurred lag: %f spls / %d spls", mdc, sdc);
+//gfx_printf("MDC: %f; SDC: %f", mdc, sdc);
+gfx_printf("Shift: %f Hz", step);
+
+
+/*******************************************************************************
+    General purpose debugging aid. Paste into the gfx section of your code.
+Variables:
+    debug1...debug6      - Displayed at the top of the debug area.
+    dOffset              - Index of first item of buffer data to display.
+*******************************************************************************/
+SHOWDEBUG = 1; //Set non-zero to enable the debug view
+SHOWDEBUG ?
+(   
+/*
+    //Options
+    dPrecision = 2;             //Decimal places for numbers
+    dLeft = 5;                  //Debug window position in pixels
+    dTop = 5;                   //Debug window position in pixels
+    dRows = 1024;                  //Row count for buffer data
+    dCols = 16;                  //Column count for buffer data
+dRowHeight = 1;            //Row height offset for buffer data
+    dColWidth = 1;             //Column width offset for buffer data
+    dMarginX = 5;               //Left margin in pixels
+    dMarginY = 5;               //Top margin in pixels
+    dBufferY = 30;              //Vertical offset for buffer data display
+    
+    /* ------------------------------------------------------------- */
+dOld_x = gfx_x;
+    dOld_y = gfx_y;
+    dOld_a = gfx_a;
+    dOld_r = gfx_r;
+    dOld_g = gfx_g;
+    dOld_b = gfx_b;
+    dOld_mode = gfx_mode;
+gfx_a = 1;
+    gfx_mode = 0;
+
+//Draw buffer data
+    di = 0;
+    dRow = 0;
+    loop
+    (
+        dRows,
+        dCol = 0;
+        loop
+        (
+            dCols,
+            gfx_x = dLeft + dMarginX + dCol * dColWidth;
+            gfx_y = dTop + dMarginY + dBufferY + dRow * dRowHeight;
+            
+            /*
+            gfx_drawNumber(dOffset[di], dPrecision);
+            //*/
+            
+            //*//
+            gfx_set(1,1,1,dOffset[di]/dAlpha);
+            gfx_setpixel(1,0.6,0.6);
+            gfx_set(0.5,0.5,1,-(dOffset[di])/dAlpha);
+            gfx_setpixel(0.5,0.7,1);
+            //*/
+            
+            /*/ SIGNUM
+            gfx_set(1,1,1,sign(dOffset[di]/dAlpha));
+            gfx_setpixel(1,0.6,0.6);
+            gfx_set(0.5,0.5,1,sign(-(dOffset[di])/dAlpha));
+            gfx_setpixel(0.5,0.7,1);
+            //*/
+            di += 1;
+            dCol += 1;
+        );
+        dRow += 1;
+    );
+//Restore previous state
+    gfx_x = dOld_x;
+    gfx_y = dOld_y;
+    gfx_a = dOld_a;
+    gfx_r = dOld_r;
+    gfx_g = dOld_g;
+    gfx_b = dOld_b;
+    gfx_mode = dOld_mode;
+);
+
+
+
+debug3 = __memtop();
+/*
+freembuf(top)
+The freembuf() function provides a facility for you to notify the memory manager that you are no longer using a portion of the local memory buffer.
+
+For example, if the user changed a parameter on your effect halving your memory requirements, you should use the lowest indices possible, and call this function with the highest index you are using plus 1, i.e. if you are using 128,000 items, you should call freembuf(128001); If you are no longer using any memory, you should call freembuf(0);
+
+Note that calling this does not guarantee that the memory is freed or cleared, it just provides a hint that it is OK to free it.
+
+memcpy(dest,source,length)
+The memcpy() function provides the ability to quickly copy regions of the local memory buffer. If the buffers overlap and either buffer crosses a 65,536 item boundary, the results may be undefined.
+
+memset(dest,value,length)
+The memset() function provides the ability to quickly set a region of the local memory buffer to a particular value.
+
+__memtop()
+Returns the total number of memory slots available to the plug-in.
+//*/
+
+gfx_x = 10; gfx_y = dMarginY + dTop + dBufferY - 1;
+gfx_a = 1;
+gfx_setpixel(1,1,1);

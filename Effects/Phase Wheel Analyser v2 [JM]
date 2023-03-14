@@ -1,0 +1,346 @@
+desc:Phase Wheel Analyser v2 [JM]
+options: gfx_hz = 60;
+
+//options:maxmem=32000000
+
+in_pin:left input
+in_pin:right input
+out_pin:none
+
+slider1:fft_size_index=7<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
+slider11:radius=1<0,8,0.00001>Radius
+slider12:blur=0.5<0,1,0.00001>Time Blur
+//slider13:magnitude=0<0,1,{Off,On}>-Magnitude
+slider14:overlap=32<1,32,1>-Overlap
+//slider15:analysis_decay_factor=0.8<0,1,0.00001>Analysis Decay Factor
+
+
+@init
+pi2 = 2*$pi;
+pi = $pi;
+//slider48 ? (gfx_clear=-1):(gfx_clear=0);
+//gfx_clear=-1;
+//gfx_clear=0;
+//top = __memtop();
+gfx_a = 1;
+//gfx_clear_color(0.5,0.5,0.5);
+
+function process_stft_segment(fft_buffer, fft_size) local(fft_bin, left_real, left_imag, right_real, right_imag) (
+  fft_bin = 0; // FFT bin number
+  loop(fft_size/2,
+    fft_bin2 = fft_bin ? (fft_size - fft_bin) : 0;
+    ///^^^/// fft_bin == 0 ? (fft_bin2 = 0):(fft_bin2 = fft_size - fft_bin);
+
+    // Unfold complex spectrum into two real spectra
+    left_real = fft_buffer[2*fft_bin] + fft_buffer[2*fft_bin2];
+    left_imag = fft_buffer[2*fft_bin + 1] - fft_buffer[2*fft_bin2 + 1];
+    right_real = fft_buffer[2*fft_bin + 1] + fft_buffer[2*fft_bin2 + 1];
+    right_imag = -fft_buffer[2*fft_bin] + fft_buffer[2*fft_bin2];
+    
+    /*
+    left_avg_buffer[fft_bin] = left_avg_buffer[fft_bin]*analysis_decay_factor + left_real;
+    left_avg_buffer[fft_bin+1] = left_avg_buffer[fft_bin+1]*analysis_decay_factor + left_imag;
+    right_avg_buffer[fft_bin] = right_avg_buffer[fft_bin]*analysis_decay_factor + right_real;
+    right_avg_buffer[fft_bin+1] = right_avg_buffer[fft_bin+1]*analysis_decay_factor + right_imag;
+    phase_avg_buffer[fft_bin] = atan2(left_avg_buffer[fft_bin+1],left_avg_buffer[fft_bin]) - atan2(right_avg_buffer[fft_bin+1],right_avg_buffer[fft_bin]);
+    magnitude_avg_buffer[fft_bin] = (sqrt(left_avg_buffer[fft_bin]^2+left_avg_buffer[fft_bin+1]^2)+sqrt(right_avg_buffer[fft_bin]^2+right_avg_buffer[fft_bin+1]^2))/2;
+    //*/
+    
+    
+    //yy = sqrt(left_real*left_imag-right_real*right_imag);
+    //xx = sqrt(left_real*right_real+left_imag*right_imag);
+    
+    
+    //phase_buffer[fft_bin] = atan2(left_real,left_imag) - atan2(right_real,right_imag);
+    phase_buffer[fft_bin] = atan2(left_imag,left_real) - atan2(right_imag,right_real);
+    //phase_buffer[fft_bin] = atan2(left_real,left_imag);
+    //phase_buffer[fft_bin] = -atan2(right_imag,right_real);
+    //phase_buffer[fft_bin] = sqrt(right_real^2 + right_imag^2);
+    //phase_buffer[fft_bin] = -atan2(yy, xx);
+    //phase_buffer[fft_bin] = yy;
+    magnitude_buffer[fft_bin] = (sqrt(left_real^2+left_imag^2)+sqrt(right_real^2+right_imag^2))/2;
+    
+    
+    /*
+    //////////////////////// Main STFT block
+    // The interesting bit - as a placeholder, let's implement a lowpass at samplerate/10
+    fft_bin > fft_size*0.1 ? (
+      left_real = 0;
+      left_imag = 0;
+      right_real = 0;
+      right_imag = 0;
+    );
+    ////////////////////////
+    //*/
+
+    /*
+    // Re-fold back into complex spectrum
+    fft_buffer[2*fft_bin] = (left_real - right_imag)*0.5;
+    fft_buffer[2*fft_bin + 1] = (left_imag + right_real)*0.5;
+    fft_buffer[2*fft_bin2] = (left_real + right_imag)*0.5;
+    fft_buffer[2*fft_bin2 + 1] = (-left_imag + right_real)*0.5;
+    //*/
+    
+    //mag_L = sqrt(left_real^2 + left_imag^2);
+    //mag_R = sqrt(right_real^2 + right_imag^2);
+    //ang_L = atan2(left_imag, left_real);
+    //ang_R = atan2(right_imag, right_real);
+    
+    fft_bin += 1;
+  );
+);
+
+function setup_stft_state(fft_size, first_time) (
+  //////////////////////// Setup block
+  // This is called when playback starts, or when the FFT size is changed
+  0;
+  ////////////////////////
+);
+
+function HSBtoRGB(hue,saturation,value,alpha) 
+ local (r,g,b,h,f,v,p,q,t) 
+( 
+   ( hue > 360) ? ( hue = hue % 360;) 
+   :( hue < 0 ) ? ( hue = hue % 360 ;); 
+   saturation = min ( max(saturation,0),1); 
+   v = floor( 255 * value); 
+   v = min ( max(v,0),255); 
+   (saturation == 0)? 
+   ( 
+   r = v ; g = v; b = v; 
+   ):( 
+   h = floor( hue / 60); 
+   f = hue / 60-h; 
+   p = floor( v * (1-saturation)); 
+   p = min ( max(p,0),255); 
+   q = floor( v * (1-f * saturation)); 
+   q = min ( max(q,0),255); 
+   t = floor( v * (1-(1-f) * saturation)); 
+   t = min ( max(t,0),255); 
+   (h==0)?(r=v;g=t;b=p;) 
+   :(h==1)?(r=q;g=v;b=p;) 
+   :(h==2)?(r=p;g=v;b=t;) 
+   :(h==3)?(r=p;g=q;b=v;) 
+   :(h==4)?(r=t;g=p;b=v;) 
+   :(h==5)?(r=v;g=p;b=q;) 
+   :( r=v;g=t;b=p;); 
+   ); 
+   this.r = r; 
+   this.g = g; 
+   this.b = b; 
+   gfx_set(r/255, g/255, b/255, alpha);
+); 
+
+
+MAX_FFT_SIZE = 32768;
+
+freemem = 0;
+freemem = (fft_buffer = freemem) + MAX_FFT_SIZE*2;
+freemem = (window_buffer = freemem) + MAX_FFT_SIZE;
+
+buffer_length = srate;
+buffer_index = 0;
+freemem = (input_buffer = freemem) + buffer_length*2;
+freemem = (output_buffer = freemem) + buffer_length*2;
+freemem = (phase_buffer = freemem) + MAX_FFT_SIZE/2;
+freemem = (magnitude_buffer = freemem) + MAX_FFT_SIZE/2;
+/*
+freemem = (phase_avg_buffer = freemem) + MAX_FFT_SIZE;
+freemem = (magnitude_avg_buffer = freemem) + MAX_FFT_SIZE;
+freemem = (left_avg_buffer = freemem) + MAX_FFT_SIZE;
+freemem = (right_avg_buffer = freemem) + MAX_FFT_SIZE;
+//*/
+
+function window(r) local(s, s2, gaussian_width, x) (
+  // When squared, the Hann window adds up perfectly for overlap >= 4, so it's suitable for perfect reconstruction
+  (0.5 - 0.5*cos(r*2*$pi))/sqrt(0.375);
+);
+
+fft_size = 0;
+
+@block
+
+overlap_factor = overlap; // Default is 6, but 4 gives better result
+fft_size = 256<<fft_size_index;
+fft_interval = fft_size/overlap_factor;
+fft_scaling_factor = 1/overlap_factor/fft_size;
+
+fft_size != prev_fft_size ? (
+  setup_stft_state(fft_size, prev_fft_size == 0);
+  prev_fft_size = fft_size;
+  // Fill window buffer
+  i = 0;
+  loop(fft_size,
+    r = (i + 0.5)/fft_size;
+    window_buffer[i] = window(r);
+    i += 1;
+  );
+);
+
+/*
+pdc_delay = fft_size;
+pdc_bot_ch = 0;
+pdc_top_ch = 2;
+//*/
+
+@sample
+pass = 0;
+input_buffer[buffer_index*2] = spl0;
+input_buffer[buffer_index*2 + 1] = spl1;
+
+fft_counter += 1;
+
+/////
+/////
+
+/*
+output_index = buffer_index - fft_size;
+output_index < 0 ? output_index += buffer_length;
+spl0 = output_buffer[output_index*2];
+spl1 = output_buffer[output_index*2 + 1];
+output_buffer[output_index*2] = 0; // clear the sample we just read
+output_buffer[output_index*2 + 1] = 0;
+//*/
+buffer_index = (buffer_index + 1)%buffer_length;
+
+
+
+
+
+
+@gfx
+fft_counter >= fft_interval ? (
+  fft_counter = 0;
+
+  // Copy input to buffer
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    i2 < 0 ? i2 += buffer_length;
+
+    fft_buffer[2*i] = input_buffer[2*i2]*window_buffer[i];
+    fft_buffer[2*i + 1] = input_buffer[2*i2 + 1]*window_buffer[i];
+
+    i += 1;
+  );
+
+  // Process buffer
+  fft(fft_buffer, fft_size);
+  fft_permute(fft_buffer, fft_size);
+
+  process_stft_segment(fft_buffer, fft_size);
+  
+  /*
+  fft_ipermute(fft_buffer, fft_size);
+  ifft(fft_buffer, fft_size);
+  
+  // Add to output
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    (i2 < 0) ? i2 += buffer_length;
+
+    output_buffer[2*i2] += fft_buffer[2*i]*fft_scaling_factor*window_buffer[i];
+    output_buffer[2*i2 + 1] += fft_buffer[2*i + 1]*fft_scaling_factor*window_buffer[i];
+
+    i += 1;
+  );
+  //*/
+  pass = 1;
+);
+
+//gfx_r=gfx_g=gfx_b=0; gfx_a=0.025; // Blur
+gfx_r=gfx_g=gfx_b=0; gfx_a=(1-blur); // Blur
+gfx_x=gfx_y=0;
+gfx_rectto(gfx_w,gfx_h);
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+gfx_clear=-1;
+(mouse_cap) ? (
+  gfx_clear=0;
+);
+pass?(gfx_flush):(gfx_wait);
+
+
+size = min(gfx_w,gfx_h)|0;
+cntr_x = gfx_w/2;
+//cntr_y = 125;
+cntr_y = gfx_h/2;
+gfx_r = 0.7; gfx_g = 0.7; gfx_b = 0.7;
+gfx_circle(cntr_x,size/2,radius*size/2,0,1);
+
+
+//*
+  mult = 2^1;
+  z = mult*radius*gfx_h/2*(1/fft_size);
+  i = 1;
+  gfx_x = sin(phi)*(magnitude_buffer[0]*2*z)+gfx_w/2;
+  gfx_y = gfx_h-(cos(phi)*(magnitude_buffer[0]*2*z)+gfx_h/2);
+  loop(fft_size/mult,
+    
+    phi = phase_buffer[i];
+    //phi = phase_buffer[i]*2; //- [180deg = 0deg]
+    //j = magnitude_buffer[i]*2;
+    //j = sqrt(magnitude_buffer[i])*2*100;
+    j = sqrt(sqrt(magnitude_buffer[i]))*2*1000;
+    //j = fft_size*log10(i)/8;
+    
+    gfx_x = sin(phi)*(j*z)+gfx_w/2;
+    gfx_y = gfx_h-(cos(phi)*(j*z)+gfx_h/2);
+    
+    //gfx_x = sin(phi)*1024*(log10(i)*z)+gfx_w/2;
+    //gfx_y = gfx_h-(cos(phi)*1024*(log10(i)*z)+gfx_h/2);
+    //gfx_x = sin(phi)*100*log10(i*z)+gfx_w/2;
+    //gfx_y = gfx_h-(cos(phi)*100*log10(i*z)+gfx_h/2);
+    //magnitude ? (gfx_a = 20*log10(magnitude_buffer[i])):(gfx_a = 1);
+    //HSBtoRGB(360*log(i/fft_size/2),1,1,1);
+    HSBtoRGB(360*sqrt(i/fft_size/2),1,1,1);
+    //HSBtoRGB(360*phi/pi/2,1,1,1);
+    gfx_setpixel(HSBtoRGB.r/255,HSBtoRGB.g/255,HSBtoRGB.b/255);
+    //gfx_circle(gfx_x,gfx_y,2,0);
+    
+    /*
+    gfx_set(HSBtoRGB.r/255,HSBtoRGB.g/255,HSBtoRGB.b/255,0.1);
+    x1 = sin(phi)*(j*z)+gfx_w/2;
+    y1 = gfx_h-(cos(phi)*(j*z)+gfx_h/2);
+    gfx_lineto(x1, y1);
+    //*/
+    
+    i += 1;
+  );
+//*/
+
+
+/*
+  mult = 2^1;
+  z = mult*radius*gfx_h/2*(1/fft_size);
+  i = 0;
+  loop(fft_size/mult,
+    
+    phi = phase_buffer[i];
+    //phi = phase_buffer[i]*2; //- [180deg = 0deg]
+    j = i;
+    //j = fft_size*log10(i)/8;
+    gfx_x = sin(phi)*(j*z)+gfx_w/2;
+    gfx_y = gfx_h-(cos(phi)*(j*z)+gfx_h/2);
+    //gfx_x = sin(phi)*1024*(log10(i)*z)+gfx_w/2;
+    //gfx_y = gfx_h-(cos(phi)*1024*(log10(i)*z)+gfx_h/2);
+    //gfx_x = sin(phi)*100*log10(i*z)+gfx_w/2;
+    //gfx_y = gfx_h-(cos(phi)*100*log10(i*z)+gfx_h/2);
+    magnitude ? (gfx_a = 20*log10(magnitude_buffer[i])):(gfx_a = 1);
+    gfx_setpixel(1,1,1);
+    //gfx_circle(gfx_x,gfx_y,2,0);
+    
+    i += 1;
+  );
+//*/
+
+
+
+
+
+
+

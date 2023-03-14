@@ -1,0 +1,430 @@
+desc:STFT Lifter v5 [JM]
+// Geraint Luff's STFT template modification
+
+slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
+slider2:mode=0<0,1,1{Long-Pass,Short-Pass,Moment-Reject>Mode
+slider4:freq=1<0,1000,0.01>Quefrency [ms]
+slider5:bandw=1<0,100,0.001>Bandwidth [ms]
+slider25:attenuation=0<0,1,0.001>Attenuation
+slider26:decay1_factor=0.8<0,1,0.00001>Decay 1 Factor
+slider27:decay2_factor=0.8<0,1,0.00001>Decay 2 Factor
+slider28:overlap=4<0,32,1>Overlap
+//slider64:smoothing_time_const=100<0,10000,1>Smoothing τ [ms]
+
+import Tale/complex.jsfx-inc
+//import Tale/window.jsfx-inc
+import _JM/jm.jsfx-inc
+
+@init
+
+  MAX_FFT_SIZE = 32768;
+  
+  freemem = 0;
+  freemem = (fft_bufferA = freemem) + MAX_FFT_SIZE*2; // allocate fft buffers first - FFT/IFFT must NOT cross a 65,536 item boundary
+  freemem = (fft_bufferB = freemem) + MAX_FFT_SIZE*2;
+  freemem = (fft_decay1_bufferA = freemem) + MAX_FFT_SIZE;
+  freemem = (fft_decay1_bufferB = freemem) + MAX_FFT_SIZE;
+  freemem = (fft_decay2_bufferA = freemem) + MAX_FFT_SIZE;
+  freemem = (fft_decay2_bufferB = freemem) + MAX_FFT_SIZE;
+  freemem = (fft_bufferC = freemem) + MAX_FFT_SIZE*2;
+  freemem = (window_buffer = freemem) + MAX_FFT_SIZE;
+  
+  buffer_length = srate;
+  buffer_index = 0;
+  freemem = (input_buffer = freemem) + buffer_length*2;
+  freemem = (output_buffer = freemem) + buffer_length*2;
+  
+
+  function process_stft_segment(fft_bufferA, fft_bufferB, fft_size) local(fft_bin) (
+    fft_bin = 0;
+    loop(fft_size,
+      //fft_bin2 = fft_bin ? (fft_size - fft_bin) : 0;
+      ///^^^/// fft_bin == 0 ? (fft_bin2 = 0):(fft_bin2 = fft_size - fft_bin);
+      fft_bin2 = fft_size - fft_bin;
+      
+      A.cplx_set(fft_bufferA[2*fft_bin], fft_bufferA[2*fft_bin+1]);
+      B.cplx_set(fft_bufferB[2*fft_bin], fft_bufferB[2*fft_bin+1]);
+      
+      A.cplx_mul_real(A, inv_fft_size);
+      B.cplx_mul_real(B, inv_fft_size);
+      
+      cut = floor(freq*(srate)*0.001);
+      //cut = floor(srate*fft_size/freq*0.5);
+      //cut = floor(fft_size/freq*0.5);
+      //bw = floor(bandw*fft_size*0.5);
+      bw = floor(bandw*(srate*0.5)*0.001);
+      
+      //debug = fft_size*1000/(srate/2);
+      //debug1 = floor(srate*fft_size/freq*0.5);
+      
+      //*
+      Arceps_avg1 = fft_decay1_bufferA[fft_bin] = fft_decay1_bufferA[fft_bin]*decay1_factor + A.re;
+      Brceps_avg1 = fft_decay1_bufferB[fft_bin] = fft_decay1_bufferB[fft_bin]*decay1_factor + B.re;
+      
+      Arceps_avg2 = fft_decay2_bufferA[fft_bin] = fft_decay2_bufferA[fft_bin]*decay2_factor + A.re;
+      Brceps_avg2 = fft_decay2_bufferB[fft_bin] = fft_decay2_bufferB[fft_bin]*decay2_factor + B.re;
+      
+      //A.re = Arceps_avg1 - Arceps_avg2;
+      //B.re = Brceps_avg1 - Brceps_avg2;
+      //*/
+      
+      
+      //attenuationA = Arceps_avg1 - Arceps_avg2;
+      //attenuationB = Brceps_avg1 - Brceps_avg2;
+      
+      //A.cplx_mul_real(A, min(1-attenuationA,1) );
+      //B.cplx_mul_real(B, min(1-attenuationB,1) );
+      
+      /*
+      G_AB_im_avg = G_AB_buffer[2*i  ] = G_AB_buffer[2*i  ]*coherence_decay_factor + G_AB.im;
+      G_AB_re_avg = G_AB_buffer[2*i+1] = G_AB_buffer[2*i+1]*coherence_decay_factor + G_AB.re;
+      G_AA_re_avg = G_AA_buffer[2*i] = G_AA_buffer[2*i]*coherence_decay_factor + G_AA.re;
+      G_BB_re_avg = G_BB_buffer[2*i] = G_BB_buffer[2*i]*coherence_decay_factor + G_BB.re;
+      //*/
+      
+      /*
+      shortpass ? (
+        fft_bin > cut || fft_bin2 < cut ? (
+          A.cplx_mul_real(A, attenuation);
+          B.cplx_mul_real(B, attenuation);
+        );
+      ):
+      longpass ? (
+        fft_bin < cut || fft_bin2 > cut ? (
+          A.cplx_mul_real(A, attenuation);
+          B.cplx_mul_real(B, attenuation);
+        );
+      );
+      //*/
+      
+      /*
+      mode == 0 ? (
+        fft_bin < cut || fft_bin2 < cut ? (
+          A.cplx_mul_real(A, attenuation);
+          B.cplx_mul_real(B, attenuation);
+        );
+      ):
+      mode == 1 ? (
+        fft_bin > cut && fft_bin2 > cut ? (
+        //fft_bin > cut ? (
+        //fft_bin2 > cut ? (
+          A.cplx_mul_real(A, attenuation);
+          B.cplx_mul_real(B, attenuation);
+        );
+      ):
+      mode == 2 ? (
+        fft_bin == cut || fft_bin2 == cut ? (
+          A.cplx_mul_real(A, attenuation);
+          B.cplx_mul_real(B, attenuation);
+        );
+      );
+      //*/
+      
+      //*
+      mode == 0 ? (
+        fft_bin < cut || fft_bin2 < cut ? (
+          A.cplx_mul_real(A, attenuation);
+          B.cplx_mul_real(B, attenuation);
+        );
+      ):
+      mode == 1 ? (
+        fft_bin > cut && fft_bin2 > cut ? (
+          A.re = min(max(A.re,-attenuation),attenuation);
+          B.re = min(max(B.re,-attenuation),attenuation);
+          //A.cplx_mul_real(A, attenuation);
+          //B.cplx_mul_real(B, attenuation);
+        );
+      ):
+      mode == 2 ? (
+        ((fft_bin > cut-bw && fft_bin < cut+bw) || (fft_bin2 > cut-bw && fft_bin2 < cut+bw)) && cut+bin <= fft_size ? (
+          A.re = min(max(A.re,-attenuation),attenuation);
+          B.re = min(max(B.re,-attenuation),attenuation);
+          //A.cplx_mul_real(A, attenuation);
+          //B.cplx_mul_real(B, attenuation);
+        );
+      );
+      //*/
+      
+      //*
+      fft_bufferA[2*fft_bin  ] = A.re;
+      fft_bufferB[2*fft_bin  ] = B.re;
+      fft_bufferA[2*fft_bin+1] = A.im;
+      fft_bufferB[2*fft_bin+1] = B.im;
+      //*/
+      
+      fft_bin += 1;
+    );
+  );
+  
+  function fft_norm(fft_bufferA, fft_bufferB, fft_size) local(fft_bin) (
+    fft_bin = 0;
+    loop(fft_size,
+      
+      A.cplx_set(fft_bufferA[2*fft_bin], fft_bufferA[2*fft_bin+1]);
+      B.cplx_set(fft_bufferB[2*fft_bin], fft_bufferB[2*fft_bin+1]);
+      
+      A.cplx_mul_real(A, inv_fft_size);
+      B.cplx_mul_real(B, inv_fft_size);
+      
+      
+      //*
+      fft_bufferA[2*fft_bin  ] = A.re;
+      fft_bufferB[2*fft_bin  ] = B.re;
+      fft_bufferA[2*fft_bin+1] = A.im;
+      fft_bufferB[2*fft_bin+1] = B.im;
+      //*/
+      
+      
+      fft_bin += 1;
+    );
+  );
+  
+  
+  function cepstrum(fft_bufferA, fft_bufferB, fft_size) local(fft_bin) (
+    fft_bin = 0;
+    loop(fft_size,
+      //fft_bin2 = fft_bin ? (fft_size - fft_bin) : 0;
+      ///^^^/// fft_bin == 0 ? (fft_bin2 = 0):(fft_bin2 = fft_size - fft_bin);
+      fft_bin2 = fft_size - fft_bin;
+      
+      A.cplx_set(fft_bufferA[2*fft_bin], fft_bufferA[2*fft_bin+1]);
+      B.cplx_set(fft_bufferB[2*fft_bin], fft_bufferB[2*fft_bin+1]);
+      
+      //A.cplx_mul_real(A, inv_fft_size); B.cplx_mul_real(B, inv_fft_size);
+      
+      A.cplx_log(A);
+      B.cplx_log(B);
+      
+      //*
+      fft_bufferA[2*fft_bin  ] = A.re;
+      fft_bufferB[2*fft_bin  ] = B.re;
+      fft_bufferA[2*fft_bin+1] = A.im;
+      fft_bufferB[2*fft_bin+1] = B.im;
+      //*/
+      
+      /*
+      fft_bufferA[2*fft_bin  ] = fft_bufferA[2*fft_bin2  ] = A.re;
+      fft_bufferB[2*fft_bin  ] = fft_bufferB[2*fft_bin2  ] = B.re;
+      fft_bufferA[2*fft_bin+1] = fft_bufferA[2*fft_bin2+1] = A.im;
+      fft_bufferB[2*fft_bin+1] = fft_bufferB[2*fft_bin2+1] = B.im;
+      //*/
+      
+      fft_bin += 1;
+    );
+  );
+  
+  
+  function icepstrum(fft_bufferA, fft_bufferB, fft_size) local(fft_bin) (
+    fft_bin = 0;
+    loop(fft_size,
+      //fft_bin2 = fft_bin ? (fft_size - fft_bin) : 0;
+      ///^^^/// fft_bin == 0 ? (fft_bin2 = 0):(fft_bin2 = fft_size - fft_bin);
+      //fft_bin2 = fft_size - fft_bin;
+      
+      A.cplx_set(fft_bufferA[2*fft_bin], fft_bufferA[2*fft_bin+1]);
+      B.cplx_set(fft_bufferB[2*fft_bin], fft_bufferB[2*fft_bin+1]);
+      
+      //A.cplx_mul_real(A, inv_fft_size); B.cplx_mul_real(B, inv_fft_size);
+      
+      A.cplx_exp(A);
+      B.cplx_exp(B);
+
+      /*
+      fft_bufferA[2*fft_bin  ] = A.re*inv_fft_size;
+      fft_bufferB[2*fft_bin  ] = B.re*inv_fft_size;
+      fft_bufferA[2*fft_bin+1] = A.im*inv_fft_size;
+      fft_bufferB[2*fft_bin+1] = B.im*inv_fft_size;
+      //*/
+      
+      //*
+      fft_bufferA[2*fft_bin  ] = A.re;
+      fft_bufferB[2*fft_bin  ] = B.re;
+      fft_bufferA[2*fft_bin+1] = A.im;
+      fft_bufferB[2*fft_bin+1] = B.im;
+      //*/
+      
+      /*
+      fft_bufferA[2*fft_bin  ] = fft_bufferA[2*fft_bin  ] = A.re;
+      fft_bufferB[2*fft_bin  ] = fft_bufferB[2*fft_bin  ] = B.re;
+      fft_bufferA[2*fft_bin+1] = fft_bufferA[2*fft_bin+1] = A.im;
+      fft_bufferB[2*fft_bin+1] = fft_bufferB[2*fft_bin+1] = B.im;
+      //*/
+      
+      fft_bin += 1;
+    );
+  );
+  
+  
+  function setup_stft_state(fft_size, first_time) (
+    //////////////////////// Setup block
+    // This is called when playback starts, or when the FFT size is changed
+    0;
+    ////////////////////////
+  );
+  
+  
+  function window(r)(
+    // When squared, the Hann window adds up perfectly for overlap >= 4, so it's suitable for perfect reconstruction
+    (0.5 - 0.5*cos(r*2*$pi))/sqrt(0.375);
+  );
+  
+  
+@slider
+  //smoothing_coeff = 1-exp(-1/abs(srate*smoothing_time_const*0.001));
+  shortpass = !mode;
+  longpass = mode;
+  
+  mode == 2 ? (showbw = 1):(showbw = 0);
+  slider_show(bandw, showbw);
+
+@block
+
+  overlap_factor = overlap;
+  fft_size = 256<<fft_size_index;
+  //fft_size = 16;
+  fft_interval = fft_size/overlap_factor;
+  fft_scaling_factor = 1/overlap_factor/fft_size;
+  
+  fft_size != prev_fft_size ? (
+    setup_stft_state(fft_size, prev_fft_size == 0);
+    prev_fft_size = fft_size;
+    // Fill window buffer
+    i = 0;
+    loop(fft_size,
+      r = (i + 0.5)/fft_size;
+      window_buffer[i] = window(r);
+      i += 1;
+    );
+  );
+  
+  pdc_delay = fft_size;
+  pdc_bot_ch = 0;
+  pdc_top_ch = 2;
+  
+  inv_fft_size = 1/fft_size;
+
+@sample
+
+  input_buffer[buffer_index*2  ] = spl0;
+  input_buffer[buffer_index*2+1] = spl1;
+  
+  fft_counter += 1;
+  fft_counter >= fft_interval ? (
+    fft_counter = 0;
+    
+    //memset(fft_bufferA,0,fft_size);
+    //memset(fft_bufferB,0,fft_size);
+  
+    // Copy input to buffer
+    bi = buffer_index - fft_size + 1;
+    i = 0;
+    loop(fft_size,
+      i2 = bi + i;
+      i2 < 0 ? i2 += buffer_length;
+      
+      //*
+      fft_bufferA[i*2] = input_buffer[2*i2  ]*window_buffer[i];
+      fft_bufferA[i*2 + 1] = 0;
+      fft_bufferB[i*2] = input_buffer[2*i2+1]*window_buffer[i];
+      fft_bufferB[i*2 + 1] = 0;
+      //*/
+  
+      i += 1;
+    );
+    
+    
+    //*
+    // Process buffer
+    fft(fft_bufferA, fft_size); fft(fft_bufferB, fft_size);
+    //fft_bufferA[0] = fft_bufferB[0] = fft_bufferA[fft_size] = fft_bufferB[fft_size] = 0;
+    
+    //fft_norm(fft_bufferA, fft_bufferB, fft_size);
+
+    cepstrum(fft_bufferA, fft_bufferB, fft_size);
+    
+    ifft(fft_bufferA, fft_size); ifft(fft_bufferB, fft_size);
+    //fft_bufferA[0] = fft_bufferB[0] = fft_bufferA[fft_size] = fft_bufferB[fft_size] = 0;
+    
+    //fft_norm(fft_bufferA, fft_bufferB, fft_size);
+    process_stft_segment(fft_bufferA, fft_bufferB, fft_size);
+    memcpy(fft_bufferC,fft_bufferA,fft_size*2);
+    //memcpy(fft_bufferC,fft_decay1_bufferA,fft_size);
+    
+    fft(fft_bufferA, fft_size); fft(fft_bufferB, fft_size);
+    //fft_bufferA[0] = fft_bufferB[0] = fft_bufferA[fft_size] = fft_bufferB[fft_size] = 0;
+    
+    //fft_permute(fft_buffer, fft_size);
+    icepstrum(fft_bufferA, fft_bufferB, fft_size);
+    //fft_ipermute(fft_buffer, fft_size);
+    ifft(fft_bufferA, fft_size); ifft(fft_bufferB, fft_size);
+    
+    //*/
+  
+    // Add to output
+    bi = buffer_index - fft_size + 1;
+    i = 0;
+    loop(fft_size,
+      i2 = bi + i;
+      (i2 < 0) ? i2 += buffer_length;
+  
+      output_buffer[2*i2  ] += fft_bufferA[2*i]*fft_scaling_factor*window_buffer[i];
+      output_buffer[2*i2+1] += fft_bufferB[2*i]*fft_scaling_factor*window_buffer[i];
+  
+      i += 1;
+    );
+  );
+  
+  output_index = buffer_index - fft_size;
+  output_index < 0 ? output_index += buffer_length;
+  spl0 = output_buffer[output_index*2  ];
+  spl1 = output_buffer[output_index*2+1];
+  output_buffer[output_index*2  ] = 0; // clear the sample we just read
+  output_buffer[output_index*2+1] = 0;
+  
+  buffer_index = (buffer_index + 1)%buffer_length;
+  
+  
+@gfx
+
+//memcpy(fft_bufferC,fft_bufferA,fft_size); plot(fft_bufferC, fft_size, 2, 1, -30, 30);
+//memcpy(fft_bufferC,window_buffer,fft_size); plot(fft_bufferC, fft_size);
+
+//memcpy(fft_bufferC,input_buffer,buffer_length*2); plot(fft_bufferC, buffer_length*2, 2, 0, -1, 1);
+//plot(fft_bufferC, fft_size*2, 2, 0, -0.5, 0.5);
+plot(fft_bufferC, fft_size, 2, 0, -1, 1);
+//plot(fft_bufferC, fft_size*0.2, 1, 0, -1, 1);
+//plot(fft_bufferC, fft_size*2, 1, 0);
+  
+  
+  
+  cut > fft_size*0.5 ? (gfx_set(1,0,0,1););
+  gfx_cut = gfx_w*freq*srate*0.001*2/fft_size;
+  
+  gfx_set(1,1,1,1);
+  spacing = 10;
+  //gfx_h > 300 ? (
+  gfx_x = 30; gfx_y = gfx_h - 30;
+  gfx_printf(" cut: %1.0f", cut); gfx_x=30; gfx_y+=spacing;
+  
+  
+  
+  mode == 2 ? (
+    gfx_printf(" bw: %1.0f", bw); gfx_x=30; gfx_y+=spacing;
+    gfx_bw = gfx_w*bandw*srate*0.001*2/fft_size;
+    gfx_bw1 = gfx_cut-gfx_bw/2;
+    gfx_bw2 = gfx_cut+gfx_bw/2;
+    //gfx_line(gfx_bw1,0,gfx_bw1,gfx_h);
+    //gfx_line(gfx_bw2,0,gfx_bw2,gfx_h);
+    
+    gfx_set(1,1,1,0.2);
+    //gfx_set(1,1,1,0.2*(1-attenuation));
+    //gfx_set(1,1,1,attenuation);
+    gfx_rect(gfx_bw1,0,gfx_bw+1,gfx_h);
+  ):(
+    //gfx_set(1,1,1,0.5);
+    //gfx_cut = gfx_w*floor(freq*0.5/fft_size);
+    //gfx_line(gfx_cut,0,gfx_cut,gfx_h);
+    
+    gfx_set(1,1,1,0.2);
+    mode == 0 ? (gfx_rect(0,0,gfx_cut,gfx_h)):(gfx_rect(gfx_cut,0,gfx_w,gfx_h));
+  );

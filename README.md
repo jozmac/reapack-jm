@@ -5,7 +5,7 @@
 Add the following repository to [ReaPack](https://reapack.com):
 
 ```
-https://raw.githubusercontent.com/wozek320/reapack-jm/master/index.xml
+https://github.com/wozek320/reapack-jm/raw/master/index.xml
 ```
 
 If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
@@ -58,7 +58,7 @@ Even more information:
 | Extension                                                                                               | Author                                                                        | Repository Index URL                                                          |
 | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | **All**                                                                                                 |                                                                               | `https://github.com/leafac/reaper/raw/main/ThirdParty/index.xml`            |
-| [Tale's JSFX Pack](https://www.taletn.com/reaper/)                                                                         | Theo Niessink  | `https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/Tale/index.xml`        |
+| [Tale's JSFX Pack](https://www.taletn.com/reaper/)                                                                         | Theo Niessink  | `https://github.com/wozek320/reapack-jm/raw/master/ThirdParty/Tale/index.xml`        |
 | [CookDSP Library](http://ajaxsoundstudio.com/cookdspdoc/)                                 | [Olivier Belanger](http://olivier.ajaxsoundstudio.com/)                        | `http://ajaxsoundstudio.com/cookdspdoc/`       |
 | [ABLevelMatching, AutoGainStaging, and EBUR128LM](https://www.tb-software.com/TBProAudio/download.html) | [TBProAudio](https://www.tb-software.com/TBProAudio/index.html)               | `https://github.com/leafac/reaper/raw/main/ThirdParty/TBProAudio/index.xml` |
 

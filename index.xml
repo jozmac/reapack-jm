@@ -5,6 +5,9 @@
       <version name="0.0.0">
         <source file="Channel Mixer [JM].jsfx">https://raw.githubusercontent.com/wozek320/reapack-jm/a8d1280c67853cbf10339a280b788191e449b780/Effects/Channel%20Mixer%20%5BJM%5D</source>
       </version>
+      <version name="0.1.0">
+        <source file="Channel Mixer [JM].jsfx">https://raw.githubusercontent.com/wozek320/reapack-jm/a8d1280c67853cbf10339a280b788191e449b780/Effects/Channel%20Mixer%20%5BJM%5D</source>
+      </version>
     </reapack>
   </category>
 </index>

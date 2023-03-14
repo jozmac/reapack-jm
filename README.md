@@ -58,8 +58,8 @@ Even more information:
 | Extension                                                                                               | Author                                                                        | Repository Index URL                                                          |
 | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | **All**                                                                                                 |                                                                               | `https://github.com/leafac/reaper/raw/main/ThirdParty/index.xml`            |
-| Theo Niessink                                                                         | [Tale's JSFX Pack](https://www.taletn.com/reaper/) | `https://github.com/leafac/reaper/raw/main/ThirdParty/SWS/index.xml`        |
-| [CookDSP](http://ajaxsoundstudio.com/cookdspdoc/)                                 | [Olivier Belanger](http://olivier.ajaxsoundstudio.com/)                        | `https://github.com/leafac/reaper/raw/main/ThirdParty/ReEQ/index.xml`       |
+| [Tale's JSFX Pack](https://www.taletn.com/reaper/)                                                                         | Theo Niessink  | `https://www.taletn.com/reaper/`        |
+| [CookDSP Library](http://ajaxsoundstudio.com/cookdspdoc/)                                 | [Olivier Belanger](http://olivier.ajaxsoundstudio.com/)                        | `http://ajaxsoundstudio.com/cookdspdoc/`       |
 | [ABLevelMatching, AutoGainStaging, and EBUR128LM](https://www.tb-software.com/TBProAudio/download.html) | [TBProAudio](https://www.tb-software.com/TBProAudio/index.html)               | `https://github.com/leafac/reaper/raw/main/ThirdParty/TBProAudio/index.xml` |
 
 

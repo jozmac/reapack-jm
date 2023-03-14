@@ -26,11 +26,5 @@
       </version>
     </reapack>
 
-    <reapack name="Crossfeed [JM].jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="Crossfeed [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Crossfeed%20%5BJM%5D</source>
-      </version>
-    </reapack>
-
   </category>
 </index>

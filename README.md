@@ -10,7 +10,8 @@ https://raw.githubusercontent.com/wozek320/reapack-jm/master/index.xml
 
 If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
-[//]: # ## Multicam Editing
+<!--
+## Multicam Editing
 
 <h3 align="center"><a href="https://youtu.be/1BvuRgKNnqc">Watch the video with a demonstration and instructions!</a></h3>
 
@@ -33,6 +34,7 @@ See also:
 - [Example projects](https://archive.org/download/leafac/leafac_Automixer%20Examples.zip).
 - [Automixer video editor FX Chain](FXChains/leafac_Video%20processor%20-%20Automixer.RfxChain).
 
+
 Even more information:
 
 - Alternatives:
@@ -49,13 +51,15 @@ Even more information:
   - [Podigy’s Complete Guide to Podcast Editing](https://podigy.co/podcast-editing-guide/). This where I first read about Automixing and became obsessed with the topic.
   - [An interview on the Podcast Engineering School with Dan Dugan, the inventor of the Automixer](https://podcastengineeringschool.com/dan-dugan-inventor-of-the-automatic-microphone-mixer-pes-101/).
 
+-->
+
 ## Third-Party ReaPack Redistribution
 
 | Extension                                                                                               | Author                                                                        | Repository Index URL                                                          |
 | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | **All**                                                                                                 |                                                                               | `https://github.com/leafac/reaper/raw/main/ThirdParty/index.xml`            |
-| [SWS](http://sws-extension.org)                                                                         | [The SWS Contributors](https://github.com/reaper-oss/sws/graphs/contributors) | `https://github.com/leafac/reaper/raw/main/ThirdParty/SWS/index.xml`        |
-| [ReEQ and ReSpectrum](https://forum.cockos.com/showthread.php?t=213501)                                 | [nitsuj](https://forum.cockos.com/member.php?u=121300)                        | `https://github.com/leafac/reaper/raw/main/ThirdParty/ReEQ/index.xml`       |
+| Theo Niessink                                                                         | [Tale's JSFX Pack](https://www.taletn.com/reaper/) | `https://github.com/leafac/reaper/raw/main/ThirdParty/SWS/index.xml`        |
+| [CookDSP](http://ajaxsoundstudio.com/cookdspdoc/)                                 | [Olivier Belanger](http://olivier.ajaxsoundstudio.com/)                        | `https://github.com/leafac/reaper/raw/main/ThirdParty/ReEQ/index.xml`       |
 | [ABLevelMatching, AutoGainStaging, and EBUR128LM](https://www.tb-software.com/TBProAudio/download.html) | [TBProAudio](https://www.tb-software.com/TBProAudio/index.html)               | `https://github.com/leafac/reaper/raw/main/ThirdParty/TBProAudio/index.xml` |
 
 

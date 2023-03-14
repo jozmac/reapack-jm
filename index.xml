@@ -20,11 +20,6 @@
       </version>
     </reapack>
 
-    <reapack name="Correlation meter [JM].jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="Correlation meter [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Correlation%20meter%20%5BJM%5D</source>
-      </version>
-    </reapack>
 
   </category>
 </index>

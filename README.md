@@ -10,7 +10,7 @@ https://raw.githubusercontent.com/wozek320/reapack-jm/master/index.xml
 
 If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
-[## Multicam Editing] #
+[//]: # ## Multicam Editing
 
 <h3 align="center"><a href="https://youtu.be/1BvuRgKNnqc">Watch the video with a demonstration and instructions!</a></h3>
 

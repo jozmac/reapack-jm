@@ -1,13 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <index version="1" name="Jozef Mackowiak">
   <category name="Utility">
-    <reapack name="Channel Mixer [JM].jsfx" type="effect">
+    
+    <reapack name="Chebyshev Saturator [JM].jsfx" type="effect">
       <version name="0.0.0">
-        <source file="Channel Mixer [JM].jsfx">https://raw.githubusercontent.com/wozek320/reapack-jm/a8d1280c67853cbf10339a280b788191e449b780/Effects/Channel%20Mixer%20%5BJM%5D</source>
-      </version>
-      <version name="0.1.0">
-        <source file="Channel Mixer [JM].jsfx">https://raw.githubusercontent.com/wozek320/reapack-jm/a8d1280c67853cbf10339a280b788191e449b780/Effects/Channel%20Mixer%20%5BJM%5D</source>
+        <source file="Chebyshev Saturator [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Chebyshev%20Saturator%20%5BJM%5D</source>
       </version>
     </reapack>
+
+    <reapack name="Coherence Analyser [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Coherence Analyser [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Coherence%20Analyser%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT Coherent Extractor [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT Coherent Extractor [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Coherent%20Extractor%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Correlation meter [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Correlation meter [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Correlation%20meter%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Crossfeed [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Crossfeed [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Crossfeed%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
   </category>
 </index>

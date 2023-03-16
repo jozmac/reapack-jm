@@ -128,9 +128,9 @@
       </version>
     </reapack>
 
-    <reapack name="STFT-Based Complex Template [JM].jsfx" type="effect">
+    <reapack name="STFT-Based Cplx Template [JM].jsfx" type="effect">
       <version name="0.0.0">
-        <source file="STFT-Based Complex Template [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Cplx%20Template%20%5BJM%5D</source>
+        <source file="STFT-Based Cplx Template [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Cplx%20Template%20%5BJM%5D</source>
       </version>
     </reapack>
 

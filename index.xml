@@ -20,6 +20,203 @@
       </version>
     </reapack>
 
+    <reapack name="Correlation meter [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Correlation meter [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Correlation%20meter%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Crossfeed [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Crossfeed [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Crossfeed%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="DPOAE Canceller [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="DPOAE Canceller [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/DPOAE%20Canceller%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Histogram Stereo [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Histogram Stereo [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Histogram%20Stereo%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="IIR Phaser [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="IIR Phaser [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/IIR%20Phaser%20%5BJM%5D</source>
+      </version>
+    </reapack>
+    
+    <reapack name="K-Flanger [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="K-Flanger [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/K-Flanger%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Logistic Noise Generator [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Logistic Noise Generator [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Logistic%20Noise%20Generator%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="MCS Vectorscope [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="MCS Vectorscope [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/MCS%20Vectorscope%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Median Filter [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Median Filter [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Median%20Filter%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Phase Wheel Analyser [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Phase Wheel Analyser [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Phase%20Wheel%20Analyser%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Phase Wheel Analyser v2 [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Phase Wheel Analyser v2 [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Phase%20Wheel%20Analyser%20v2%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Polar Histogram [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Polar Histogram [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Polar%20Histogram%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Proximity v5 [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Proximity v5 [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Proximity%20v5%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFA [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFA [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFA%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT Autocorrelation Analyser [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT Autocorrelation Analyser [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Autocorrelation%20Analyser%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT Bispectrum V2 [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT Bispectrum V2 [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Bispectrum%20V2%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT Cepstrum Analyser v2.0 [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT Cepstrum Analyser v2.0 [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Cepstrum%20Analyser%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT Cplx Kaiser Template [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT Cplx Kaiser Template [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Cplx%20Kaiser%20Template%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT-Based Complex Template [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT-Based Complex Template [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Cplx%20Template%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT Extractor [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT Extractor [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Extractor%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT Frequency Shifter [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT Frequency Shifter [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Frequency%20Shifter%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT Lifter v5 [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT Lifter v5 [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Lifter%20v5%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT Transient Split [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT Transient Split [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20Transient%20Split%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT-Based dual-channel Template v2 [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT-Based dual-channel Template v2 [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT%20dual-channel%20Template%20v2%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="STFT-Based Complex Template [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="STFT-Based Complex Template [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/STFT-Based%20Complex%20Template%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Stereo Tool [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Stereo Tool [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Stereo%20Tool%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Stereoscope v4 [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Stereoscope v4 [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Stereoscope%20v4%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Stern-Brocot Stereochord [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Stern-Brocot Stereochord [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Stern-Brocot%20Stereochord%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Strobe Tuner [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Strobe Tuner [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Strobe%20Tuner%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Tetrad Spiral Farey [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Tetrad Spiral Farey [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Tetrad%20Spiral%20Farey%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Thiran Delay [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Thiran Delay [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Thiran%20Delay%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Transfer Function Analyser [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Transfer Function Analyser [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Transfer%20Function%20Analyser%20%5BJM%5D</source>
+      </version>
+    </reapack>
+
+    <reapack name="Filter v2 [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Filter v2 [JM].jsfx">https://raw.githubusercontent.com/JozefMackowiak/reapack-jm/master/Effects/Vowel%20Filter%20v2%20%5BJM%5D</source>
+      </version>
+    </reapack>
 
   </category>
 </index>

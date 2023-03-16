@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="JM Tale's JSFX Pack Redistribution">
-  <category name="Utility">
+<index version="1" name="Jozef Mackowiak">
+  <category name="Tale">
     <reapack name="Tale" type="effect">
       <version name="0.0.0">
         <source file="adsr.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/Tale/adsr.jsfx-inc</source>

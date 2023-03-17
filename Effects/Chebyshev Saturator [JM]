@@ -1,4 +1,19 @@
+version: 0.0.1
 desc:Chebyshev Saturator [JM]
+tags: effect, saturation
+author: Jozef Mackowiak
+license: MIT
+about:
+  # Chebyshev Saturator
+  A saturator capable of emphasizing given harmonics.
+  ### Features:
+  - chebyshev polynomials from 1st to 9th order
+  - harmonic mode - adjust the amount of even and odd harmonics
+  - rectifier
+  - DC filter
+  - GFX signal transfer function wiever
+changelog: Initial Commit
+
 options: gfx_hz = 60;
 
 in_pin:left input

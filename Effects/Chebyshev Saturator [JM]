@@ -1,8 +1,7 @@
-version: 0.0.1
 desc:Chebyshev Saturator [JM]
-tags: effect, saturation
 author: Jozef Mackowiak
-license: MIT
+version: 1.0.0
+changelog: Initial Commit
 about:
   # Chebyshev Saturator
   A saturator capable of emphasizing given harmonics.
@@ -12,7 +11,6 @@ about:
   - rectifier
   - DC filter
   - GFX signal transfer function wiever
-changelog: Initial Commit
 
 options: gfx_hz = 60;
 

@@ -1,0 +1,626 @@
+desc:Stern-Brocot Stereochord [JM]
+author: Jozef Mackowiak
+license: MIT
+version: 0.0.0
+changelog: Initial Commit
+about:
+  # Your Package Title
+  Longer description and documentation for this package in *markdown*.
+
+// based on the STFT template created by Geraint Luff
+
+options: gfx_hz = 60;
+
+slider1:gain_db=-12<-144,0,1>Gain [dB]
+slider2:440<20,5000,1>Freq [Hz]
+slider3:1<-16,16,1>Partial No
+slider4:0<0,41,1{Sine,Cosine,Triangle,Square,Rectangle (pulse),Sawtooth,Ramp,Modified triangle,Modified square,Half-wave rectified sine (fixed 0.5 pulse width),Half-wave rectified sine (variable pulse width),Full-wave rectified sine,Pulse sine (fixed 0.5 pulse width),Saw pulse,Triangular pulse,Half-wave rectified sawtooth,Alternating sine,Camel sine,Alternating camel sine,Bipolar camel sine,Bipolar squared sine,Parabola,Trapezoid (fixed 0.5 pulse width),Trapezoid (variable pulse width),Hyper triangular wave,LPF square approximation (order N = 2 or 3),Integrated LPF square (order N = 2 or 3),Integrated sawtooth,Cubic sawtooth,Sine sawtooth,HPF sawtooth approximation,Logit approximation,Square wave minus fundamental,Sawtooth minus fundamental,Stepped triangle,Stepped sawtooth,Hard sync sawtooth,Might not be suitable for vegetarians,Staircase (fixed 0.5 pulse width),Staircase (variable pulse width),Uneven staircase}>Wave Type
+//slider5:0.5<0,1,0.0001>Pulse Width
+//slider6:1<0,10,0.0001>Hard Sync
+//slider7:1<1,32,1>Steps Number
+slider8:5<0,10,0.0001>Smoothing
+slider9:0.01<0,0.1,0.000001>Error
+slider10:0.5<0.000001,0.999999,0.00001>Division 1
+slider11:0.5<0.000001,0.999999,0.00001>Division 2
+
+
+import Tale/poly_blep.jsfx-inc
+import _JM/jm.jsfx-inc
+
+options:want_all_kb
+
+
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output
+
+@init
+sliders_showing=0;
+
+last_gain=10^(gain_db/20);
+
+/*
+function float_to_fraction(x, error=0.000001)
+local(n, lower_d, lower_n, middle_d, middle_n, upper_d, upper_n)
+global(return)
+(
+  n = floor(x);
+  x -= n;
+  x < error ? 
+
+);
+*/
+
+function onepole(val,targ,coeff) ( coeff*val + (1-coeff)*targ; );
+function get_coeff(ms) ( exp(-1/(srate*ms*0.001)); );
+
+
+function dec2frac2 (d,error) local (df,top,bot) instance(licznik,mianownik)(
+  df = top = bot = 1;
+  while(
+    //df < d ? (top+=1):(bot+=1; top=d*bot);
+    df < d ? (top+=1):(bot+=1);
+    df = top/bot;
+  abs(df-d)>error);
+  
+  licznik = top;
+  mianownik = bot;
+  d == 1?(licznik=mianownik=1); ////////////////////////
+  top/bot;
+);
+
+function HSBtoRGB(hue,saturation,value) 
+ local (r,g,b,h,f,v,p,q,t) 
+( 
+   ( hue > 360) ? ( hue = hue % 360;) 
+   :( hue < 0 ) ? ( hue = hue % 360 ;); 
+   saturation = min ( max(saturation,0),1); 
+   v = floor( 255 * value); 
+   v = min ( max(v,0),255); 
+   (saturation == 0)? 
+   ( 
+   r = v ; g = v; b = v; 
+   ):( 
+   h = floor( hue / 60); 
+   f = hue / 60-h; 
+   p = floor( v * (1-saturation)); 
+   p = min ( max(p,0),255); 
+   q = floor( v * (1-f * saturation)); 
+   q = min ( max(q,0),255); 
+   t = floor( v * (1-(1-f) * saturation)); 
+   t = min ( max(t,0),255); 
+   (h==0)?(r=v;g=t;b=p;) 
+   :(h==1)?(r=q;g=v;b=p;) 
+   :(h==2)?(r=p;g=v;b=t;) 
+   :(h==3)?(r=p;g=q;b=v;) 
+   :(h==4)?(r=t;g=p;b=v;) 
+   :(h==5)?(r=v;g=p;b=q;) 
+   :( r=v;g=t;b=p;); 
+   ); 
+   this.r = r; 
+   this.g = g; 
+   this.b = b; 
+   //gfx_r = r/255;
+   //gfx_g = g/255;
+   //gfx_b = b/255;
+   gfx_set(r/255, g/255, b/255, 1);
+); 
+
+function log2(x) ( 
+  log(x) / log(2);
+);
+
+function smooth_parameter(target)
+instance(s, coeff)
+global()
+local(y, v)
+(
+  v = coeff*(target - s);
+  y = v + s;
+  s = y + v;
+  y
+);
+
+function initialize_smoother(cutoff)
+instance(coeff)
+global(srate)
+local(g)
+( 
+  g = tan($pi*cutoff/srate);
+  coeff = g/(1+g);  
+);
+
+function interpolator_init(slider_idx)
+instance(next_val, idx, s)
+local()
+global()
+(
+  s = slider(slider_idx);
+  next_val = slider(slider_idx);
+  idx = slider_idx;
+);
+
+function interpolator_block()
+instance(delta, next_changepoint_t, next_val, idx)
+local(next_changepoint_y)
+global(samplesblock)
+(
+  next_changepoint_t = slider_next_chg(idx, next_changepoint_y);
+  next_changepoint_t > 0 ? 
+  (
+    next_val = slider(idx);
+  ) : (
+    next_changepoint_y = slider(idx);
+    next_changepoint_t = samplesblock;
+  );
+    
+  delta = (next_changepoint_y - next_val) / next_changepoint_t;
+);
+  
+function interpolate()
+instance(delta, next_changepoint_t, next_val, idx, coeff)
+local(current_value, next_changepoint_y)
+global(current_sample)
+(
+  current_value = next_val;
+  current_sample == next_changepoint_t ? 
+  (
+    delta = 0;
+    next_changepoint_t = slider_next_chg(idx, next_changepoint_y);
+    delta = next_changepoint_t > current_sample ? (next_changepoint_y - current_value) / (next_changepoint_t-current_sample) : 0;
+  );
+    
+  next_val = current_value + delta;
+    
+  coeff > 0 ? this.smooth_parameter(current_value) : current_value
+);
+
+freq_interpolator.interpolator_init(2);
+div1_interpolator.interpolator_init(10);
+div2_interpolator.interpolator_init(11);
+
+
+@slider
+
+wavetype = slider4+1;
+a = slider5;
+b = slider6;
+c = slider7;
+a = 0;
+b = 1;
+c = 1;
+//partial = slider3;
+slider3 > 0 ? (partial = slider3):(partial = -1/slider3);
+smoothing = slider8;
+//division = slider10;
+error = slider9;
+
+next_gain=10^(gain_db/20);
+osc.poly_setpw(slider5);
+//lfo.lfo_setf2(slider6);
+osc.poly_setn(slider7);
+freq_interpolator.initialize_smoother(smoothing);
+div1_interpolator.initialize_smoother(smoothing);
+div2_interpolator.initialize_smoother(smoothing);
+
+
+@block
+d_gain = (next_gain - last_gain)/samplesblock;
+freq_interpolator.interpolator_block();
+div1_interpolator.interpolator_block();
+div2_interpolator.interpolator_block();
+
+@sample
+/*
+div1.dec2frac2(slider10,error);
+div2.dec2frac2(slider11,error);
+freq = freq_interpolator.interpolate();
+division1 = div1_interpolator.interpolate();
+division2 = div2_interpolator.interpolate();
+division1 = div1.licznik/div1.mianownik;
+division2 = div2.licznik/div2.mianownik;
+*/
+  freq = freq_interpolator.interpolate();
+  
+
+freq0 = freq*partial;
+osc0.poly_setf(freq0);
+
+freq1 = freq*partial/(1-division1);
+//freq1 = freq*partial*division1;
+osc1.poly_setf(freq1);
+
+freq2 = freq*partial/(1-division2);
+//freq2 = freq*partial*division2;
+osc2.poly_setf(freq2);
+
+
+wavetype==1  ? spl0 = last_gain * osc0.poly_sin():       // Sine
+wavetype==2  ? spl0 = last_gain * osc0.poly_cos():       // Cosine
+wavetype==3  ? spl0 = last_gain * osc0.poly_tri():       // Triangle
+wavetype==4  ? spl0 = last_gain * osc0.poly_sqr():       // Square
+wavetype==5  ? spl0 = last_gain * osc0.poly_rect():      // Rectangle (pulse)
+wavetype==6  ? spl0 = last_gain * osc0.poly_saw():       // Sawtooth
+wavetype==7  ? spl0 = last_gain * osc0.poly_ramp():      // Ramp
+wavetype==8  ? spl0 = last_gain * osc0.poly_tri2():      // Modified triangle
+wavetype==9  ? spl0 = last_gain * osc0.poly_sqr2():      // Modified square
+wavetype==10 ? spl0 = last_gain * osc0.poly_half():      // Half-wave rectified sine (fixed 0.5 pulse width)
+wavetype==11 ? spl0 = last_gain * osc0.poly_half2():     // Half-wave rectified sine (variable pulse width)
+wavetype==12 ? spl0 = last_gain * osc0.poly_full():      // Full-wave rectified sine
+wavetype==13 ? spl0 = last_gain * osc0.poly_sinp():      // Pulse sine (fixed 0.5 pulse width)
+wavetype==14 ? spl0 = last_gain * osc0.poly_sawp():      // Saw pulse
+wavetype==15 ? spl0 = last_gain * osc0.poly_trip():      // Triangular pulse
+wavetype==16 ? spl0 = last_gain * osc0.poly_hwsaw():     // Half-wave rectified sawtooth
+wavetype==17 ? spl0 = last_gain * osc0.poly_alt():       // Alternating sine
+wavetype==18 ? spl0 = last_gain * osc0.poly_camel():     // Camel sine
+wavetype==19 ? spl0 = last_gain * osc0.poly_camela():    // Alternating camel sine
+wavetype==20 ? spl0 = last_gain * osc0.poly_camel2():    // Bipolar camel sine
+wavetype==21 ? spl0 = last_gain * osc0.poly_sin2():      // Bipolar squared sine
+wavetype==22 ? spl0 = last_gain * osc0.poly_para():      // Parabola
+wavetype==23 ? spl0 = last_gain * osc0.poly_trap():      // Trapezoid (fixed 0.5 pulse width)
+wavetype==24 ? spl0 = last_gain * osc0.poly_trap2():     // Trapezoid (variable pulse width)
+wavetype==25 ? spl0 = last_gain * osc0.poly_hyptri():    // Hyper triangular wave
+wavetype==26 ? spl0 = last_gain * osc0.poly_lpsqr2():    // LPF square approximation (order N = 2 or 3)
+wavetype==27 ? spl0 = last_gain * osc0.poly_intlpsqr2(): // Integrated LPF square (order N = 2 or 3)
+wavetype==28 ? spl0 = last_gain * osc0.poly_intsaw():    // Integrated sawtooth
+wavetype==29 ? spl0 = last_gain * osc0.poly_cubsaw():    // Cubic sawtooth
+wavetype==30 ? spl0 = last_gain * osc0.poly_sinsaw():    // Sine sawtooth
+wavetype==31 ? spl0 = last_gain * osc0.poly_hpsaw6():    // HPF sawtooth approximation
+wavetype==32 ? spl0 = last_gain * osc0.poly_logit3():    // Logit approximation
+wavetype==33 ? spl0 = last_gain * osc0.poly_sqrm1():     // Square wave minus fundamental
+wavetype==34 ? spl0 = last_gain * osc0.poly_sawm1():     // Sawtooth minus fundamental
+wavetype==35 ? spl0 = last_gain * osc0.poly_trin():      // Stepped triangle
+wavetype==36 ? spl0 = last_gain * osc0.poly_sawn():      // Stepped sawtooth
+wavetype==37 ? spl0 = last_gain * osc0.poly_hssaw():     // Hard sync sawtooth
+wavetype==38 ? spl0 = last_gain * osc0.poly_ham():       // Might not be suitable for vegetarians
+wavetype==39 ? spl0 = last_gain * osc0.poly_stairs():    // Staircase (fixed 0.5 pulse width)
+wavetype==40 ? spl0 = last_gain * osc0.poly_stairs3():   // Staircase (variable pulse width)
+wavetype==41 ? spl0 = last_gain * osc0.poly_stairs2();   // Uneven staircase
+
+wavetype==1  ? spl1 = last_gain * osc1.poly_sin():       // Sine
+wavetype==2  ? spl1 = last_gain * osc1.poly_cos():       // Cosine
+wavetype==3  ? spl1 = last_gain * osc1.poly_tri():       // Triangle
+wavetype==4  ? spl1 = last_gain * osc1.poly_sqr():       // Square
+wavetype==5  ? spl1 = last_gain * osc1.poly_rect():      // Rectangle (pulse)
+wavetype==6  ? spl1 = last_gain * osc1.poly_saw():       // Sawtooth
+wavetype==7  ? spl1 = last_gain * osc1.poly_ramp():      // Ramp
+wavetype==8  ? spl1 = last_gain * osc1.poly_tri2():      // Modified triangle
+wavetype==9  ? spl1 = last_gain * osc1.poly_sqr2():      // Modified square
+wavetype==10 ? spl1 = last_gain * osc1.poly_half():      // Half-wave rectified sine (fixed 0.5 pulse width)
+wavetype==11 ? spl1 = last_gain * osc1.poly_half2():     // Half-wave rectified sine (variable pulse width)
+wavetype==12 ? spl1 = last_gain * osc1.poly_full():      // Full-wave rectified sine
+wavetype==13 ? spl1 = last_gain * osc1.poly_sinp():      // Pulse sine (fixed 0.5 pulse width)
+wavetype==14 ? spl1 = last_gain * osc1.poly_sawp():      // Saw pulse
+wavetype==15 ? spl1 = last_gain * osc1.poly_trip():      // Triangular pulse
+wavetype==16 ? spl1 = last_gain * osc1.poly_hwsaw():     // Half-wave rectified sawtooth
+wavetype==17 ? spl1 = last_gain * osc1.poly_alt():       // Alternating sine
+wavetype==18 ? spl1 = last_gain * osc1.poly_camel():     // Camel sine
+wavetype==19 ? spl1 = last_gain * osc1.poly_camela():    // Alternating camel sine
+wavetype==20 ? spl1 = last_gain * osc1.poly_camel2():    // Bipolar camel sine
+wavetype==21 ? spl1 = last_gain * osc1.poly_sin2():      // Bipolar squared sine
+wavetype==22 ? spl1 = last_gain * osc1.poly_para():      // Parabola
+wavetype==23 ? spl1 = last_gain * osc1.poly_trap():      // Trapezoid (fixed 0.5 pulse width)
+wavetype==24 ? spl1 = last_gain * osc1.poly_trap2():     // Trapezoid (variable pulse width)
+wavetype==25 ? spl1 = last_gain * osc1.poly_hyptri():    // Hyper triangular wave
+wavetype==26 ? spl1 = last_gain * osc1.poly_lpsqr2():    // LPF square approximation (order N = 2 or 3)
+wavetype==27 ? spl1 = last_gain * osc1.poly_intlpsqr2(): // Integrated LPF square (order N = 2 or 3)
+wavetype==28 ? spl1 = last_gain * osc1.poly_intsaw():    // Integrated sawtooth
+wavetype==29 ? spl1 = last_gain * osc1.poly_cubsaw():    // Cubic sawtooth
+wavetype==30 ? spl1 = last_gain * osc1.poly_sinsaw():    // Sine sawtooth
+wavetype==31 ? spl1 = last_gain * osc1.poly_hpsaw6():    // HPF sawtooth approximation
+wavetype==32 ? spl1 = last_gain * osc1.poly_logit3():    // Logit approximation
+wavetype==33 ? spl1 = last_gain * osc1.poly_sqrm1():     // Square wave minus fundamental
+wavetype==34 ? spl1 = last_gain * osc1.poly_sawm1():     // Sawtooth minus fundamental
+wavetype==35 ? spl1 = last_gain * osc1.poly_trin():      // Stepped triangle
+wavetype==36 ? spl1 = last_gain * osc1.poly_sawn():      // Stepped sawtooth
+wavetype==37 ? spl1 = last_gain * osc1.poly_hssaw():     // Hard sync sawtooth
+wavetype==38 ? spl1 = last_gain * osc1.poly_ham():       // Might not be suitable for vegetarians
+wavetype==39 ? spl1 = last_gain * osc1.poly_stairs():    // Staircase (fixed 0.5 pulse width)
+wavetype==40 ? spl1 = last_gain * osc1.poly_stairs3():   // Staircase (variable pulse width)
+wavetype==41 ? spl1 = last_gain * osc1.poly_stairs2();   // Uneven staircase
+
+wavetype==1  ? spl2 = last_gain * osc2.poly_sin():       // Sine
+wavetype==2  ? spl2 = last_gain * osc2.poly_cos():       // Cosine
+wavetype==3  ? spl2 = last_gain * osc2.poly_tri():       // Triangle
+wavetype==4  ? spl2 = last_gain * osc2.poly_sqr():       // Square
+wavetype==5  ? spl2 = last_gain * osc2.poly_rect():      // Rectangle (pulse)
+wavetype==6  ? spl2 = last_gain * osc2.poly_saw():       // Sawtooth
+wavetype==7  ? spl2 = last_gain * osc2.poly_ramp():      // Ramp
+wavetype==8  ? spl2 = last_gain * osc2.poly_tri2():      // Modified triangle
+wavetype==9  ? spl2 = last_gain * osc2.poly_sqr2():      // Modified square
+wavetype==10 ? spl2 = last_gain * osc2.poly_half():      // Half-wave rectified sine (fixed 0.5 pulse width)
+wavetype==11 ? spl2 = last_gain * osc2.poly_half2():     // Half-wave rectified sine (variable pulse width)
+wavetype==12 ? spl2 = last_gain * osc2.poly_full():      // Full-wave rectified sine
+wavetype==13 ? spl2 = last_gain * osc2.poly_sinp():      // Pulse sine (fixed 0.5 pulse width)
+wavetype==14 ? spl2 = last_gain * osc2.poly_sawp():      // Saw pulse
+wavetype==15 ? spl2 = last_gain * osc2.poly_trip():      // Triangular pulse
+wavetype==16 ? spl2 = last_gain * osc2.poly_hwsaw():     // Half-wave rectified sawtooth
+wavetype==17 ? spl2 = last_gain * osc2.poly_alt():       // Alternating sine
+wavetype==18 ? spl2 = last_gain * osc2.poly_camel():     // Camel sine
+wavetype==19 ? spl2 = last_gain * osc2.poly_camela():    // Alternating camel sine
+wavetype==20 ? spl2 = last_gain * osc2.poly_camel2():    // Bipolar camel sine
+wavetype==21 ? spl2 = last_gain * osc2.poly_sin2():      // Bipolar squared sine
+wavetype==22 ? spl2 = last_gain * osc2.poly_para():      // Parabola
+wavetype==23 ? spl2 = last_gain * osc2.poly_trap():      // Trapezoid (fixed 0.5 pulse width)
+wavetype==24 ? spl2 = last_gain * osc2.poly_trap2():     // Trapezoid (variable pulse width)
+wavetype==25 ? spl2 = last_gain * osc2.poly_hyptri():    // Hyper triangular wave
+wavetype==26 ? spl2 = last_gain * osc2.poly_lpsqr2():    // LPF square approximation (order N = 2 or 3)
+wavetype==27 ? spl2 = last_gain * osc2.poly_intlpsqr2(): // Integrated LPF square (order N = 2 or 3)
+wavetype==28 ? spl2 = last_gain * osc2.poly_intsaw():    // Integrated sawtooth
+wavetype==29 ? spl2 = last_gain * osc2.poly_cubsaw():    // Cubic sawtooth
+wavetype==30 ? spl2 = last_gain * osc2.poly_sinsaw():    // Sine sawtooth
+wavetype==31 ? spl2 = last_gain * osc2.poly_hpsaw6():    // HPF sawtooth approximation
+wavetype==32 ? spl2 = last_gain * osc2.poly_logit3():    // Logit approximation
+wavetype==33 ? spl2 = last_gain * osc2.poly_sqrm1():     // Square wave minus fundamental
+wavetype==34 ? spl2 = last_gain * osc2.poly_sawm1():     // Sawtooth minus fundamental
+wavetype==35 ? spl2 = last_gain * osc2.poly_trin():      // Stepped triangle
+wavetype==36 ? spl2 = last_gain * osc2.poly_sawn():      // Stepped sawtooth
+wavetype==37 ? spl2 = last_gain * osc2.poly_hssaw():     // Hard sync sawtooth
+wavetype==38 ? spl2 = last_gain * osc2.poly_ham():       // Might not be suitable for vegetarians
+wavetype==39 ? spl2 = last_gain * osc2.poly_stairs():    // Staircase (fixed 0.5 pulse width)
+wavetype==40 ? spl2 = last_gain * osc2.poly_stairs3():   // Staircase (variable pulse width)
+wavetype==41 ? spl2 = last_gain * osc2.poly_stairs2();   // Uneven staircase
+
+last_gain += d_gain;
+
+spl0 = spl1 = (spl0+spl1+spl2)/2
+
+@gfx 640 640
+
+order = 13;
+
+/*
+gfx_set(1,1,1,0.5); // Farey fractions
+n = 1;
+i = 0;
+loop(order,
+  i = 0;
+  loop(n,
+    //tx = freq_to_x(i[]);
+    //HSBtoRGB(360*log2(i[]/minFreq),s,1);
+    //gfx_line(floor((gfx_w+(i*gfx_w))/n),floor(gfx_h - gfx_h/n),floor((gfx_w+(i*gfx_w))/n),gfx_h);
+    gfx_a = 1/n;
+    gfx_line((gfx_w+(i*gfx_w))/n,0,(gfx_w+(i*gfx_w))/n,gfx_h);
+    gfx_line(0,(gfx_h+(i*gfx_h))/n,gfx_w,(gfx_h+(i*gfx_h))/n);
+    i += 1;
+  );
+  n += 1;
+);
+*/
+
+gfx_set(1,1,1,0.5); // Farey fractions
+n = 1;
+i = 0;
+loop(order,
+  i = 0;
+  loop(n,
+    //tx = freq_to_x(i[]);
+    HSBtoRGB(360*log2(partial*freq*((i+1)/n)),1,1);
+    //gfx_line(floor((gfx_w+(i*gfx_w))/n),floor(gfx_h - gfx_h/n),floor((gfx_w+(i*gfx_w))/n),gfx_h);
+    gfx_a = 1/n;
+    //gfx_a = 1.5/n;
+    //gfx_a = 1-(n/order);
+    vertical = gfx_w-(gfx_w+(i*gfx_w))/n;
+    lateral  = (gfx_h+(i*gfx_h))/n;
+    gfx_line(vertical,0,vertical,gfx_h);
+    gfx_line(0,lateral,gfx_w,lateral);
+    i += 1;
+  );
+  n += 1;
+);
+
+
+cursor1_pos = division1*gfx_w;
+cursor2_pos = division2*gfx_h;
+/*
+//gfx_set(1,0,0,1);
+//gfx_set(1,1,1,1);
+gfx_set(1,1,1,0.75);
+gfx_line(cursor1_pos,0,cursor1_pos,gfx_h);
+gfx_line(0,gfx_h-cursor2_pos,gfx_w,gfx_h-cursor2_pos);
+*/
+
+xoffset = -11;
+yoffset = 0;
+gfx_set(1,1,1,0.75);
+freq0 != 0 ? 
+  (gfx_x = xoffset - floor(abs(log10(freq1)))*8):
+  (gfx_x = xoffset);
+gfx_x += cursor1_pos;
+//gfx_y = 10 + yoffset;
+gfx_y = gfx_h - 10;
+gfx_drawnumber(freq1,2);
+//freq1 != 0 ? 
+//  (gfx_x = xoffset - floor(abs(log10(freq2)))*8):
+//  (gfx_x = xoffset);
+gfx_y = gfx_h-cursor2_pos-10;
+gfx_x = 20 + xoffset;
+gfx_drawnumber(freq2,2);
+abs(freq0-freq1) > 1 ? 
+  (gfx_x = xoffset - floor(log10(abs(freq0-freq1)))*8):
+  (gfx_x = xoffset);
+gfx_x += cursor1_pos;
+
+
+/*
+//freq0-freq1 < 0 ? (gfx_x -= 8); //align when negative
+abs(freq0-freq1) < 36 && abs(freq0-freq1) > 10 ? (gfx_set(1,0.5,0.5,0.75)):(gfx_set(1,1,1,0.75));
+gfx_y = 30 + yoffset;
+gfx_drawnumber(abs(freq0-freq1),2);
+*/
+
+
+/*
+//difftone = abs(freq0-freq1)/min(freq0,freq1);     //// Difference tones
+difftone0 = freq0/abs(freq0-freq1);
+//difftone1 = freq1/abs(freq0-freq1);
+difftone00 = abs(freq0-freq1)/freq0;
+//difftone11 = abs(freq0-freq1)/freq1;
+
+difftone1 = freq0/abs(freq0-freq2);
+//difftone1 = freq1/abs(freq0-freq1);
+difftone11 = abs(freq0-freq2)/freq0;
+//difftone11 = abs(freq0-freq1)/freq1;
+
+difftone2 = freq1/abs(freq1-freq2);
+//difftone1 = freq1/abs(freq0-freq1);
+difftone22 = abs(freq1-freq2)/freq1;
+//difftone11 = abs(freq0-freq1)/freq1;
+
+//gfx_set(0,1,0,0.75); 
+gfx_set(1,1,1,0.5); 
+//gfx_set(0,0,1,0.75);
+gfx_line(difftone0*gfx_w,0,difftone0*gfx_w,gfx_h);
+gfx_line(0,(1-difftone1)*gfx_h,gfx_w,(1-difftone1)*gfx_h);
+//gfx_line(difftone2*gfx_w,0,difftone0*gfx_w,gfx_h);
+//gfx_line(difftone1*gfx_w,0,difftone1*gfx_w,gfx_h);
+//gfx_set(0,1,0,0.75);
+gfx_line(difftone00*gfx_w,0,difftone00*gfx_w,gfx_h);//
+gfx_line(0,(1-difftone11)*gfx_h,gfx_w,(1-difftone11)*gfx_h);
+//gfx_line(difftone11*gfx_w,0,difftone11*gfx_w,gfx_h);
+
+gfx_line(0,(1-difftone2)*gfx_h,gfx_w,(1-difftone2)*gfx_h);
+gfx_line(difftone2*gfx_w,0,difftone2*gfx_w,gfx_h);///
+
+gfx_line(0,(1-difftone22)*gfx_h,gfx_w,(1-difftone22)*gfx_h);
+gfx_line(difftone22*gfx_w,0,difftone22*gfx_w,gfx_h);//
+
+//abs(freq0-freq1)/min(freq0,freq1) >= 1 ? 
+//(*gfx_w);
+//*/
+
+
+/*
+//difftone = abs(freq0-freq1)/min(freq0,freq1);     //// Difference tones
+difftone0 = freq0/abs(freq0-freq1);
+//difftone1 = freq1/abs(freq0-freq1);
+difftone00 = abs(freq0-freq1)/freq0;
+//difftone11 = abs(freq0-freq1)/freq1;
+
+difftone1 = freq0/abs(freq0-freq2);
+//difftone1 = freq1/abs(freq0-freq1);
+difftone11 = abs(freq0-freq2)/freq0;
+//difftone11 = abs(freq0-freq1)/freq1;
+
+difftone2 = freq1/abs(freq1-freq2);
+//difftone1 = freq1/abs(freq0-freq1);
+difftone22 = abs(freq1-freq2)/freq1;
+//difftone11 = abs(freq0-freq1)/freq1;
+
+gfx_set(1,1,1,0.5); 
+
+jm.xcross(difftone0*gfx_w,(1-difftone1)*gfx_h,4,4);
+jm.xcross(difftone1*gfx_w,(1-difftone2)*gfx_h,4,4);
+jm.xcross(difftone0*gfx_w,(1-difftone2)*gfx_h,4,4);
+jm.xcross(difftone00*gfx_w,(1-difftone11)*gfx_h,4,4);
+jm.xcross(difftone11*gfx_w,(1-difftone22)*gfx_h,4,4);
+jm.xcross(difftone00*gfx_w,(1-difftone22)*gfx_h,4,4);
+
+
+//abs(freq0-freq1)/min(freq0,freq1) >= 1 ? 
+//(*gfx_w);
+//*/
+
+
+gfx_set(1,1,1,1);
+mouse_cap ? (
+  slider10 = mouse_x/gfx_w;
+  slider11 = 1 - mouse_y/gfx_h;
+  
+  size_x = error*gfx_w;
+  size_y = error*gfx_h;
+  p1x = mouse_x-size_x;
+  p1y = mouse_y+size_y;
+  p2x = mouse_x+size_x;
+  p2y = mouse_y+size_y;
+  p3x = mouse_x+size_x;
+  p3y = mouse_y-size_y;
+  p4x = mouse_x-size_x;
+  p4y = mouse_y-size_y;
+  /*
+  gfx_x = p1x; gfx_y = p1y;
+  gfx_setpixel(1,1,1);
+  gfx_x = p2x; gfx_y = p2y;
+  gfx_setpixel(1,1,1);
+  gfx_x = p3x; gfx_y = p3y;
+  gfx_setpixel(1,1,1);
+  gfx_x = p4x; gfx_y = p4y;
+  gfx_setpixel(1,1,1);
+  */
+  gfx_set(1,1,1,0.5);
+  gfx_x = p1x; gfx_y = p1y;
+  gfx_lineto(p2x,p2y);
+  gfx_lineto(p3x,p3y);
+  gfx_lineto(p4x,p4y);
+  gfx_lineto(p1x,p1y);
+  //gfx_rect(mouse_x-size_x,mouse_y-size_y,size_x*2,size_y*2,0);
+  
+  //div1.dec2frac2(slider10,error);
+  //div2.dec2frac2(slider11,error);
+  div1.dec2frac2(1-slider10,error);
+  div2.dec2frac2(1-slider11,error);
+  division1 = div1_interpolator.interpolate();
+  division2 = div2_interpolator.interpolate();
+  //division1 = div1.licznik/div1.mianownik;
+  //division2 = div2.licznik/div2.mianownik;
+  division1 = 1-div1.licznik/div1.mianownik;
+  division2 = 1-div2.licznik/div2.mianownik;
+
+  
+
+);
+
+cx = division1*gfx_w;
+cy = gfx_h-division2*gfx_h; 
+  
+gfx_x = cx-3; gfx_y = cy-30;
+gfx_drawnumber(div1.licznik,0);
+gfx_x = cx-3; gfx_y = cy-40;
+gfx_drawnumber(div1.mianownik,0);
+gfx_x = cx+30; gfx_y = cy+3;
+gfx_drawnumber(div2.licznik,0);
+gfx_x = cx+30; gfx_y = cy-8;
+gfx_drawnumber(div2.mianownik,0);
+
+gfx_set(1,1,1,1);
+jm.xcross(cx,cy,4,4);
+
+
+//gfx_getchar(13) ? (sliders = 1);
+
+//lchar == 13 && gfx_getchar() == 0 ? hideUI = 1 - hideUI;
+//lchar = gfx_getchar();
+debug = gfx_getchar(13);
+
+//mouse_cap && mouse_x < gfx_w-10 && mouse_y < gfx_h-10 && sliders ? (sliders = 0);
+//mouse_cap && mouse_x < gfx_w-10 && mouse_y < gfx_h-10 && !sliders ? (sliders = 1);
+//mouse_cap && mouse_x < gfx_w-10 && mouse_y < gfx_h-10 ? (sliders = 0);
+
+
+/*
+function set_color(trgb)
+(
+  gfx_set((trgb&$xff0000)/$xff0000,(trgb&$xff00)/$xff00,(trgb&$xff)/$xff);
+);
+*/
+
+//*
+gfx_set(1,1,1,0.5);
+gfx_texth = 16;
+UI_SLIDER_MASK = 32767;
+xu=gfx_texth*3/4;
+yu=gfx_texth*7/8;
+ylo=gfx_h-yu;
+
+has_click = (mouse_cap&1) && !(last_cap&1) ? 1 : 0;
+last_cap=mouse_cap;
+
+tx=gfx_w-gfx_texth;
+gfx_rect(gfx_x=tx-gfx_texth/2,gfx_y=ylo-gfx_texth/2,gfx_texth+1,gfx_texth+1,0);
+gfx_drawstr("?",1|4,gfx_x+gfx_texth+1,gfx_y+gfx_texth+1);
+has_click && abs(mouse_x-tx) < gfx_texth/2 && abs(mouse_y-ylo) < gfx_texth/2 ? (
+  sliders_showing = slider_show(UI_SLIDER_MASK,-1) > 0;
+  has_click=0;
+);
+

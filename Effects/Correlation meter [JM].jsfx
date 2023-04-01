@@ -1,0 +1,141 @@
+desc:Correlation meter [JM]
+author: Jozef Mackowiak
+license: MIT
+version: 0.0.0
+changelog: Initial Commit
+about:
+  # Your Package Title
+  Longer description and documentation for this package in *markdown*.
+
+
+options: gfx_hz = 60;
+
+//in_pin:left input
+//in_pin:right input
+
+slider1:weight_ms=1000<0,10000,1>Weight [ms]
+
+slider11:bal_st=0<-1,1,0.001>Balance
+slider12:cor_st=0<-1,1,0.001>Correlation
+slider13:azi=0<-90,90,1>Azimuth
+//slider14:amp=0<0,1,0.001>Modulus
+//slider15:amp_db=0<-120,0,1>Modulus [dB]
+
+
+@init
+  
+  pi = $pi;
+  invpi = 1/$pi;
+  pidiv2 = $pi*0.5;
+  pidiv4 = $pi*0.25;
+  invpidiv2 = 1/($pi*0.5);
+  invpidiv4 = 1/($pi*0.25);
+  //pi2 = 2*$pi;
+  //sqrt2pi = sqrt(2.0*$pi);
+  sqrt2 = sqrt(2);
+  invsqrt2 = invsqrt(2);
+  
+  function rms_init(weight_ms)
+  instance (weight)(
+    weight = 1-exp(-1/(weight_ms / 1000 * srate));
+  );
+  
+  function rms(input) // no sqrt
+  instance (s,rms,weight)(
+    rms = (s +=  weight * ( input^2 - s ));
+  );
+  
+  /*
+  function rms(input)
+  instance (s,rms,weight)(
+    rms = sqrt(s +=  weight * ( input^2 - s ));
+  );
+  
+  /*
+  function mr_init(weight_ms)
+  instance (weight)(
+    weight = 1-exp(-1/(weight_ms / 1000 * srate));
+  );
+  
+  function mr(input)
+  instance (s,mr,weight)(
+    mr = (s +=  weight * ( abs(input) - s ));
+  );
+  //*/
+  
+
+@slider
+m.rms_init(weight_ms);
+s.rms_init(weight_ms);
+l.rms_init(weight_ms);
+r.rms_init(weight_ms);
+
+//m1.mr_init(weight_ms);
+//s1.mr_init(weight_ms);
+
+@sample
+  m.rms((spl0+spl1)*0.5);
+  s.rms((spl0-spl1)*0.5);
+  
+  //*
+  l.rms(spl0);
+  r.rms(spl1);
+  //*/
+  
+  
+  //m1.mr((spl0+spl1)*0.5);
+  //s1.mr((spl0-spl1)*0.5);
+
+@gfx
+  
+  //cor = asin((m.rms-s.rms)/(m.rms+s.rms))*invpidiv2;
+  //bal = asin((r.rms-l.rms)/(r.rms+l.rms))*invpidiv2;
+  
+  cor = (m.rms-s.rms)/(m.rms+s.rms);
+  bal = (r.rms-l.rms)/(r.rms+l.rms);
+  
+  azi = (atan2(bal,cor)*invpi) * 90;
+  
+  cor_st = asin(cor)*invpidiv2;
+  bal_st = asin(bal)*invpidiv2;
+  
+  amp = sqrt(sqr(cor)+sqr(bal));
+  invamp = 1/amp;
+  invLR = 1/LR.s;
+  invMS = 1/MS.s;
+  amp_db = 20*log10(amp);
+
+  
+  //correlation1 = ((m1.mr-s1.mr)/(m1.mr+s1.mr));
+  
+  /*
+  gfx_set(0,0,0.945,1);
+  gfx_x = gfx_y = 0;
+  gfx_x = gfx_w*(cor*0.5+0.5);
+  gfx_line(gfx_x,0,gfx_x,gfx_h);
+  //gfx_rectto(gfx_w*(correlation*0.5+0.5),gfx_h);
+  
+  gfx_set(0.945,0,0,1);
+  gfx_x = gfx_y = 0;
+  gfx_x = gfx_w*(bal*0.5+0.5);
+  gfx_line(gfx_x,0,gfx_x,gfx_h);
+  //*/
+  
+  //MCS
+  //point_angle = atan2(l.lp,r.lp)-7*pi/4;
+  //point_radius = sqrt(sqr(l.lp)+sqr(r.lp))*invsqrt2;
+
+  
+  
+  gfxw2 = floor(gfx_w/2);
+  gfxh2 = floor(gfx_h/2);
+  centre = min(gfxw2,gfxh2);
+  gfx_x = gfxw2+bal*centre;
+  gfx_y = gfxh2-cor*centre;
+  
+  gfx_set(1,1,1,1);
+  gfx_circle(gfx_x,gfx_y,centre*0.02,0,1);
+  gfx_set(1,1,1,0.2);
+  gfx_line(gfx_x,gfx_y,gfxw2,gfxh2);
+  gfx_set(1,1,1,1);
+  gfx_circle(gfxw2,gfxh2,centre,0,1);

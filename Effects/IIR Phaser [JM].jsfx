@@ -1,0 +1,175 @@
+// JSFX-CookDSP - hilbert - manual example
+// (c) Olivier Belanger - 2020 - belangeo@gmail.com
+
+desc:IIR Phaser [JM]
+author: Jozef Mackowiak
+license: MIT
+version: 0.0.0
+changelog: Initial Commit
+about:
+  # Your Package Title
+  Longer description and documentation for this package in *markdown*.
+
+
+/slider1:10<0,20,0.01>Shifting Frequency (Hz)
+/slider1:0<0,1,0.001>Crossfade [12 - 34]
+/slider1:0<-180,180,0.1>Angle
+/slider2:0<0,2,1{Disabled,LR,MS}>Modulation
+/slider3:0<1,1000,0.01>Multiplier
+slider3:0<-10,10,0.001>Shift [Hz]
+slider4:wet=0.5<0,1,0.001>Width
+
+slider20:0.5<0,10,0.001>Smooth Coeff (0 = Off)
+slider26:xchannel=0<0,1,1{Off,Additive,Subtractive>X Channel Mode
+
+import cookdsp.jsfx-inc
+  
+@init
+  anAngle = 0;
+  pi = $pi;
+  srate2 = srate/2;
+  
+  function smooth_parameter(target)
+  instance(s, coeff)
+  global()
+  local(y, v)
+  (
+    v = coeff*(target - s);
+    y = v + s;
+    s = y + v;
+    y
+  );
+  
+  function initialize_smoother(cutoff)
+  instance(coeff)
+  global(srate)
+  local(g)
+  ( 
+    g = tan($pi*cutoff/srate);
+    coeff = g/(1+g);  
+  );
+  
+  function interpolator_init(slider_idx)
+  instance(next_val, idx, s)
+  local()
+  global()
+  (
+    s = slider(slider_idx);
+    next_val = slider(slider_idx);
+    idx = slider_idx;
+  );
+  
+  function interpolator_block()
+  instance(delta, next_changepoint_t, next_val, idx)
+  local(next_changepoint_y)
+  global(samplesblock)
+  (
+    next_changepoint_t = slider_next_chg(idx, next_changepoint_y);
+    next_changepoint_t > 0 ? 
+    (
+      next_val = slider(idx);
+    ) : (
+      next_changepoint_y = slider(idx);
+      next_changepoint_t = samplesblock;
+    );
+      
+    delta = (next_changepoint_y - next_val) / next_changepoint_t;
+  );
+    
+  function interpolate()
+  instance(delta, next_changepoint_t, next_val, idx, coeff)
+  local(current_value, next_changepoint_y)
+  global(current_sample)
+  (
+    current_value = next_val;
+    current_sample == next_changepoint_t ? 
+    (
+      delta = 0;
+      next_changepoint_t = slider_next_chg(idx, next_changepoint_y);
+      delta = next_changepoint_t > current_sample ? (next_changepoint_y - current_value) / (next_changepoint_t-current_sample) : 0;
+    );
+      
+    next_val = current_value + delta;
+      
+    coeff > 0 ? this.smooth_parameter(current_value) : current_value
+  );
+  
+  p1_interpolator.interpolator_init(3); // init interpolation
+  
+  // Initializes the Hilbert transform
+  hilb0.hilbert();
+  hilb1.hilbert();
+
+@slider
+  p1_interpolator.initialize_smoother(slider20);  // interpolation coeff
+
+@block
+  p1_interpolator.interpolator_block();
+
+@sample
+step = p1_interpolator.interpolate();//*unit;
+//spl0 *= sin(2*pi*rot/360);
+//spl1 *= cos(2*pi*rot/360);
+  lCosAngle = cos(anAngle);
+  lSinAngle = sin(anAngle);
+  
+  xchannel == 0 ? (
+    s0=spl0;
+    s1=spl1;
+  ):
+  xchannel == 1 ? (
+    s0=(spl0+spl1)*0.5;
+    s1=(spl1+spl0)*0.5;
+  ):(
+    s0=(spl0-spl1)*0.5;
+    s1=(spl1-spl0)*0.5;
+  );
+  
+  mid = (s0 + s1)/2;
+  sid = (s0 - s1)/2;
+
+  // Hilbert transform
+  hilb0.hilbert_do(mid);
+  hilb1.hilbert_do(sid);
+
+  //*
+  spl0 = hilb0.real;
+  spl1 = hilb1.real;
+  spl2 = hilb0.imag;
+  spl3 = hilb1.imag;
+  //*/
+  
+  //*
+  ch0 = (lCosAngle*spl0+lSinAngle*spl2);
+  ch1 = (lCosAngle*spl1+lSinAngle*spl3);
+  ch2 = (lCosAngle*spl2+lSinAngle*spl0);
+  ch3 = (lCosAngle*spl3+lSinAngle*spl1);
+  //*/
+  
+  
+  anAngle += pi*step/srate2;
+  anAngle >= pi ? (anAngle -= 2*pi):(anAngle <= -pi ? (anAngle += 2*pi););
+  slider1 = anAngle*360/(2*pi);
+  
+  //*
+  ch0 = (1-wet)*ch0+wet*sid;
+  ch1 = (1-wet)*ch1+wet*mid;
+  //ch2 = (ch2+spl3);
+  //ch3 = (ch3+spl1);
+  //*/
+  
+  //*
+  spl0 = ch0-ch1;
+  spl1 = ch0+ch1;
+  //spl2 = ch2-ch3;
+  //spl3 = ch2+ch3;
+  //*/
+  
+  
+@gfx
+  gfx_set(1, 1, 1, 1);
+  gfx_x = 5;
+  gfx_y = 5;
+  //gfx_printf("Incurred lag: %f spls / %d spls", mdc, sdc);
+  //gfx_printf("MDC: %f; SDC: %f", mdc, sdc);
+  gfx_printf("Shift: %f Hz", step);

@@ -1,0 +1,303 @@
+desc:Phase Wheel Analyser [JM]
+author: Jozef Mackowiak
+license: MIT
+version: 0.0.0
+changelog: Initial Commit
+about:
+  # Your Package Title
+  Longer description and documentation for this package in *markdown*.
+
+
+options: gfx_hz = 60;
+
+//options:maxmem=32000000
+
+in_pin:left input
+in_pin:right input
+out_pin:none
+
+slider1:fft_size_index=6<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
+slider11:radius=1<0,8,0.00001>Radius
+slider12:blur=0.5<0,1,0.00001>Time Blur
+slider13:magnitude=0<0,1,{Off,On}>Magnitude
+slider14:overlap=16<1,16,1>-Overlap
+
+
+@init
+//slider48 ? (gfx_clear=-1):(gfx_clear=0);
+//gfx_clear=-1;
+//gfx_clear=0;
+//top = __memtop();
+gfx_a = 1;
+//gfx_clear_color(0.5,0.5,0.5);
+
+function process_stft_segment(fft_buffer, fft_size) local(fft_bin, left_real, left_imag, right_real, right_imag) (
+  fft_bin = 0; // FFT bin number
+  loop(fft_size/2,
+    fft_bin2 = fft_bin ? (fft_size - fft_bin) : 0;
+    ///^^^/// fft_bin == 0 ? (fft_bin2 = 0):(fft_bin2 = fft_size - fft_bin);
+
+    // Unfold complex spectrum into two real spectra
+    left_real = fft_buffer[2*fft_bin] + fft_buffer[2*fft_bin2];
+    left_imag = fft_buffer[2*fft_bin + 1] - fft_buffer[2*fft_bin2 + 1];
+    right_real = fft_buffer[2*fft_bin + 1] + fft_buffer[2*fft_bin2 + 1];
+    right_imag = -fft_buffer[2*fft_bin] + fft_buffer[2*fft_bin2];
+    
+    //yy = sqrt(left_real*left_imag-right_real*right_imag);
+    //xx = sqrt(left_real*right_real+left_imag*right_imag);
+    
+    
+    //phase_buffer[fft_bin] = atan2(left_real,left_imag) - atan2(right_real,right_imag);
+    phase_buffer[fft_bin] = atan2(left_imag,left_real) - atan2(right_imag,right_real);
+    //phase_buffer[fft_bin] = atan2(left_imag,left_real);
+    //phase_buffer[fft_bin] = atan2(left_real,left_imag);
+    //phase_buffer[fft_bin] = -atan2(right_imag,right_real);
+    //phase_buffer[fft_bin] = sqrt(right_real^2 + right_imag^2);
+    //phase_buffer[fft_bin] = -atan2(yy, xx);
+    //phase_buffer[fft_bin] = yy;
+    magnitude_buffer[fft_bin] = (sqrt(left_real^2+left_imag^2)+sqrt(right_real^2+right_imag^2))/2;
+
+    /*
+    //////////////////////// Main STFT block
+    // The interesting bit - as a placeholder, let's implement a lowpass at samplerate/10
+    fft_bin > fft_size*0.1 ? (
+      left_real = 0;
+      left_imag = 0;
+      right_real = 0;
+      right_imag = 0;
+    );
+    ////////////////////////
+    //*/
+
+    /*
+    // Re-fold back into complex spectrum
+    fft_buffer[2*fft_bin] = (left_real - right_imag)*0.5;
+    fft_buffer[2*fft_bin + 1] = (left_imag + right_real)*0.5;
+    fft_buffer[2*fft_bin2] = (left_real + right_imag)*0.5;
+    fft_buffer[2*fft_bin2 + 1] = (-left_imag + right_real)*0.5;
+    //*/
+    
+    //mag_L = sqrt(left_real^2 + left_imag^2);
+    //mag_R = sqrt(right_real^2 + right_imag^2);
+    //ang_L = atan2(left_imag, left_real);
+    //ang_R = atan2(right_imag, right_real);
+    
+    fft_bin += 1;
+  );
+);
+
+function setup_stft_state(fft_size, first_time) (
+  //////////////////////// Setup block
+  // This is called when playback starts, or when the FFT size is changed
+  0;
+  ////////////////////////
+);
+
+MAX_FFT_SIZE = 32768;
+
+freemem = 0;
+freemem = (fft_buffer = freemem) + MAX_FFT_SIZE*2;
+freemem = (window_buffer = freemem) + MAX_FFT_SIZE;
+
+buffer_length = srate;
+buffer_index = 0;
+freemem = (input_buffer = freemem) + buffer_length*2;
+freemem = (output_buffer = freemem) + buffer_length*2;
+freemem = (phase_buffer = freemem) + buffer_length;
+freemem = (magnitude_buffer = freemem) + buffer_length;
+
+function window(r) local(s, s2, gaussian_width, x) (
+  // When squared, the Hann window adds up perfectly for overlap >= 4, so it's suitable for perfect reconstruction
+  (0.5 - 0.5*cos(r*2*$pi))/sqrt(0.375);
+);
+
+fft_size = 0;
+
+@block
+
+overlap_factor = overlap; // Default is 6, but 4 gives better result
+fft_size = 256<<fft_size_index;
+fft_interval = fft_size/overlap_factor;
+fft_scaling_factor = 1/overlap_factor/fft_size;
+
+fft_size != prev_fft_size ? (
+  setup_stft_state(fft_size, prev_fft_size == 0);
+  prev_fft_size = fft_size;
+  // Fill window buffer
+  i = 0;
+  loop(fft_size,
+    r = (i + 0.5)/fft_size;
+    window_buffer[i] = window(r);
+    i += 1;
+  );
+);
+
+/*
+pdc_delay = fft_size;
+pdc_bot_ch = 0;
+pdc_top_ch = 2;
+//*/
+
+@sample
+
+pass = 0;
+input_buffer[buffer_index*2] = spl0;
+input_buffer[buffer_index*2 + 1] = spl1;
+
+fft_counter += 1;
+
+/////
+/////
+
+/*
+output_index = buffer_index - fft_size;
+output_index < 0 ? output_index += buffer_length;
+spl0 = output_buffer[output_index*2];
+spl1 = output_buffer[output_index*2 + 1];
+output_buffer[output_index*2] = 0; // clear the sample we just read
+output_buffer[output_index*2 + 1] = 0;
+//*/
+buffer_index = (buffer_index + 1)%buffer_length;
+
+
+
+
+
+
+@gfx
+function calc_color(mv, col*) globals(over24)
+(
+  col.r=col.g=col.b=0;
+  
+  mv <= -96  ? 
+  (
+    mv>-168 ? (
+      mv <= -144 ? ( col.b = (mv+168)*over24*0.25) :
+      mv <= -120 ? ( col.g = (mv+144)*over24*0.25; col.b = 0.25; ) :
+                   ( col.g=0.25+(mv+120)*over24*0.5; col.b = 0.25-(mv+120)*over24*0.25) 
+    );
+  ) : (
+    mv <= -72 ? ( col.r = (mv+96)*over24; col.g = 0.75; ) :
+    mv <= -48 ? ( col.r = 1; col.g = 0.75-(mv+72)*over24*0.75; ) :
+    mv <= -24 ? ( col.r = 1; col.b = (mv+48)*over24; ) :
+    mv <= 0 ? ( col.r=col.b=1; col.g=(mv+24)*over24; ) :
+      col.r=col.g=col.b=1;
+  );    
+);
+
+fft_counter >= fft_interval ? (
+  fft_counter = 0;
+
+  // Copy input to buffer
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    i2 < 0 ? i2 += buffer_length;
+
+    fft_buffer[2*i] = input_buffer[2*i2]*window_buffer[i];
+    fft_buffer[2*i + 1] = input_buffer[2*i2 + 1]*window_buffer[i];
+
+    i += 1;
+  );
+
+  // Process buffer
+  fft(fft_buffer, fft_size);
+  fft_permute(fft_buffer, fft_size);
+
+  process_stft_segment(fft_buffer, fft_size);
+  
+  /*
+  fft_ipermute(fft_buffer, fft_size);
+  ifft(fft_buffer, fft_size);
+  
+  // Add to output
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    (i2 < 0) ? i2 += buffer_length;
+
+    output_buffer[2*i2] += fft_buffer[2*i]*fft_scaling_factor*window_buffer[i];
+    output_buffer[2*i2 + 1] += fft_buffer[2*i + 1]*fft_scaling_factor*window_buffer[i];
+
+    i += 1;
+  );
+  //*/
+  pass = 1;
+);
+
+//gfx_r=gfx_g=gfx_b=0; gfx_a=0.025; // Blur
+gfx_r=gfx_g=gfx_b=0; gfx_a=(1-blur); // Blur
+gfx_x=gfx_y=0;
+gfx_rectto(gfx_w,gfx_h);
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+gfx_clear=-1;
+(mouse_cap) ? (
+  gfx_clear=0;
+);
+pass?(gfx_flush):(gfx_wait);
+
+
+size = min(gfx_w,gfx_h)|0;
+cntr_x = gfx_w/2;
+//cntr_y = 125;
+cntr_y = gfx_h/2;
+gfx_r = 0.7; gfx_g = 0.7; gfx_b = 0.7;
+gfx_circle(cntr_x,size/2,radius*size/2,0,1);
+
+
+
+
+  mult = 2^1;
+  z = mult*radius*gfx_h/2*(1/fft_size);
+  i = 0;
+  loop(fft_size/mult,
+    
+    phi = phase_buffer[i];
+    //phi = phase_buffer[i]*2; //- [180deg = 0deg]
+    //j = i^(1/2)*100;
+    j = i;
+    //j = fft_size*log10(i)/8;
+    gfx_x = sin(phi)*(j*z)+gfx_w/2;
+    gfx_y = gfx_h-(cos(phi)*(j*z)+gfx_h/2);
+    //gfx_x = sin(phi)*1024*(log10(i)*z)+gfx_w/2;
+    //gfx_y = gfx_h-(cos(phi)*1024*(log10(i)*z)+gfx_h/2);
+    //gfx_x = sin(phi)*100*log10(i*z)+gfx_w/2;
+    //gfx_y = gfx_h-(cos(phi)*100*log10(i*z)+gfx_h/2);
+    
+    /*
+    magnitude ? (gfx_a = 20*log10(magnitude_buffer[i])):(gfx_a = 1);
+    gfx_setpixel(1,1,1);
+    //*/
+    
+    /*
+    magnitude ? (color = 20*log10(magnitude_buffer[i])):(color = 1);
+    gfx_setpixel(color,color,color);
+    //*/
+    
+    //*
+    magnitude ? (
+      lscale=100/log(10);
+      mv = log(magnitude_buffer[i])*lscale;
+      calc_color(mv/2,drawc);
+    ):(
+      drawc.r=drawc.g=drawc.b=1;
+    );
+    gfx_setpixel(drawc.r,drawc.g,drawc.b);
+    //*/
+    
+    //gfx_circle(gfx_x,gfx_y,2,0);
+    
+    i += 1;
+  );
+
+
+
+
+
+
+
+

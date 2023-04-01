@@ -9,7 +9,7 @@
         <source file="fft_real_synth.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/Tale/fft_real_synth.jsfx-inc</source>
         <source file="fft_synth.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/Tale/fft_synth.jsfx-inc</source>
         <source file="fourier_series.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/Tale/fourier_series.jsfx-inc</source>
-        <source file="lfo.jsfx-inc" type="data">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/Tale/lfo.jsfx-inc</source>
+        <source file="lfo.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/Tale/lfo.jsfx-inc</source>
         <source file="malloc.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/Tale/malloc.jsfx-inc</source>
         <source file="midi_queue.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/Tale/midi_queue.jsfx-inc</source>
         <source file="noise.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/Tale/noise.jsfx-inc</source>

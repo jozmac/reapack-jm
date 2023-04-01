@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" name="Jozef Mackowiak">
+  <category name="cookdsp">
+    <reapack name="cookdsp" type="effect">
+      <version name="0.0.0">
+        <source file="cookdsp/analysis.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/analysis.jsfx-inc</source>
+        <source file="cookdsp/buffer.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/buffer.jsfx-inc</source>
+        <source file="cookdsp/cookdsp.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/cookdsp.jsfx-inc</source>
+        <source file="cookdsp/delay.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/delay.jsfx-inc</source>
+        <source file="cookdsp/dynamics.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/dynamics.jsfx-inc</source>
+        <source file="cookdsp/effects.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/effects.jsfx-inc</source>
+        <source file="cookdsp/fftobjects.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/fftobjects.jsfx-inc</source>
+        <source file="cookdsp/filters.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/filters.jsfx-inc</source>
+        <source file="cookdsp/list.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/list.jsfx-inc</source>
+        <source file="cookdsp/memalloc.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/memalloc.jsfx-inc</source>
+        <source file="cookdsp/midi.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/midi.jsfx-inc</source>
+        <source file="cookdsp/mmath.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/mmath.jsfx-inc</source>
+        <source file="cookdsp/oscil.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/oscil.jsfx-inc</source>
+        <source file="cookdsp/pobjects.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/pobjects.jsfx-inc</source>
+        <source file="cookdsp/pvocobjects.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/pvocobjects.jsfx-inc</source>
+        <source file="cookdsp/random.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/random.jsfx-inc</source>
+        <source file="cookdsp/scaling.jsfx-inc">https://raw.githubusercontent.com/wozek320/reapack-jm/master/ThirdParty/cookdsp/scaling.jsfx-inc</source>
+      </version>
+    </reapack>
+  </category>
+</index>

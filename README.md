@@ -5,7 +5,7 @@
 Add the following repository to [ReaPack](https://reapack.com):
 
 ```
-https://github.com/JozefMackowiak/reapack-jm/raw/master/index.xml
+https://github.com/jozmac/reapack-jm/raw/master/index.xml
 ```
 
 If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).

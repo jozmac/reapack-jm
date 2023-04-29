@@ -1,6 +1,7 @@
 <!--
 TODO:
 - indexes
+- jsfx folder cleanup - faster load times
 - 
 -->
 

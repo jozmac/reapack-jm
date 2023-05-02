@@ -22,9 +22,16 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ### Plugins
 
 ## Histogram
-
 ![02-05-23_reaper_477](https://user-images.githubusercontent.com/123021340/235791502-3fe553b7-01c1-4567-9570-0c766c3d230e.gif)
 
+## Coherence Analyser
+![02-05-23_reaper_483](https://user-images.githubusercontent.com/123021340/235800291-17eb5f37-b503-4e2a-85a8-963a2a12fdb3.gif)
+
+## Correlation Meter
+![02-05-23_reaper_485](https://user-images.githubusercontent.com/123021340/235800419-0f8c1543-c696-4ce6-9ea1-05b242d222a0.gif)
+
+## MCS Vectorscope
+![03-05-23_reaper_499](https://user-images.githubusercontent.com/123021340/235800512-6232800b-f098-47b4-9d1f-3e0c157d4b2d.gif)
 
 
 

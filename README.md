@@ -1,3 +1,11 @@
+<!--
+TODO:
+- indexes
+- jsfx folder cleanup - faster load times
+- 
+-->
+
+
 <h1 align="center">Józef Maćkowiak’s REAPER Effects and Scripts</h1>
 
 ## How to Install
@@ -5,7 +13,7 @@
 Add the following repository to [ReaPack](https://reapack.com):
 
 ```
-https://github.com/JozefMackowiak/reapack-jm/raw/master/index.xml
+https://github.com/jozmac/reapack-jm/raw/master/index.xml
 ```
 
 If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
@@ -58,7 +66,7 @@ Even more information:
 | Extension                                                                                               | Author                                                                        | Repository Index URL                                                          |
 | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | **All**                                                                                                 |                                                                               | `https://github.com/leafac/reaper/raw/main/ThirdParty/index.xml`            |
-| [Tale's JSFX Pack](https://www.taletn.com/reaper/)                                                                         | Theo Niessink  | `https://github.com/JozefMackowiak/reapack-jm/raw/master/ThirdParty/Tale/index.xml`        |
-| [CookDSP Library](http://ajaxsoundstudio.com/cookdspdoc/)                                 | [Olivier Belanger](http://olivier.ajaxsoundstudio.com/)                        | `http://ajaxsoundstudio.com/cookdspdoc/`       |
+| [Tale's JSFX Pack](https://www.taletn.com/reaper/)                                                                         | Theo Niessink  | `https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/index.xml`        |
+| [CookDSP Library](http://ajaxsoundstudio.com/cookdspdoc/)                                 | [Olivier Belanger](http://olivier.ajaxsoundstudio.com/)                        | `https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/cookdsp/index.xml`       |
 | [ABLevelMatching, AutoGainStaging, and EBUR128LM](https://www.tb-software.com/TBProAudio/download.html) | [TBProAudio](https://www.tb-software.com/TBProAudio/index.html)               | `https://github.com/leafac/reaper/raw/main/ThirdParty/TBProAudio/index.xml` |
 

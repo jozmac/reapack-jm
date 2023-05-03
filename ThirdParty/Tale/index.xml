@@ -3,25 +3,25 @@
   <category name="Tale">
     <reapack name="Tale" type="effect">
       <version name="0.0.0">
-        <source file="adsr.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/adsr.jsfx-inc</source>
-        <source file="array.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/array.jsfx-inc</source>
-        <source file="complex.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/complex.jsfx-inc</source>
-        <source file="fft_real_synth.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/fft_real_synth.jsfx-inc</source>
-        <source file="fft_synth.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/fft_synth.jsfx-inc</source>
-        <source file="fourier_series.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/fourier_series.jsfx-inc</source>
-        <source file="lfo.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/lfo.jsfx-inc</source>
-        <source file="malloc.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/malloc.jsfx-inc</source>
-        <source file="midi_queue.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/midi_queue.jsfx-inc</source>
-        <source file="noise.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/noise.jsfx-inc</source>
-        <source file="oversample.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/oversample.jsfx-inc</source>
-        <source file="poly_blep.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/poly_blep.jsfx-inc</source>
-        <source file="rbj_filter.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/rbj_filter.jsfx-inc</source>
-        <source file="rc_filter.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/rc_filter.jsfx-inc</source>
-        <source file="sine.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/sine.jsfx-inc</source>
-        <source file="uint.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/uint.jsfx-inc</source>
-        <source file="wavetable.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/wavetable.jsfx-inc</source>
-        <source file="window.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/window.jsfx-inc</source>
-        <source file="zdf_filter.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/Tale/zdf_filter.jsfx-inc</source>
+        <source file="adsr.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/adsr.jsfx-inc</source>
+        <source file="array.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/array.jsfx-inc</source>
+        <source file="complex.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/complex.jsfx-inc</source>
+        <source file="fft_real_synth.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/fft_real_synth.jsfx-inc</source>
+        <source file="fft_synth.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/fft_synth.jsfx-inc</source>
+        <source file="fourier_series.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/fourier_series.jsfx-inc</source>
+        <source file="lfo.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/lfo.jsfx-inc</source>
+        <source file="malloc.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/malloc.jsfx-inc</source>
+        <source file="midi_queue.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/midi_queue.jsfx-inc</source>
+        <source file="noise.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/noise.jsfx-inc</source>
+        <source file="oversample.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/oversample.jsfx-inc</source>
+        <source file="poly_blep.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/poly_blep.jsfx-inc</source>
+        <source file="rbj_filter.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/rbj_filter.jsfx-inc</source>
+        <source file="rc_filter.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/rc_filter.jsfx-inc</source>
+        <source file="sine.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/sine.jsfx-inc</source>
+        <source file="uint.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/uint.jsfx-inc</source>
+        <source file="wavetable.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/wavetable.jsfx-inc</source>
+        <source file="window.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/window.jsfx-inc</source>
+        <source file="zdf_filter.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/zdf_filter.jsfx-inc</source>
       </version>
     </reapack>
   </category>

@@ -4,7 +4,7 @@ version: 1.0.0
 changelog: Initial Commit
 about:
   # Chebyshev Saturator
-  A saturator capable of emphasizing given harmonics.
+  Utility for emphasizing given harmonics.
   ### Features:
   - chebyshev polynomials from 1st to 9th order
   - harmonic mode - adjust the amount of even and odd harmonics

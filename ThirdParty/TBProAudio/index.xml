@@ -3,32 +3,32 @@
   <category name="Utility">
     <reapack name="ABLevelMatching" type="effect">
       <version name="3.3">
-        <source file="ABLevelMatching/AB_LMLT_cntrl">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/AB_LMLT_cntrl</source>
-        <source file="ABLevelMatching/AB_LM_cntrl">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/AB_LM_cntrl</source>
-        <source file="ABLevelMatching/AB_LM_src">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/AB_LM_src</source>
-        <source file="ABLevelMatching/audiomeasurement.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/audiomeasurement.jsfx-inc</source>
-        <source file="ABLevelMatching/ebur128.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/ebur128.jsfx-inc</source>
-        <source file="ABLevelMatching/gfx.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/gfx.jsfx-inc</source>
-        <source file="ABLevelMatching/manual.pdf" type="data">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/manual.pdf</source>
-        <source file="ABLevelMatching/memorymanager.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/memorymanager.jsfx-inc</source>
-        <source file="ABLevelMatching/TBProAudio_common.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/TBProAudio_common.jsfx-inc</source>
+        <source file="ABLevelMatching/AB_LMLT_cntrl">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/AB_LMLT_cntrl</source>
+        <source file="ABLevelMatching/AB_LM_cntrl">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/AB_LM_cntrl</source>
+        <source file="ABLevelMatching/AB_LM_src">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/AB_LM_src</source>
+        <source file="ABLevelMatching/audiomeasurement.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/audiomeasurement.jsfx-inc</source>
+        <source file="ABLevelMatching/ebur128.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/ebur128.jsfx-inc</source>
+        <source file="ABLevelMatching/gfx.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/gfx.jsfx-inc</source>
+        <source file="ABLevelMatching/manual.pdf" type="data">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/manual.pdf</source>
+        <source file="ABLevelMatching/memorymanager.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/memorymanager.jsfx-inc</source>
+        <source file="ABLevelMatching/TBProAudio_common.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/TBProAudio_common.jsfx-inc</source>
       </version>
     </reapack>
     <reapack name="AutoGainStaging" type="effect">
       <version name="1.9">
-        <source file="AutoGainStagingJSFX/AutoGainStage_cntrl">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/AutoGainStage_cntrl</source>
-        <source file="AutoGainStagingJSFX/AutoGainStage_src">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/AutoGainStage_src</source>
-        <source file="AutoGainStagingJSFX/audiomeasurement.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/audiomeasurement.jsfx-inc</source>
-        <source file="AutoGainStagingJSFX/memorymanager.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/memorymanager.jsfx-inc</source>
-        <source file="AutoGainStagingJSFX/TBProAudio_common.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/TBProAudio_common.jsfx-inc</source>
+        <source file="AutoGainStagingJSFX/AutoGainStage_cntrl">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/AutoGainStage_cntrl</source>
+        <source file="AutoGainStagingJSFX/AutoGainStage_src">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/AutoGainStage_src</source>
+        <source file="AutoGainStagingJSFX/audiomeasurement.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/audiomeasurement.jsfx-inc</source>
+        <source file="AutoGainStagingJSFX/memorymanager.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/memorymanager.jsfx-inc</source>
+        <source file="AutoGainStagingJSFX/TBProAudio_common.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/TBProAudio_common.jsfx-inc</source>
       </version>
     </reapack>
     <reapack name="EBUR128LM" type="effect">
       <version name="2.11">
-        <source file="EBUR128LM/ebur128.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/EBUR128LMJSFX12042020/ebur128.jsfx-inc</source>
-        <source file="EBUR128LM/ebur128_analysis">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/EBUR128LMJSFX12042020/ebur128_analysis</source>
-        <source file="EBUR128LM/memorymanager.jsfx-inc">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/EBUR128LMJSFX12042020/memorymanager.jsfx-inc</source>
-        <source file="EBUR128LM/tiny_ebu_r128">https://raw.githubusercontent.com/jozmac/reapack-jm/master/ThirdParty/TBProAudio/EBUR128LMJSFX12042020/tiny_ebu_r128</source>
+        <source file="EBUR128LM/ebur128.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/EBUR128LMJSFX12042020/ebur128.jsfx-inc</source>
+        <source file="EBUR128LM/ebur128_analysis">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/EBUR128LMJSFX12042020/ebur128_analysis</source>
+        <source file="EBUR128LM/memorymanager.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/EBUR128LMJSFX12042020/memorymanager.jsfx-inc</source>
+        <source file="EBUR128LM/tiny_ebu_r128">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/EBUR128LMJSFX12042020/tiny_ebu_r128</source>
       </version>
     </reapack>
   </category>

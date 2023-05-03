@@ -19,6 +19,8 @@ https://github.com/jozmac/reapack-jm/raw/master/index.xml
 If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 
+
+
 ### Plugins
 
 ## Histogram
@@ -32,6 +34,7 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## MCS Vectorscope
 ![03-05-23_reaper_499](https://user-images.githubusercontent.com/123021340/235800512-6232800b-f098-47b4-9d1f-3e0c157d4b2d.gif)
+
 
 
 
@@ -83,8 +86,8 @@ Even more information:
 
 | Extension                                                                                               | Author                                                                        | Repository Index URL                                                          |
 | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| **All**                                                                                                 |                                                                               | `https://github.com/leafac/reaper/raw/main/ThirdParty/index.xml`            |
+| **All**                                                                                                 |                                                                               | `https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/index.xml`            |
 | [Tale's JSFX Pack](https://www.taletn.com/reaper/)                                                                         | Theo Niessink  | `https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/index.xml`        |
 | [CookDSP Library](http://ajaxsoundstudio.com/cookdspdoc/)                                 | [Olivier Belanger](http://olivier.ajaxsoundstudio.com/)                        | `https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/cookdsp/index.xml`       |
-| [ABLevelMatching, AutoGainStaging, and EBUR128LM](https://www.tb-software.com/TBProAudio/download.html) | [TBProAudio](https://www.tb-software.com/TBProAudio/index.html)               | `https://github.com/leafac/reaper/raw/main/ThirdParty/TBProAudio/index.xml` |
+| [ABLevelMatching, AutoGainStaging, and EBUR128LM](https://www.tb-software.com/TBProAudio/download.html) | [TBProAudio](https://www.tb-software.com/TBProAudio/index.html)               | `https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/index.xml` |
 

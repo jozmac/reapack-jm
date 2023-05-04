@@ -8,6 +8,7 @@ TODO:
 - Mixing template
 - reaper jsfx folder cleanup - faster load times
 - 4k compatibility
+- new name for correlation meter
 
 
 
@@ -75,6 +76,13 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Histogram
 ![02-05-23_reaper_477](https://user-images.githubusercontent.com/123021340/235791502-3fe553b7-01c1-4567-9570-0c766c3d230e.gif)
+  Real-time visualization of distribution of input signal.
+  ### Features:
+  - mean and standard deviation readouts for two channels
+  - readout of value at cursor position
+  - variable bin number
+  - X and Y exponential scaling
+  - bin decay factor
 
 ## Autocorrelation Analyser
 ![04-05-23_reaper_580](https://user-images.githubusercontent.com/123021340/236194317-43261a43-612a-4866-8598-aa1a5d473113.gif)
@@ -119,6 +127,9 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Correlation Meter
 ![02-05-23_reaper_485](https://user-images.githubusercontent.com/123021340/235800419-0f8c1543-c696-4ce6-9ea1-05b242d222a0.gif)
+  Correlation, balance and azimuth meter.
+  ### Features:
+  - variable smoothing time
 
 ## Bispectrum Analyser
 ![04-05-23_reaper_558](https://user-images.githubusercontent.com/123021340/236189466-c3f44d97-5f90-4720-b428-5aa5b7b1c0ad.gif)
@@ -158,6 +169,10 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Coherent Extractor
 ![04-05-23_reaper_553](https://user-images.githubusercontent.com/123021340/236189788-b1079010-493e-4974-81f5-20e3a00d3c2d.png)
+  A tool for separating a coherent signal from a stereo signal.
+  ### Features:
+  - averaging factor
+  - suppression factor
 
 ## STFT Frequency Shifter
 ![04-05-23_reaper_552](https://user-images.githubusercontent.com/123021340/236194913-11a5a454-f7d9-42d0-b8dd-483b7b9a874c.png)
@@ -177,6 +192,11 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## DPOAE Canceller
 ![04-05-23_reaper_597](https://user-images.githubusercontent.com/123021340/236298587-64f227c4-2efe-48ab-b30b-b5c55311ac98.gif)
+  Generator of two periodic signals and phase-locked signals capable of canceling otoacoustic emissions (F1-F2, 2*F1-F2, F1-2*F2).
+  ### Features:
+  - three methods of changing frequency
+  - tone and combination tone visualization
+  - visualization of undertones and overtones of main two tones
 
 
 

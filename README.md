@@ -27,7 +27,7 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ![02-05-23_reaper_477](https://user-images.githubusercontent.com/123021340/235791502-3fe553b7-01c1-4567-9570-0c766c3d230e.gif)
 
 ## Autocorrelation Analyser
-![04-05-23_reaper_578](https://user-images.githubusercontent.com/123021340/236192507-0505566f-38b5-4ea3-a273-4ea1ea21c2ec.gif)
+![04-05-23_reaper_580](https://user-images.githubusercontent.com/123021340/236194317-43261a43-612a-4866-8598-aa1a5d473113.gif)
 
 ## Cepstrum Analyser
 ![03-05-23_reaper_509](https://user-images.githubusercontent.com/123021340/236180935-4cb80718-c082-48fc-a956-e40b41f37b9c.gif)

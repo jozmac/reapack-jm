@@ -23,10 +23,12 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 # Plugins
 
-## Histogram
+## Analysers
+
+### Histogram
 ![02-05-23_reaper_477](https://user-images.githubusercontent.com/123021340/235791502-3fe553b7-01c1-4567-9570-0c766c3d230e.gif)
 
-## Autocorrelation Analyser
+### Autocorrelation Analyser
 ![04-05-23_reaper_580](https://user-images.githubusercontent.com/123021340/236194317-43261a43-612a-4866-8598-aa1a5d473113.gif)
 
 ## Cepstrum Analyser
@@ -169,3 +171,41 @@ Even more information:
 | [CookDSP Library](http://ajaxsoundstudio.com/cookdspdoc/)                                 | [Olivier Belanger](http://olivier.ajaxsoundstudio.com/)                        | `https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/cookdsp/index.xml`       |
 | [ABLevelMatching, AutoGainStaging, and EBUR128LM](https://www.tb-software.com/TBProAudio/download.html) | [TBProAudio](https://www.tb-software.com/TBProAudio/index.html)               | `https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/index.xml` |
 
+
+
+<!--
+Thanks to the entire REAPER community, and in particular to:
+
+Justin Frankel (Cockos)
+John Schwartz (Schwa)
+Theo Niessink (Tale) (https://www.taletn.com/reaper/mono_synth/)
+Justin Johnson (nitsuj)
+Leandro Facchinetti (leafac)
+Geraint Luff (https://signalsmith-audio.co.uk/)
+Joep Vanlier (Sai'ke)
+TBProAudio
+Sonic Anomaly
+ATK Community and Joseph Anderson, Josh Parmenter, Trond Lossius (https://www.ambisonictoolkit.net/documentation/reaper/)
+Philip S. Considine (IX)
+Thierry Rochebois (TiaR)
+Kite Giedraitis (TallKite)
+micsthepick (https://github.com/micsthepick)
+ccernn (https://sites.google.com/site/ccernnaudio/js-plugins) (cern.th.skei)
+SaulT
+kawa (https://www.kawa.works/)
+LOSER
+Sexan
+chokehold
+Liteon
+jahudka (https://github.com/jahudka?tab=repositories)
+micsthepick (https://github.com/micsthepick)
+
+Merlijn van Veen (https://www.merlijnvanveen.nl/en/)
+Aleksey Vaneev (https://www.voxengo.com/)
+Robin Schmidt (http://www.rs-met.com/)
+Dan Worrall
+Bob Katz (https://www.digido.com/)
+Robert Bond Randall (B&K Frequency Analysis)
+Siegfried Linkwitz (https://www.linkwitzlab.com/index.htm)
+Wiliam M. Hartmann (Signals, Sound, and Sensation)
+-->

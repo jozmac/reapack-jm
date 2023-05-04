@@ -86,6 +86,13 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ![04-05-23_reaper_549](https://user-images.githubusercontent.com/123021340/236188601-b21d940b-4592-4c60-b9b9-09a57ce5a603.gif)
 
 ### Chebyshev Saturator
+  Utility for emphasizing given harmonics.
+  Features:
+  - chebyshev polynomials from 1st to 9th order
+  - harmonic mode - adjust the amount of even and odd harmonics
+  - rectifier
+  - DC filter
+  - GFX signal transfer function wiever
 ![04-05-23_reaper_587](https://user-images.githubusercontent.com/123021340/236242101-9ceb42b5-0192-42d4-a82b-c347319e6ab5.gif)
 
 ### Transient Extractor
@@ -116,6 +123,9 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ### Farey Tetrad Spiral 
 ![04-05-23_reaper_574](https://user-images.githubusercontent.com/123021340/236191959-bc89c8d1-4c56-491e-a5d2-69ab7207d078.gif)
 
+### DPOAE Canceller
+![04-05-23_reaper_597](https://user-images.githubusercontent.com/123021340/236298587-64f227c4-2efe-48ab-b30b-b5c55311ac98.gif)
+
 
 
 ## Utilities
@@ -129,8 +139,7 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ### Stereo Tool
 ![04-05-23_reaper_564](https://user-images.githubusercontent.com/123021340/236191762-829398cc-ed97-4279-8359-2477347fd318.gif)
 
-### DPOAE Canceller
-![04-05-23_reaper_597](https://user-images.githubusercontent.com/123021340/236298587-64f227c4-2efe-48ab-b30b-b5c55311ac98.gif)
+
 
 
 

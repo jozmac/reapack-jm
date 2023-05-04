@@ -20,6 +20,7 @@ https://github.com/jozmac/reapack-jm/raw/master/index.xml
 If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 
+
 ### Plugins
 
 ## Histogram
@@ -33,6 +34,17 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## MCS Vectorscope
 ![03-05-23_reaper_499](https://user-images.githubusercontent.com/123021340/235800512-6232800b-f098-47b4-9d1f-3e0c157d4b2d.gif)
+
+## Cepstrum Analyser
+![03-05-23_reaper_509](https://user-images.githubusercontent.com/123021340/236180935-4cb80718-c082-48fc-a956-e40b41f37b9c.gif)
+
+
+## Transfer Function Analyser
+![03-05-23_reaper_517](https://user-images.githubusercontent.com/123021340/236181048-2cb60583-d540-4e64-b3b9-f2c9af9918dc.gif)
+
+## Vectorscope
+![04-05-23_reaper_527](https://user-images.githubusercontent.com/123021340/236181211-13e84d09-36fe-4ba7-b4b6-d83fccb4ada8.gif)
+
 
 
 

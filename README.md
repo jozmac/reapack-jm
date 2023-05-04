@@ -82,7 +82,7 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ![04-05-23_reaper_556](https://user-images.githubusercontent.com/123021340/236189545-cc3b8e93-c1fa-4867-866c-0c3a5f9d4ed8.png)
 
 ## Cepstrum Lifter
-![04-05-23_reaper_555](https://user-images.githubusercontent.com/123021340/236189555-152c700e-51a2-4e04-9a0c-9e20970b9aa0.png)![04-05-23_reaper_554](https://user-images.githubusercontent.com/123021340/236189684-ba4c6d92-e9c3-4ea6-9458-3d2386602700.png)
+![04-05-23_reaper_555](https://user-images.githubusercontent.com/123021340/236189555-152c700e-51a2-4e04-9a0c-9e20970b9aa0.png)
 
 ## STFT Extractor
 ![04-05-23_reaper_554](https://user-images.githubusercontent.com/123021340/236192232-a28063d3-3277-4fbf-b8f2-3d45cdad71fa.png)

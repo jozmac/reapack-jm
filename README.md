@@ -32,9 +32,6 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ## Cepstrum Analyser
 ![03-05-23_reaper_509](https://user-images.githubusercontent.com/123021340/236180935-4cb80718-c082-48fc-a956-e40b41f37b9c.gif)
 
-## Correlation Meter
-![02-05-23_reaper_485](https://user-images.githubusercontent.com/123021340/235800419-0f8c1543-c696-4ce6-9ea1-05b242d222a0.gif)
-
 ## MCS Vectorscope
 ![03-05-23_reaper_499](https://user-images.githubusercontent.com/123021340/235800512-6232800b-f098-47b4-9d1f-3e0c157d4b2d.gif)
 
@@ -61,6 +58,9 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Polar Histogram
 ![04-05-23_reaper_551](https://user-images.githubusercontent.com/123021340/236188405-e01e7de2-9419-44e4-8381-6c3ea05e541b.gif)
+
+## Correlation Meter
+![02-05-23_reaper_485](https://user-images.githubusercontent.com/123021340/235800419-0f8c1543-c696-4ce6-9ea1-05b242d222a0.gif)
 
 ## Bispectrum Analyser
 ![04-05-23_reaper_558](https://user-images.githubusercontent.com/123021340/236189466-c3f44d97-5f90-4720-b428-5aa5b7b1c0ad.gif)

@@ -38,12 +38,80 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ## Cepstrum Analyser
 ![03-05-23_reaper_509](https://user-images.githubusercontent.com/123021340/236180935-4cb80718-c082-48fc-a956-e40b41f37b9c.gif)
 
-
 ## Transfer Function Analyser
 ![03-05-23_reaper_517](https://user-images.githubusercontent.com/123021340/236181048-2cb60583-d540-4e64-b3b9-f2c9af9918dc.gif)
 
 ## Vectorscope
 ![04-05-23_reaper_527](https://user-images.githubusercontent.com/123021340/236181211-13e84d09-36fe-4ba7-b4b6-d83fccb4ada8.gif)
+
+## Strobe Tuner
+![04-05-23_reaper_529](https://user-images.githubusercontent.com/123021340/236182222-77f9db15-5edf-4bdb-9a8b-3d9f05925857.gif)
+
+## Phase Wheel Analyser
+![04-05-23_reaper_533](https://user-images.githubusercontent.com/123021340/236182943-74c2e1ab-8a47-4ab3-ae05-6c958d0cd4e2.gif)
+
+## Signal Transfer Function Analyser (STFA)
+![04-05-23_reaper_537](https://user-images.githubusercontent.com/123021340/236184110-233d8a55-be28-44c8-8589-ac56882aa64c.gif)
+
+## Autocorrelation Analyser
+![04-05-23_reaper_539](https://user-images.githubusercontent.com/123021340/236184801-c865f5ca-5994-45bd-b7b4-e4ba7ac183f3.gif)
+
+## Stereoscope
+![04-05-23_reaper_543](https://user-images.githubusercontent.com/123021340/236187181-32e9eb96-016d-4dd3-a050-45fedaa93f59.gif)
+
+## Polar Histogram
+![04-05-23_reaper_551](https://user-images.githubusercontent.com/123021340/236188405-e01e7de2-9419-44e4-8381-6c3ea05e541b.gif)
+
+## Bispectrum Analyser
+![04-05-23_reaper_558](https://user-images.githubusercontent.com/123021340/236189466-c3f44d97-5f90-4720-b428-5aa5b7b1c0ad.gif)
+
+
+
+## Thiran Delay
+![04-05-23_reaper_545](https://user-images.githubusercontent.com/123021340/236188483-258a6729-b3e8-4a9c-b70b-591de17336e1.png)
+
+## K-Flanger
+![04-05-23_reaper_546](https://user-images.githubusercontent.com/123021340/236188538-83b97033-e04b-4d43-890e-656611beae66.png)
+
+## Vowel Filter
+![04-05-23_reaper_549](https://user-images.githubusercontent.com/123021340/236188601-b21d940b-4592-4c60-b9b9-09a57ce5a603.gif)
+
+
+
+## Transient Extractor
+![04-05-23_reaper_556](https://user-images.githubusercontent.com/123021340/236189545-cc3b8e93-c1fa-4867-866c-0c3a5f9d4ed8.png)
+
+## Cepstrum Lifter
+![04-05-23_reaper_555](https://user-images.githubusercontent.com/123021340/236189555-152c700e-51a2-4e04-9a0c-9e20970b9aa0.png)![04-05-23_reaper_554](https://user-images.githubusercontent.com/123021340/236189684-ba4c6d92-e9c3-4ea6-9458-3d2386602700.png)
+
+## STFT Extractor
+![Uploading 04-05-23_reaper_554.png…]()
+
+## Coherent Extractor
+![04-05-23_reaper_553](https://user-images.githubusercontent.com/123021340/236189788-b1079010-493e-4974-81f5-20e3a00d3c2d.png)
+
+
+
+## Crossfeed
+![04-05-23_reaper_560](https://user-images.githubusercontent.com/123021340/236190142-a5ee30ed-8329-429b-b260-e5e071a0a0e2.gif)
+
+## Proximity Processor
+![04-05-23_reaper_562](https://user-images.githubusercontent.com/123021340/236191716-ac359225-08fa-4e7c-8922-288352cef26d.gif)
+
+## Stereo Tool
+![04-05-23_reaper_564](https://user-images.githubusercontent.com/123021340/236191762-829398cc-ed97-4279-8359-2477347fd318.gif)
+
+
+
+## Logistic Noise Generator
+![04-05-23_reaper_570](https://user-images.githubusercontent.com/123021340/236191867-5ee7c738-0fd5-40b0-a4d3-957816a89346.gif)
+
+## Stern-Brocot Stereochord
+![04-05-23_reaper_572](https://user-images.githubusercontent.com/123021340/236191889-dad9fc18-2a51-4eca-8bb1-6b85997f027c.gif)
+
+
+## Farey Tetrad Spiral 
+![04-05-23_reaper_574](https://user-images.githubusercontent.com/123021340/236191959-bc89c8d1-4c56-491e-a5d2-69ab7207d078.gif)
 
 
 

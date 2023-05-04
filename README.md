@@ -26,8 +26,11 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ## Histogram
 ![02-05-23_reaper_477](https://user-images.githubusercontent.com/123021340/235791502-3fe553b7-01c1-4567-9570-0c766c3d230e.gif)
 
-## Coherence Analyser
-![02-05-23_reaper_483](https://user-images.githubusercontent.com/123021340/235800291-17eb5f37-b503-4e2a-85a8-963a2a12fdb3.gif)
+## Autocorrelation Analyser
+![04-05-23_reaper_578](https://user-images.githubusercontent.com/123021340/236192507-0505566f-38b5-4ea3-a273-4ea1ea21c2ec.gif)
+
+## Cepstrum Analyser
+![03-05-23_reaper_509](https://user-images.githubusercontent.com/123021340/236180935-4cb80718-c082-48fc-a956-e40b41f37b9c.gif)
 
 ## Correlation Meter
 ![02-05-23_reaper_485](https://user-images.githubusercontent.com/123021340/235800419-0f8c1543-c696-4ce6-9ea1-05b242d222a0.gif)
@@ -44,12 +47,6 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ## Strobe Tuner
 ![04-05-23_reaper_529](https://user-images.githubusercontent.com/123021340/236182222-77f9db15-5edf-4bdb-9a8b-3d9f05925857.gif)
 
-## Autocorrelation Analyser
-![04-05-23_reaper_578](https://user-images.githubusercontent.com/123021340/236192507-0505566f-38b5-4ea3-a273-4ea1ea21c2ec.gif)
-
-## Cepstrum Analyser
-![03-05-23_reaper_509](https://user-images.githubusercontent.com/123021340/236180935-4cb80718-c082-48fc-a956-e40b41f37b9c.gif)
-
 ## Phase Wheel Analyser
 ![04-05-23_reaper_533](https://user-images.githubusercontent.com/123021340/236182943-74c2e1ab-8a47-4ab3-ae05-6c958d0cd4e2.gif)
 
@@ -58,6 +55,9 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Stereoscope
 ![04-05-23_reaper_543](https://user-images.githubusercontent.com/123021340/236187181-32e9eb96-016d-4dd3-a050-45fedaa93f59.gif)
+
+## Coherence Analyser
+![02-05-23_reaper_483](https://user-images.githubusercontent.com/123021340/235800291-17eb5f37-b503-4e2a-85a8-963a2a12fdb3.gif)
 
 ## Polar Histogram
 ![04-05-23_reaper_551](https://user-images.githubusercontent.com/123021340/236188405-e01e7de2-9419-44e4-8381-6c3ea05e541b.gif)

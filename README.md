@@ -129,6 +129,9 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ### Stereo Tool
 ![04-05-23_reaper_564](https://user-images.githubusercontent.com/123021340/236191762-829398cc-ed97-4279-8359-2477347fd318.gif)
 
+### DPOAE Canceller
+![04-05-23_reaper_597](https://user-images.githubusercontent.com/123021340/236298587-64f227c4-2efe-48ab-b30b-b5c55311ac98.gif)
+
 
 
 

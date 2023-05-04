@@ -105,14 +105,14 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Stereoscope
 ![04-05-23_reaper_543](https://user-images.githubusercontent.com/123021340/236187181-32e9eb96-016d-4dd3-a050-45fedaa93f59.gif)
+
+## Coherence Analyser
+![02-05-23_reaper_483](https://user-images.githubusercontent.com/123021340/235800291-17eb5f37-b503-4e2a-85a8-963a2a12fdb3.gif)
   STFT-based graphical coherence analyser.
   ### Features:
   - analysis decay factor and average time factor
   - coherence and phase graph
   - average coherence readout
-
-## Coherence Analyser
-![02-05-23_reaper_483](https://user-images.githubusercontent.com/123021340/235800291-17eb5f37-b503-4e2a-85a8-963a2a12fdb3.gif)
 
 ## Polar Histogram
 ![04-05-23_reaper_551](https://user-images.githubusercontent.com/123021340/236188405-e01e7de2-9419-44e4-8381-6c3ea05e541b.gif)

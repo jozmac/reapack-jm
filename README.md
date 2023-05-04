@@ -35,12 +35,6 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ## MCS Vectorscope
 ![03-05-23_reaper_499](https://user-images.githubusercontent.com/123021340/235800512-6232800b-f098-47b4-9d1f-3e0c157d4b2d.gif)
 
-## Cepstrum Analyser
-![03-05-23_reaper_509](https://user-images.githubusercontent.com/123021340/236180935-4cb80718-c082-48fc-a956-e40b41f37b9c.gif)
-
-## Autocorrelation Analyser
-![04-05-23_reaper_578](https://user-images.githubusercontent.com/123021340/236192507-0505566f-38b5-4ea3-a273-4ea1ea21c2ec.gif)
-
 ## Transfer Function Analyser
 ![03-05-23_reaper_517](https://user-images.githubusercontent.com/123021340/236181048-2cb60583-d540-4e64-b3b9-f2c9af9918dc.gif)
 
@@ -49,6 +43,12 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Strobe Tuner
 ![04-05-23_reaper_529](https://user-images.githubusercontent.com/123021340/236182222-77f9db15-5edf-4bdb-9a8b-3d9f05925857.gif)
+
+## Autocorrelation Analyser
+![04-05-23_reaper_578](https://user-images.githubusercontent.com/123021340/236192507-0505566f-38b5-4ea3-a273-4ea1ea21c2ec.gif)
+
+## Cepstrum Analyser
+![03-05-23_reaper_509](https://user-images.githubusercontent.com/123021340/236180935-4cb80718-c082-48fc-a956-e40b41f37b9c.gif)
 
 ## Phase Wheel Analyser
 ![04-05-23_reaper_533](https://user-images.githubusercontent.com/123021340/236182943-74c2e1ab-8a47-4ab3-ae05-6c958d0cd4e2.gif)

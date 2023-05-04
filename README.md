@@ -90,7 +90,8 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ## Coherent Extractor
 ![04-05-23_reaper_553](https://user-images.githubusercontent.com/123021340/236189788-b1079010-493e-4974-81f5-20e3a00d3c2d.png)
 
-
+## STFT Frequency Shifter
+![04-05-23_reaper_552](https://user-images.githubusercontent.com/123021340/236194913-11a5a454-f7d9-42d0-b8dd-483b7b9a874c.png)
 
 ## Crossfeed
 ![04-05-23_reaper_560](https://user-images.githubusercontent.com/123021340/236190142-a5ee30ed-8329-429b-b260-e5e071a0a0e2.gif)

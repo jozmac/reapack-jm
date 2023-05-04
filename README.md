@@ -86,8 +86,8 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ![04-05-23_reaper_549](https://user-images.githubusercontent.com/123021340/236188601-b21d940b-4592-4c60-b9b9-09a57ce5a603.gif)
 
 ### Chebyshev Saturator
+![04-05-23_reaper_587](https://user-images.githubusercontent.com/123021340/236242101-9ceb42b5-0192-42d4-a82b-c347319e6ab5.gif)
   Utility for emphasizing given harmonics.
-  ![04-05-23_reaper_587](https://user-images.githubusercontent.com/123021340/236242101-9ceb42b5-0192-42d4-a82b-c347319e6ab5.gif)
   Features:
   - chebyshev polynomials from 1st to 9th order
   - harmonic mode - adjust the amount of even and odd harmonics

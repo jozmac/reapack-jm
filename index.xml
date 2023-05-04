@@ -57,6 +57,11 @@
         <source file="MCS Vectorscope [JM].jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/MCS%20Vectorscope%20%5BJM%5D.jsfx</source>
       </version>
     </reapack>
+    <reapack name="Vectorscope v4 [JM].jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="Vectorscope v4 [JM].jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/Vectorscope%20v4%20%5BJM%5D.jsfx</source>
+      </version>
+    </reapack>
     <reapack name="Median Filter [JM].jsfx" type="effect">
       <version name="0.0.0">
         <source file="Median Filter [JM].jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/Median%20Filter%20%5BJM%5D.jsfx</source>

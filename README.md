@@ -1,10 +1,57 @@
 <!--
 DONE:
-TODO:
 - gifs or screenshots (smallest possible)
+TODO:
+- donation link 
 - descriptions - in jsfx files and in README
+- Plugin Doctor template
+- Mixing template
 - reaper jsfx folder cleanup - faster load times
 - 4k compatibility
+
+
+
+desc: Dual Time Adjustment
+author: Michael Schnell (mschnell@bschnell.de)
+version: 2.0
+changelog: add positive Midi delay
+donation: United Nations Foundation http://www.unfoundation.org/
+about:
+  ## Description
+
+  Apply a positive or negative delay to up to two audio channel in a track and optionally to Midi
+
+     modes:
+   - Stereo: All Sliders are coupled
+   - Dual: Two channels with two coupled sliders each 
+
+
+
+desc:Saike Swellotron (No GUI, No PDC) [JM]
+tags: ambient, soundscape, long, reverb, convolution, stft
+version: 0.09
+author: Joep Vanlier
+changelog: Add about section.
+about:
+  # Swellotron
+  Swellotron computes the spectrum of both signals (using the STFT), multiplies the magnitudes in the spectral domain and puts the result of that in an energy buffer. This energy buffer is drained proportionally to its contents. The energy buffer is then used to resynthesize the sound, but this time with a random phase.
+  In plain terms, it behaves almost like a reverb, where frequencies that both sounds have in common are emphasized and frequencies where the sounds differ are attenuated. This will almost always lead to something that sounds pretty harmonic.
+  [Screenshot](https://i.imgur.com/ikizwwk.gif)
+  ### Demos
+  You can find demos of the plugin [here](https://www.youtube.com/watch?v=PSaL8BvYdKk) and [here](https://www.youtube.com/watch?v=Ggojmb9wd5U).
+  ### Features:
+  - FFT Reverberation
+  - Shimmer: Copies energy to twice the frequency (leading to iterative octave doubling).
+  - Aether: Same as shimmer but for fifths.
+  - Scorch: Input saturation.
+  - Ruin: Output saturation.
+  - Diffusion: Spectral blur.
+  - Ice: Chops small bandwidth bits from the energy at random, and copies them to a higher frequency (at 1x or 2x the frequency), thereby giving narrowband high frequency sounds (sounding very cold).
+
+Copyright (C) 2019 Joep Vanlier
+License: MIT
+
+-- Based on the STFT-Based Effect Template by Geraintluff
 -->
 
 
@@ -58,6 +105,11 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Stereoscope
 ![04-05-23_reaper_543](https://user-images.githubusercontent.com/123021340/236187181-32e9eb96-016d-4dd3-a050-45fedaa93f59.gif)
+  STFT-based graphical coherence analyser.
+  ### Features:
+  - analysis decay factor and average time factor
+  - coherence and phase graph
+  - average coherence readout
 
 ## Coherence Analyser
 ![02-05-23_reaper_483](https://user-images.githubusercontent.com/123021340/235800291-17eb5f37-b503-4e2a-85a8-963a2a12fdb3.gif)
@@ -86,9 +138,8 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Chebyshev Saturator
 ![04-05-23_reaper_587](https://user-images.githubusercontent.com/123021340/236242101-9ceb42b5-0192-42d4-a82b-c347319e6ab5.gif)
-
   Utility for emphasizing given harmonics.
-  Features:
+  ### Features:
   - chebyshev polynomials from 1st to 9th order
   - harmonic mode - adjust the amount of even and odd harmonics
   - rectifier

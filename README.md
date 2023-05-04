@@ -87,6 +87,7 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ### Chebyshev Saturator
 ![04-05-23_reaper_587](https://user-images.githubusercontent.com/123021340/236242101-9ceb42b5-0192-42d4-a82b-c347319e6ab5.gif)
+
   Utility for emphasizing given harmonics.
   Features:
   - chebyshev polynomials from 1st to 9th order

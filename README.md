@@ -262,7 +262,7 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 ![04-05-23_reaper_572](https://user-images.githubusercontent.com/123021340/236191889-dad9fc18-2a51-4eca-8bb1-6b85997f027c.gif)
   Triad generator with two-dimansional snap-to-integer-ratio control panel.
   ### Features:
-  - simplest integer ratio snapping with variable error value 
+  - snapping simplest integer ratio with variable error value
   - multiple waveforms to choose from
   - oscilator frequency smoothing
   - ratio and frequency readouts

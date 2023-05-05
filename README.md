@@ -211,7 +211,7 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## DPOAE Canceller
 ![04-05-23_reaper_597](https://user-images.githubusercontent.com/123021340/236298587-64f227c4-2efe-48ab-b30b-b5c55311ac98.gif)
-  Generator of two periodic signals and phase-locked signals capable of canceling otoacoustic emissions (F1-F2, 2*F1-F2, F1-2*F2).
+  Generator of two periodic signals and three phase-locked signals for canceling otoacoustic emissions (F1-F2, 2*F1-F2, F1-2*F2).
   ### Features:
   - three methods of changing frequency
   - tone and combination tone visualization

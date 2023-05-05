@@ -301,7 +301,7 @@ Please report suggestions, feature requests and bugs.
 ![04-05-23_reaper_562](https://user-images.githubusercontent.com/123021340/236191716-ac359225-08fa-4e7c-8922-288352cef26d.gif)
   A tool for positioning sound object in stereo field.
   ### Features:
-  - easy to use, MCP dockable GUI
+  - MCP dockable GUI
   - two modes of ITD (delay and pseudo-delay)
   - distance-dependent reverb send gain
   - parameter smoothing

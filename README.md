@@ -112,6 +112,7 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Phase Wheel Analyser v2
 ![04-05-23_reaper_591](https://user-images.githubusercontent.com/123021340/236243032-9b31853d-0def-4f1b-8b93-ca792e36ab68.gif)
+
   The transfer function of the stereo signal from the direction of the frequency axis.
 
 ## Stereoscope

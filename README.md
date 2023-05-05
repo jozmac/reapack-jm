@@ -76,6 +76,7 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Histogram
 ![02-05-23_reaper_477](https://user-images.githubusercontent.com/123021340/235791502-3fe553b7-01c1-4567-9570-0c766c3d230e.gif)
+  
   Visualization of input signal distribution.
   ### Features:
   - mean, standard deviation, max and min value readouts for two channels
@@ -110,12 +111,10 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ## Phase Wheel Analyser
 ![04-05-23_reaper_533](https://user-images.githubusercontent.com/123021340/236182943-74c2e1ab-8a47-4ab3-ae05-6c958d0cd4e2.gif)
   
-  
   Displays phase difference between two channels (frequency => distance from center)
 
 ## Phase Wheel Analyser v2
 ![04-05-23_reaper_591](https://user-images.githubusercontent.com/123021340/236243032-9b31853d-0def-4f1b-8b93-ca792e36ab68.gif)
-  
   
   The transfer function of the stereo signal from the direction of the frequency axis.
 

@@ -105,6 +105,11 @@ Please report suggestions, feature requests and bugs.
 
 ## Transfer Function Analyser
 ![03-05-23_reaper_517](https://user-images.githubusercontent.com/123021340/236181048-2cb60583-d540-4e64-b3b9-f2c9af9918dc.gif)
+  Displays transfer function, coherence and phase coherence of stereo signal
+  ### Features:
+  - transfer function color indicating phase coherence value
+  - analysis smoothing factiors
+  - impulse response export
 
 ## Signal Transfer Function Analyser (STFA)
 ![04-05-23_reaper_537](https://user-images.githubusercontent.com/123021340/236184110-233d8a55-be28-44c8-8589-ac56882aa64c.gif)
@@ -114,6 +119,12 @@ Please report suggestions, feature requests and bugs.
 
 ## Vectorscope
 ![04-05-23_reaper_527](https://user-images.githubusercontent.com/123021340/236181211-13e84d09-36fe-4ba7-b4b6-d83fccb4ada8.gif)
+  ### Features:
+  - 8x oversampling
+  - exponential scaling
+  - blur
+  - HSV settings
+  - bit, sample value, dB value and angle readout
 
 ## Mean Complex Square Vectorscope
 ![03-05-23_reaper_499](https://user-images.githubusercontent.com/123021340/235800512-6232800b-f098-47b4-9d1f-3e0c157d4b2d.gif)
@@ -140,7 +151,7 @@ Please report suggestions, feature requests and bugs.
   - two modes:
     - unwrapped - azimuth analysis
     - normal - similar to nebula in FLUX Analyser
-  - interchannel phase difference analysis (phase difference value -> hue)
+  - color indicating phase coherence value
   - blur and decay factor
   - readout of azimuth and frequency at cursor position
 
@@ -178,7 +189,8 @@ Please report suggestions, feature requests and bugs.
   ### Features:
   - linked sliders with 6 unit types
   - feedback azimuth rotation
-  - sidechain and sine wave delay modulation
+  - sidechain delay modulation
+  - sine wave delay modulation
   - parameter smoothing
 
 ## K-Flanger

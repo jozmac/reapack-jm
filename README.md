@@ -3,6 +3,7 @@ DONE:
 - gifs or screenshots (smallest possible)
 TODO:
 - donation link 
+- early developement stage info, help, support, ideas
 - descriptions - in jsfx files and in README
 - Plugin Doctor template
 - Mixing template

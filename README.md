@@ -8,7 +8,7 @@ TODO:
 - Mixing template
 - reaper jsfx folder cleanup - faster load times
 - 4k compatibility
-- new name for correlation meter
+- new name for correlation meter and k-flanger (m-flanger, klanger, mlanger)
 
 
 
@@ -76,9 +76,9 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Histogram
 ![02-05-23_reaper_477](https://user-images.githubusercontent.com/123021340/235791502-3fe553b7-01c1-4567-9570-0c766c3d230e.gif)
-  Real-time visualization of distribution of input signal.
+  Visualization of input signal distribution.
   ### Features:
-  - mean and standard deviation readouts for two channels
+  - mean, standard deviation, max and min value readouts for two channels
   - readout of value at cursor position
   - variable bin number
   - X and Y exponential scaling
@@ -99,17 +99,20 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ## Vectorscope
 ![04-05-23_reaper_527](https://user-images.githubusercontent.com/123021340/236181211-13e84d09-36fe-4ba7-b4b6-d83fccb4ada8.gif)
 
-## MCS Vectorscope
+## Mean Complex Square Vectorscope
 ![03-05-23_reaper_499](https://user-images.githubusercontent.com/123021340/235800512-6232800b-f098-47b4-9d1f-3e0c157d4b2d.gif)
+  Stereo signal azimuth analyser.
 
 ## Strobe Tuner
 ![04-05-23_reaper_529](https://user-images.githubusercontent.com/123021340/236182222-77f9db15-5edf-4bdb-9a8b-3d9f05925857.gif)
 
 ## Phase Wheel Analyser
 ![04-05-23_reaper_533](https://user-images.githubusercontent.com/123021340/236182943-74c2e1ab-8a47-4ab3-ae05-6c958d0cd4e2.gif)
+  Displays phase difference between two channels (frequency => distance from center)
 
 ## Phase Wheel Analyser v2
 ![04-05-23_reaper_591](https://user-images.githubusercontent.com/123021340/236243032-9b31853d-0def-4f1b-8b93-ca792e36ab68.gif)
+  The transfer function of the stereo signal from the direction of the frequency axis.
 
 ## Stereoscope
 ![04-05-23_reaper_543](https://user-images.githubusercontent.com/123021340/236187181-32e9eb96-016d-4dd3-a050-45fedaa93f59.gif)
@@ -124,6 +127,10 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Polar Histogram
 ![04-05-23_reaper_551](https://user-images.githubusercontent.com/123021340/236188405-e01e7de2-9419-44e4-8381-6c3ea05e541b.gif)
+   Displays stereo angle histogram
+   ### Features:
+   - peak, hold and energy indicator
+   - variable exponential scaling
 
 ## Correlation Meter
 ![02-05-23_reaper_485](https://user-images.githubusercontent.com/123021340/235800419-0f8c1543-c696-4ce6-9ea1-05b242d222a0.gif)
@@ -143,6 +150,11 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## K-Flanger
 ![04-05-23_reaper_546](https://user-images.githubusercontent.com/123021340/236188538-83b97033-e04b-4d43-890e-656611beae66.png)
+  Combination of flanger and stereo widener.
+  ### Featires:
+  - high quality fractional delay algorhithm
+  - feedback rotation
+  - three stereo widening modes
 
 ## Vowel Filter
 ![04-05-23_reaper_549](https://user-images.githubusercontent.com/123021340/236188601-b21d940b-4592-4c60-b9b9-09a57ce5a603.gif)
@@ -177,12 +189,16 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 ## STFT Frequency Shifter
 ![04-05-23_reaper_552](https://user-images.githubusercontent.com/123021340/236194913-11a5a454-f7d9-42d0-b8dd-483b7b9a874c.png)
 
+## IIR Phaser
+  Phaser based on IIR Hilbert transformer with three stereo widening modes
+
 
 
 # Generators
 
 ## Logistic Noise Generator
 ![04-05-23_reaper_570](https://user-images.githubusercontent.com/123021340/236191867-5ee7c738-0fd5-40b0-a4d3-957816a89346.gif)
+  Noise generator based on the logistic map equation.
 
 ## Stern-Brocot Stereochord
 ![04-05-23_reaper_572](https://user-images.githubusercontent.com/123021340/236191889-dad9fc18-2a51-4eca-8bb1-6b85997f027c.gif)
@@ -204,12 +220,24 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Crossfeed
 ![04-05-23_reaper_560](https://user-images.githubusercontent.com/123021340/236190142-a5ee30ed-8329-429b-b260-e5e071a0a0e2.gif)
+  Utility plugin inspired by the Goodhertz CanOpener
+  ### Features:
+  - three crossfeed algorhithms
+  - delay value readouts
+  - speaker angle visualization
 
 ## Proximity Processor
 ![04-05-23_reaper_562](https://user-images.githubusercontent.com/123021340/236191716-ac359225-08fa-4e7c-8922-288352cef26d.gif)
+  A tool for positioning sound object in stereo field.
+  ### Features:
+  - easy to use, MCP dockable GUI
+  - two modes of ITD (delay and pseudo-delay)
+  - distance-dependent reverb send gain
+  - parameter smoothing
 
 ## Stereo Tool
 ![04-05-23_reaper_564](https://user-images.githubusercontent.com/123021340/236191762-829398cc-ed97-4279-8359-2477347fd318.gif)
+Utility for modyfying azimuth, balance and width of stereo field.
 
 
 

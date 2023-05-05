@@ -76,7 +76,6 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Histogram
 ![02-05-23_reaper_477](https://user-images.githubusercontent.com/123021340/235791502-3fe553b7-01c1-4567-9570-0c766c3d230e.gif)
-  
   Visualization of input signal distribution.
   ### Features:
   - mean, standard deviation, max and min value readouts for two channels

@@ -93,8 +93,9 @@ Please report suggestions, feature requests and bugs.
   - bin decay factor
 
 ## Autocorrelation Analyser
+Displays crosscorrelation function of two channels or autocorrelation of mono signal.
 ![04-05-23_reaper_580](https://user-images.githubusercontent.com/123021340/236194317-43261a43-612a-4866-8598-aa1a5d473113.gif)
-  Displays crosscorrelation function of two channels or autocorrelation of mono signal.
+
   ### Features:
   - auto-detect maximum in mouse selection
   - note, distance, frequency and quefrency readout 
@@ -113,7 +114,7 @@ Please report suggestions, feature requests and bugs.
 
 ## Signal Transfer Function Analyser (STFA)
 ![04-05-23_reaper_537](https://user-images.githubusercontent.com/123021340/236184110-233d8a55-be28-44c8-8589-ac56882aa64c.gif)
-  Features:
+  ### Features:
   - stereo analysis (route non-processed signals to channels 3/4) 
   - readout of dB value at cursor position
 

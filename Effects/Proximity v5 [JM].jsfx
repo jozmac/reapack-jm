@@ -1,13 +1,21 @@
 desc:Proximity v5 [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Proximity
+  A tool for positioning sound object in stereo field.
+  ### Features:
+  - MCP dockable GUI
+  - two modes of ITD (delay and pseudo-delay)
+  - distance-dependent reverb send gain
+  - parameter smoothing
 
-// based on the pitch lib (C) Joep Vanlier 2020
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the pitch lib (C) Joep Vanlier 2020
+
 
 options: gfx_hz = 50;
 

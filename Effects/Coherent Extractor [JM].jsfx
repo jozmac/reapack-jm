@@ -1,12 +1,16 @@
 desc:STFT Coherent Extractor [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Coherent Extractor
+  A tool for separating a coherent signal from a stereo signal (use reaper's delta solo to extract non-coherent stereo signal).
+  ### Features:
+  - averaging factor
+  - suppression factor
 
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 
 slider1:fft_size_index=5<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size

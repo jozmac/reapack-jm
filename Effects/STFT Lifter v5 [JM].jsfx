@@ -1,13 +1,18 @@
 desc:STFT Lifter v5 [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # STFT Lifter
+  ### Features:
+  - long-pass, short-pass and moment-reject liftering
+  - cepstrum analyser with peak detection
 
-// based on the STFT template created by Geraint Luff
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the STFT template created by Geraint Luff
+
 
 slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
 slider2:mode=0<0,1,1{Long-Pass,Short-Pass,Moment-Reject>Mode

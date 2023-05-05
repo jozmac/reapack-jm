@@ -1,11 +1,13 @@
 desc:Stereo Tool [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Stereo Tool
+  Utility for modyfying azimuth, balance and width of stereo field.
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 
 options: gfx_hz = 60;

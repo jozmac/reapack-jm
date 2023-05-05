@@ -1,13 +1,19 @@
 desc:Stern-Brocot Stereochord [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Stern-Brocot Stereochord
+  Triad generator with two-dimansional snap-to-integer-ratio control panel.
+  ### Features:
+  - simplest integer ratio snapping with variable error value 
+  - multiple waveforms to choose from
+  - oscilator frequency smoothing
+  - ratio and frequency readouts
 
-// based on the STFT template created by Geraint Luff
+Copyright (C) 2023 Jozef Mackowiak
+License: MIT
+
 
 options: gfx_hz = 60;
 

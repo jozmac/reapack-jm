@@ -1,11 +1,13 @@
 desc:Phase Wheel Analyser [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Phase Wheel Analyser
+  Displays phase difference between two channels (frequency => distance from center)
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 
 options: gfx_hz = 60;

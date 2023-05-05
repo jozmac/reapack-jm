@@ -1,11 +1,12 @@
 desc:Median Filter [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Median Filter
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 
 slider1:window=3<1,33,2>Window Length

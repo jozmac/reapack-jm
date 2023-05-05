@@ -1,11 +1,14 @@
 desc:MCS Vectorscope [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Mean Complex Sqare Vectorscope
-  Longer description and documentation for this package in *markdown*.
+  # Mean Complex Square Vectorscope
+  Stereo signal azimuth analyser.
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
 
 options: gfx_hz = 60;
 

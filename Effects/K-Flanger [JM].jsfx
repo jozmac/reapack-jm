@@ -1,13 +1,20 @@
 desc:K-Flanger [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # K-Flanger
+  Combination of flanger and stereo widener.
+  ### Featires:
+  - high quality fractional delay algorhithm
+  - feedback rotation
+  - three stereo widening modes
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 // based on the pitch lib (C) Joep Vanlier 2020
+
 
 //import saike_pitchlib.jsfx-inc
 import Tale/lfo.jsfx-inc

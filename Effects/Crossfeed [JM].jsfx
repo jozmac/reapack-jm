@@ -1,13 +1,19 @@
 desc:Crossfeed [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Crossfeed
+  Utility plugin inspired by the Goodhertz CanOpener
+  ### Features:
+  - three crossfeed algorhithms
+  - delay value readouts
+  - speaker angle visualization
 
-// based on the pitch lib (C) Joep Vanlier 2020
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the pitch lib (C) Joep Vanlier 2020
 
 
 options: gfx_hz = 60;

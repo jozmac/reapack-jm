@@ -4,8 +4,8 @@ license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # STFT Extractor
+  Utility for attenuating partials with given azimuth and phase difference in stereo field
 
 // based on the STFT template created by Geraint Luff
 

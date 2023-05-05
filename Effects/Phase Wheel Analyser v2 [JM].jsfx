@@ -1,11 +1,13 @@
 desc:Phase Wheel Analyser v2 [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Phase Wheel Analyser v2
+  The transfer function of the stereo signal from the direction of the frequency axis.
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 
 options: gfx_hz = 60;

@@ -1,13 +1,21 @@
 desc:Thiran Delay [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Thiran Delay
+  Delay effect with allpass fractional delay algorithm.
+  ### Features:
+  - linked sliders with 6 unit types
+  - feedback azimuth rotation
+  - sidechain and sine wave delay modulation
+  - parameter smoothing
 
-// based on the pitch lib (C) Joep Vanlier 2020
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the pitch lib (C) Joep Vanlier 2020
+
 
 //import saike_pitchlib.jsfx-inc
 import Tale/lfo.jsfx-inc

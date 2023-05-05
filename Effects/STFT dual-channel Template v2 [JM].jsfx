@@ -1,13 +1,15 @@
 desc:STFT-Based dual-channel Template v2 [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # STFT-Based dual-channel Template
 
-// based on the STFT template created by Geraint Luff
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the STFT template created by Geraint Luff
+
 
 slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
 //slider64:smoothing_time_const=100<0,10000,1>Smoothing τ [ms]

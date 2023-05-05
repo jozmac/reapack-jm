@@ -1,11 +1,16 @@
 desc:Polar Histogram [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Polar Histogram
+   Displays stereo angle histogram
+   ### Features:
+   - peak, hold and energy indicator
+   - variable exponential scaling
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 
 options: gfx_hz = 60;

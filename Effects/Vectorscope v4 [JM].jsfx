@@ -1,11 +1,18 @@
 desc:Vectorscope v4 [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Vectorscope
+  ### Features:
+  - 8x oversampling
+  - exponential scaling
+  - blur
+  - HSV settings
+  - bit, sample value, dB value and angle readout
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 
 options: gfx_hz = 60;

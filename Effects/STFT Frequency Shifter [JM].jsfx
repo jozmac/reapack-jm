@@ -1,13 +1,21 @@
 desc:STFT Frequency Shifter [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # STFT Frequency Shifter
+  ### Features:
+  - FFT brickwall antialiasing filter
+  - linear phase processing
+  - spectrum reverser
+  - pre-differentiator
+  - parameter smoothing
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 // based on the STFT template created by Geraint Luff
+
 
 slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
 slider2:12000<0,24000,1>Cutoff Frequency

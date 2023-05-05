@@ -1,13 +1,14 @@
 desc: Strobe Tuner [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Strobe Tuner
+  
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
-// based on [TallKite Software] EDOtuner
+// Based on [TallKite Software] EDOtuner
 
 options: gfx_hz = 60;
 

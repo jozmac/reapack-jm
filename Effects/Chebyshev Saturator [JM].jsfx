@@ -12,6 +12,10 @@ about:
   - DC filter
   - GFX signal transfer function wiever
 
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+
 options: gfx_hz = 60;
 
 in_pin:left input

@@ -1,13 +1,23 @@
 desc:Stereoscope v4 [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Stereoscope
+  Azimuth-frequency graph of stereo signal. Usefull for calibrating analog equipment or checking correlation of partials of piano recording.
+  ### Features:
+  - two modes:
+    - unwrapped - azimuth analysis
+    - normal - similar to nebula in FLUX Analyser  
+  - color indicating phase coherence value
+  - blur and decay factor
+  - readout of azimuth and frequency at cursor position
 
-// based on the STFT template created by Geraint Luff
+Copyright (C) 2023 Jozef Mackowiak
+License: MIT
+
+// Based on the STFT template created by Geraint Luff
+
 
 options: gfx_hz = 60;
 

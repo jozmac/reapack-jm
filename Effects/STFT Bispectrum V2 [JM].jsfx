@@ -1,13 +1,16 @@
 desc:STFT Bispectrum V2 [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
+  # Bispectrum Analyser
   Longer description and documentation for this package in *markdown*.
 
-// based on the STFT template created by Geraint Luff
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the STFT template created by Geraint Luff
+
 
 options: gfx_hz = 60;
 

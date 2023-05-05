@@ -1,13 +1,20 @@
 desc:Transfer Function Analyser [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Transfer Function Analyser
+  Displays transfer function, coherence and phase coherence of stereo signal
+  ### Features:
+  - transfer function color indicating phase coherence value
+  - analysis smoothing factiors
+  - impulse response export
 
-// based on the STFT template created by Geraint Luff
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the STFT template created by Geraint Luff
+
 
 options: gfx_hz = 60;
 

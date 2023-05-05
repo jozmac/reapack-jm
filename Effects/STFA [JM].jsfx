@@ -1,12 +1,15 @@
 desc:STFA [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Signal Transfer Function Analyser
+  Features:
+  - stereo analysis (route non-processed signals to channels 3/4) 
+  - readout of dB value at cursor position
 
+Copyright (C) 2023 Jozef Mackowiak
+License: MIT
 
 options: gfx_hz = 60;
 

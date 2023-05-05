@@ -1,12 +1,20 @@
 desc:Histogram Stereo [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Histogram
+  Visualization of input signal distribution.
+  ### Features:
+  - mean and standard deviation readouts for two channels
+  - readout of value at cursor position
+  - variable bin number
+  - variable X and Y exponential scaling
+  - bin decay factor
 
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+ 
  
 options: gfx_hz = 60;
 

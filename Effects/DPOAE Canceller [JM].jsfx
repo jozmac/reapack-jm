@@ -1,11 +1,17 @@
 desc:DPOAE Canceller [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # DPOAE Canceller
+  generator of two periodic signals and phase-locked signals capable of canceling otoacoustic emissions (F1-F2, 2*F1-F2, F1-2*F2).
+  ### Features:
+  - three methods of changing frequency
+  - tone and combination tone visualization
+  - visualization of undertones and overtones of main two tones
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 
 options: gfx_hz = 60;

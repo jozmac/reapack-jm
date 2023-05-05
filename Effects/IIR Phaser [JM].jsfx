@@ -1,14 +1,16 @@
-// JSFX-CookDSP
-// (c) Olivier Belanger - 2020 - belangeo@gmail.com
-
 desc:IIR Phaser [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # IIR Phaser
+  Phaser based on IIR Hilbert transformer
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the JSFX-CookDSP Library
+// (c) Olivier Belanger - 2020 - belangeo@gmail.com
 
 
 /slider1:10<0,20,0.01>Shifting Frequency (Hz)

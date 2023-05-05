@@ -1,17 +1,20 @@
 desc:Coherence Analyser [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Coherence Analyser
-  Utility for emphasizing given harmonics.
+  # Coherence
+  STFT-based graphical coherence analyser.
   ### Features:
-  - chebyshev polynomials from 1st to 9th order
-  - harmonic mode - adjust the amount of even and odd harmonics
-  - rectifier
-  - DC filter
-  - GFX signal transfer function wiever
+  - analysis decay factor and averaging factor
+  - coherence and phase graph
+  - average coherence readout
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the STFT-Based Effect Template by Geraintluff
+
 
 options: gfx_hz = 60;
 

@@ -1,11 +1,20 @@
 desc:Tetrad Spiral Farey [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
-  # Your Package Title
-  Longer description and documentation for this package in *markdown*.
+  # Farey Tetrad Spiral
+  Four-oscillator generator with spiral visualization.
+  ### Features:
+  - visualization of combination tones (F1-F2, 2*F1-F2, F1-2*F2)
+  - colors indicating chroma of musical note
+  - display of overtones, undertones, upper and lower Farey sequences 
+  - frequency readout for every tone and combination tone
+  - parameter smoothing
+  - multiple waveforms
+  
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
 
 
 options: gfx_hz = 60;

@@ -79,7 +79,7 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
   Visualization of input signal distribution.
   ### Features:
   - mean, standard deviation, max and min value readouts for two channels
-  - readout of value at cursor position
+  - readout of values at cursor position
   - variable bin number
   - X and Y exponential scaling
   - bin decay factor
@@ -108,11 +108,14 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 ## Phase Wheel Analyser
 ![04-05-23_reaper_533](https://user-images.githubusercontent.com/123021340/236182943-74c2e1ab-8a47-4ab3-ae05-6c958d0cd4e2.gif)
+  
+  
   Displays phase difference between two channels (frequency => distance from center)
 
 ## Phase Wheel Analyser v2
 ![04-05-23_reaper_591](https://user-images.githubusercontent.com/123021340/236243032-9b31853d-0def-4f1b-8b93-ca792e36ab68.gif)
-
+  
+  
   The transfer function of the stereo signal from the direction of the frequency axis.
 
 ## Stereoscope

@@ -70,8 +70,9 @@ https://github.com/jozmac/reapack-jm/raw/master/index.xml
 If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 
 
-
+<!--
 # Plugins
+-->
 
 # Analysers
 

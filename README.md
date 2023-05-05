@@ -102,7 +102,6 @@ Please report suggestions, feature requests and bugs.
 
 ## Cepstrum Analyser
 ![03-05-23_reaper_509](https://user-images.githubusercontent.com/123021340/236180935-4cb80718-c082-48fc-a956-e40b41f37b9c.gif)
-  ### Features similar to autocorrelation analyser
 
 ## Transfer Function Analyser
 ![03-05-23_reaper_517](https://user-images.githubusercontent.com/123021340/236181048-2cb60583-d540-4e64-b3b9-f2c9af9918dc.gif)

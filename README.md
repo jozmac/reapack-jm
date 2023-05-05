@@ -2,14 +2,16 @@
 DONE:
 - gifs or screenshots (smallest possible)
 TODO:
-- donation link 
+- donation link PayPal
 - early developement stage info, help, support, ideas
 - descriptions - in jsfx files and in README
-- Plugin Doctor template
+- Plugin Doctor template, jsfx demo project, plugin chains
 - Mixing template
 - reaper jsfx folder cleanup - faster load times
 - 4k compatibility
 - new name for correlation meter and k-flanger (m-flanger, klanger, mlanger)
+- rename all plugins to jm_type_name.jsfx
+- logo
 
 
 
@@ -92,15 +94,24 @@ Please report suggestions, feature requests and bugs.
 
 ## Autocorrelation Analyser
 ![04-05-23_reaper_580](https://user-images.githubusercontent.com/123021340/236194317-43261a43-612a-4866-8598-aa1a5d473113.gif)
+  Displays crosscorrelation function of two channels or autocorrelation of mono signal.
+  ### Features:
+  - auto-detect maximum in selection
+  - note, distance, frequency and quefrency readout 
+  - color indicating chroma of musical note
 
 ## Cepstrum Analyser
 ![03-05-23_reaper_509](https://user-images.githubusercontent.com/123021340/236180935-4cb80718-c082-48fc-a956-e40b41f37b9c.gif)
+  ### Features similar to autocorrelation analyser
 
 ## Transfer Function Analyser
 ![03-05-23_reaper_517](https://user-images.githubusercontent.com/123021340/236181048-2cb60583-d540-4e64-b3b9-f2c9af9918dc.gif)
 
 ## Signal Transfer Function Analyser (STFA)
 ![04-05-23_reaper_537](https://user-images.githubusercontent.com/123021340/236184110-233d8a55-be28-44c8-8589-ac56882aa64c.gif)
+  Features:
+  - stereo analysis (route non-processed signals to channels 3/4) 
+  - readout of dB value at cursor position
 
 ## Vectorscope
 ![04-05-23_reaper_527](https://user-images.githubusercontent.com/123021340/236181211-13e84d09-36fe-4ba7-b4b6-d83fccb4ada8.gif)
@@ -125,6 +136,14 @@ Please report suggestions, feature requests and bugs.
 
 ## Stereoscope
 ![04-05-23_reaper_543](https://user-images.githubusercontent.com/123021340/236187181-32e9eb96-016d-4dd3-a050-45fedaa93f59.gif)
+  Azimuth-frequency graph of stereo signal. Usefull for calibrating analog equipment or checking correlation of partials of piano recording.
+  ### Features:
+  - two modes:
+    - unwrapped - azimuth analysis
+    - normal - similar to nebula in FLUX Analyser
+  - interchannel phase difference analysis (phase difference value -> hue)
+  - blur and decay factor
+  - readout of azimuth and frequency at cursor position
 
 ## Coherence Analyser
 ![02-05-23_reaper_483](https://user-images.githubusercontent.com/123021340/235800291-17eb5f37-b503-4e2a-85a8-963a2a12fdb3.gif)
@@ -211,6 +230,12 @@ Please report suggestions, feature requests and bugs.
 
 ## Stern-Brocot Stereochord
 ![04-05-23_reaper_572](https://user-images.githubusercontent.com/123021340/236191889-dad9fc18-2a51-4eca-8bb1-6b85997f027c.gif)
+  Triad generator with two-dimansional snap-to-integer-ratio control panel.
+  ### Features:
+  - simplest integer ratio snapping with variable error value 
+  - multiple waveforms to choose from
+  - oscilator frequency smoothing
+  - ratio and frequency readouts
 
 ## Farey Tetrad Spiral 
 ![04-05-23_reaper_574](https://user-images.githubusercontent.com/123021340/236191959-bc89c8d1-4c56-491e-a5d2-69ab7207d078.gif)

@@ -175,6 +175,12 @@ Please report suggestions, feature requests and bugs.
 
 ## Thiran Delay
 ![04-05-23_reaper_545](https://user-images.githubusercontent.com/123021340/236188483-258a6729-b3e8-4a9c-b70b-591de17336e1.png)
+  Delay effect with allpass fractional delay algorithm.
+  ### Features:
+  - linked sliders with 6 unit types
+  - feedback azimuth rotation
+  - sidechain and sine wave delay modulation
+  - parameter smoothing
 
 ## K-Flanger
 ![04-05-23_reaper_546](https://user-images.githubusercontent.com/123021340/236188538-83b97033-e04b-4d43-890e-656611beae66.png)
@@ -198,14 +204,20 @@ Please report suggestions, feature requests and bugs.
   - GFX signal transfer function wiever
 
 
-## Transient Extractor
+## Transient Split
 ![04-05-23_reaper_556](https://user-images.githubusercontent.com/123021340/236189545-cc3b8e93-c1fa-4867-866c-0c3a5f9d4ed8.png)
+  A tool that allows you to extract transients or stationary signals from the input signal.
 
 ## Cepstrum Lifter
 ![04-05-23_reaper_555](https://user-images.githubusercontent.com/123021340/236189555-152c700e-51a2-4e04-9a0c-9e20970b9aa0.png)
+  ### Features:
+  - long-pass, short-pass and moment-reject liftering
+  - cepstrum analyser with peak detection
 
 ## STFT Extractor
 ![04-05-23_reaper_554](https://user-images.githubusercontent.com/123021340/236192232-a28063d3-3277-4fbf-b8f2-3d45cdad71fa.png)
+  Utility for attenuating partials with given azimuth and phase difference in stereo field.
+
 
 ## Coherent Extractor
 ![04-05-23_reaper_553](https://user-images.githubusercontent.com/123021340/236189788-b1079010-493e-4974-81f5-20e3a00d3c2d.png)
@@ -216,6 +228,12 @@ Please report suggestions, feature requests and bugs.
 
 ## STFT Frequency Shifter
 ![04-05-23_reaper_552](https://user-images.githubusercontent.com/123021340/236194913-11a5a454-f7d9-42d0-b8dd-483b7b9a874c.png)
+  ### Features:
+  - FFT brickwall antialiasing filter
+  - linear phase processing
+  - spectrum reverser
+  - pre-differentiator
+  - parameter smoothing
 
 ## IIR Phaser
   Phaser based on IIR Hilbert transformer with three stereo widening modes
@@ -239,6 +257,14 @@ Please report suggestions, feature requests and bugs.
 
 ## Farey Tetrad Spiral 
 ![04-05-23_reaper_574](https://user-images.githubusercontent.com/123021340/236191959-bc89c8d1-4c56-491e-a5d2-69ab7207d078.gif)
+  Four-oscillator generator with spiral visualization.
+  ### Features:
+  - visualization of combination tones (F1-F2, 2*F1-F2, F1-2*F2)
+  - colors indicating chroma of musical note
+  - display of overtones, undertones, upper and lower Farey sequences 
+  - frequency readout for every tone and combination tone
+  - parameter smoothing
+  - multiple waveforms
 
 ## DPOAE Canceller
 ![04-05-23_reaper_597](https://user-images.githubusercontent.com/123021340/236298587-64f227c4-2efe-48ab-b30b-b5c55311ac98.gif)

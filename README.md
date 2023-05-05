@@ -96,7 +96,7 @@ Please report suggestions, feature requests and bugs.
 ![04-05-23_reaper_580](https://user-images.githubusercontent.com/123021340/236194317-43261a43-612a-4866-8598-aa1a5d473113.gif)
   Displays crosscorrelation function of two channels or autocorrelation of mono signal.
   ### Features:
-  - auto-detect maximum in selection
+  - auto-detect maximum in mouse selection
   - note, distance, frequency and quefrency readout 
   - color indicating chroma of musical note
 

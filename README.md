@@ -75,7 +75,7 @@ If you’re new to this, check [this video](https://youtu.be/gVbMbqGSB7E?t=367).
 -->
 
 All plugins are in early developement, so parameters and functionality may change.
-Please report suggestions, feature requests and bug reports.
+Please report suggestions, feature requests and bugs.
 
 
 # Analysers

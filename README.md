@@ -57,7 +57,7 @@ License: MIT
 -->
 
 
-<h1 align="center">Józef Maćkowiak’s REAPER Effects and Scripts</h1>
+<h1 align="center">Józef Maćkowiak’s REAPER Plugins</h1>
 
 ## How to Install
 

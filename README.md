@@ -304,6 +304,7 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
   ### Features:
   - MCP dockable GUI
   - two modes of ITD (delay and pseudo-delay)
+  - weight sliders for ITD, ILD and spectral panning
   - distance-dependent reverb send gain
   - parameter smoothing
 

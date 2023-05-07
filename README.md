@@ -174,8 +174,6 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 ## Correlation Meter
 ![02-05-23_reaper_485](https://user-images.githubusercontent.com/123021340/235800419-0f8c1543-c696-4ce6-9ea1-05b242d222a0.gif)
   Correlation, balance and azimuth meter.
-  ### Features:
-  - variable smoothing time
 
 ## Bispectrum Analyser
 ![04-05-23_reaper_558](https://user-images.githubusercontent.com/123021340/236189466-c3f44d97-5f90-4720-b428-5aa5b7b1c0ad.gif)
@@ -213,7 +211,7 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
   - harmonic mode - adjust the amount of even and odd harmonics
   - rectifier
   - DC filter
-  - GFX signal transfer function wiever
+  - GFX signal transfer function viewer
 
 
 ## Transient Split
@@ -259,7 +257,7 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 ![04-05-23_reaper_572](https://user-images.githubusercontent.com/123021340/236191889-dad9fc18-2a51-4eca-8bb1-6b85997f027c.gif)
   Triad generator with two-dimansional snap-to-integer-ratio control panel.
   ### Features:
-  - snapping simplest integer ratio with variable error value
+  - snapping to simplest integer ratio with variable error value
   - multiple waveforms to choose from
   - oscilator frequency smoothing
   - ratio and frequency readouts

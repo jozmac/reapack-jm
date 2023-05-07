@@ -147,7 +147,7 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 
 ## Stereoscope
 ![04-05-23_reaper_543](https://user-images.githubusercontent.com/123021340/236187181-32e9eb96-016d-4dd3-a050-45fedaa93f59.gif)
-  Azimuth-frequency graph of stereo signal. Usefull for calibrating analog equipment or checking correlation of partials of piano recording.
+  Azimuth-frequency graph of stereo signal. Useful for calibrating analog equipment, checking correlation of partials of piano recording, analysis of flanger, phaser or stereo widener plugins, etc.
   ### Features:
   - two modes:
     - unwrapped - azimuth analysis

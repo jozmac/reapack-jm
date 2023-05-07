@@ -219,6 +219,15 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 ## Transient Split
 ![04-05-23_reaper_556](https://user-images.githubusercontent.com/123021340/236189545-cc3b8e93-c1fa-4867-866c-0c3a5f9d4ed8.png)
   A tool that allows you to extract transients or stationary signals from the input signal.
+  
+## STFT Frequency Shifter
+![04-05-23_reaper_552](https://user-images.githubusercontent.com/123021340/236194913-11a5a454-f7d9-42d0-b8dd-483b7b9a874c.png)
+  ### Features:
+  - FFT brickwall antialiasing filter
+  - linear phase processing
+  - spectrum reverser
+  - pre-differentiator
+  - parameter smoothing
 
 ## Cepstrum Lifter
 ![04-05-23_reaper_555](https://user-images.githubusercontent.com/123021340/236189555-152c700e-51a2-4e04-9a0c-9e20970b9aa0.png)
@@ -234,18 +243,6 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 ## Coherent Extractor
 ![04-05-23_reaper_553](https://user-images.githubusercontent.com/123021340/236189788-b1079010-493e-4974-81f5-20e3a00d3c2d.png)
   A tool for separating a coherent signal from a stereo signal.
-  ### Features:
-  - averaging factor
-  - suppression factor
-
-## STFT Frequency Shifter
-![04-05-23_reaper_552](https://user-images.githubusercontent.com/123021340/236194913-11a5a454-f7d9-42d0-b8dd-483b7b9a874c.png)
-  ### Features:
-  - FFT brickwall antialiasing filter
-  - linear phase processing
-  - spectrum reverser
-  - pre-differentiator
-  - parameter smoothing
 
 ## IIR Phaser
   Phaser based on IIR Hilbert transformer with three stereo widening modes

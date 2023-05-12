@@ -93,8 +93,9 @@ Please report suggestions, feature requests and bugs.
   - bin decay factor
 
 ## Autocorrelation Analyser
+Displays crosscorrelation function of two channels or autocorrelation of mono signal.
 ![04-05-23_reaper_580](https://user-images.githubusercontent.com/123021340/236194317-43261a43-612a-4866-8598-aa1a5d473113.gif)
-  Displays crosscorrelation function of two channels or autocorrelation of mono signal.
+
   ### Features:
   - auto-detect maximum in mouse selection
   - note, distance, frequency and quefrency readout 
@@ -113,7 +114,7 @@ Please report suggestions, feature requests and bugs.
 
 ## Signal Transfer Function Analyser (STFA)
 ![04-05-23_reaper_537](https://user-images.githubusercontent.com/123021340/236184110-233d8a55-be28-44c8-8589-ac56882aa64c.gif)
-  Features:
+  ### Features:
   - stereo analysis (route non-processed signals to channels 3/4) 
   - readout of dB value at cursor position
 
@@ -146,7 +147,7 @@ Please report suggestions, feature requests and bugs.
 
 ## Stereoscope
 ![04-05-23_reaper_543](https://user-images.githubusercontent.com/123021340/236187181-32e9eb96-016d-4dd3-a050-45fedaa93f59.gif)
-  Azimuth-frequency graph of stereo signal. Usefull for calibrating analog equipment or checking correlation of partials of piano recording.
+  Azimuth-frequency graph of stereo signal. Useful for calibrating analog equipment, checking correlation of partials of piano recording, analysis of flanger, phaser or stereo widener plugins, etc.
   ### Features:
   - two modes:
     - unwrapped - azimuth analysis
@@ -173,8 +174,6 @@ Please report suggestions, feature requests and bugs.
 ## Correlation Meter
 ![02-05-23_reaper_485](https://user-images.githubusercontent.com/123021340/235800419-0f8c1543-c696-4ce6-9ea1-05b242d222a0.gif)
   Correlation, balance and azimuth meter.
-  ### Features:
-  - variable smoothing time
 
 ## Bispectrum Analyser
 ![04-05-23_reaper_558](https://user-images.githubusercontent.com/123021340/236189466-c3f44d97-5f90-4720-b428-5aa5b7b1c0ad.gif)
@@ -212,12 +211,21 @@ Please report suggestions, feature requests and bugs.
   - harmonic mode - adjust the amount of even and odd harmonics
   - rectifier
   - DC filter
-  - GFX signal transfer function wiever
+  - GFX signal transfer function viewer
 
 
 ## Transient Split
 ![04-05-23_reaper_556](https://user-images.githubusercontent.com/123021340/236189545-cc3b8e93-c1fa-4867-866c-0c3a5f9d4ed8.png)
   A tool that allows you to extract transients or stationary signals from the input signal.
+  
+## STFT Frequency Shifter
+![04-05-23_reaper_552](https://user-images.githubusercontent.com/123021340/236194913-11a5a454-f7d9-42d0-b8dd-483b7b9a874c.png)
+  ### Features:
+  - FFT brickwall antialiasing filter
+  - linear phase processing
+  - spectrum reverser
+  - pre-differentiator
+  - parameter smoothing
 
 ## Cepstrum Lifter
 ![04-05-23_reaper_555](https://user-images.githubusercontent.com/123021340/236189555-152c700e-51a2-4e04-9a0c-9e20970b9aa0.png)
@@ -233,18 +241,6 @@ Please report suggestions, feature requests and bugs.
 ## Coherent Extractor
 ![04-05-23_reaper_553](https://user-images.githubusercontent.com/123021340/236189788-b1079010-493e-4974-81f5-20e3a00d3c2d.png)
   A tool for separating a coherent signal from a stereo signal.
-  ### Features:
-  - averaging factor
-  - suppression factor
-
-## STFT Frequency Shifter
-![04-05-23_reaper_552](https://user-images.githubusercontent.com/123021340/236194913-11a5a454-f7d9-42d0-b8dd-483b7b9a874c.png)
-  ### Features:
-  - FFT brickwall antialiasing filter
-  - linear phase processing
-  - spectrum reverser
-  - pre-differentiator
-  - parameter smoothing
 
 ## IIR Phaser
   Phaser based on IIR Hilbert transformer with three stereo widening modes
@@ -261,7 +257,7 @@ Please report suggestions, feature requests and bugs.
 ![04-05-23_reaper_572](https://user-images.githubusercontent.com/123021340/236191889-dad9fc18-2a51-4eca-8bb1-6b85997f027c.gif)
   Triad generator with two-dimansional snap-to-integer-ratio control panel.
   ### Features:
-  - simplest integer ratio snapping with variable error value 
+  - snapping to simplest integer ratio with variable error value
   - multiple waveforms to choose from
   - oscilator frequency smoothing
   - ratio and frequency readouts
@@ -303,6 +299,7 @@ Please report suggestions, feature requests and bugs.
   ### Features:
   - MCP dockable GUI
   - two modes of ITD (delay and pseudo-delay)
+  - weight sliders for ITD, ILD and spectral panning
   - distance-dependent reverb send gain
   - parameter smoothing
 

@@ -12,14 +12,9 @@
         <source file="JM_ana_Histogram.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Histogram.jsfx</source>
       </version>
     </reapack>
-    <reapack name="JM_ana_MCS_Vectorscope.jsfx" type="effect">
+    <reapack name="JM_ana_Histogram_Polar.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_MCS_Vectorscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_MCS_Vectorscope.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="JM_ana_Polar_Histogram.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_ana_Polar_Histogram.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Polar_Histogram.jsfx</source>
+        <source file="JM_ana_Histogram_Polar.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Histogram_Polar.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_STFA.jsfx" type="effect">
@@ -72,9 +67,9 @@
         <source file="JM_ana_STFT_Stereoscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_Stereoscope.jsfx</source>
       </version>
     </reapack>
-    <reapack name="JM_ana_Strobe_Tuner.jsfx" type="effect">
+    <reapack name="JM_ana_Tuner_Strobe.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_Strobe_Tuner.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Strobe_Tuner.jsfx</source>
+        <source file="JM_ana_Tuner_Strobe.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Tuner_Strobe.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_Vectorscope.jsfx" type="effect">
@@ -82,19 +77,25 @@
         <source file="JM_ana_Vectorscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Vectorscope.jsfx</source>
       </version>
     </reapack>
-    <reapack name="JM_fx_Chebyshev_Saturator.jsfx" type="effect">
+    <reapack name="JM_ana_Vectorscope_MCS.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_Chebyshev_Saturator.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Chebyshev_Saturator.jsfx</source>
+        <source file="JM_ana_Vectorscope_MCS.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Vectorscope_MCS.jsfx</source>
       </version>
     </reapack>
-    <reapack name="JM_fx_Coherent_Extractor.jsfx" type="effect">
+    </reapack>
+    <reapack name="JM_fx_Delay_Thiran.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_Coherent_Extractor.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Coherent_Extractor.jsfx</source>
+        <source file="JM_fx_Delay_Thiran.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Delay_Thiran.jsfx</source>
       </version>
     </reapack>
-    <reapack name="JM_fx_Median_Filter.jsfx" type="effect">
+    <reapack name="JM_fx_Filter_Median.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_Median_Filter.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Median_Filter.jsfx</source>
+        <source file="JM_fx_Filter_Median.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Filter_Median.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_fx_Filter_Vowel.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_fx_Filter_Vowel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Filter_Vowel.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_M-Flanger.jsfx" type="effect">
@@ -105,6 +106,16 @@
     <reapack name="JM_fx_M-Phaser.jsfx" type="effect">
       <version name="0.0.0">
         <source file="JM_fx_M-Phaser.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_M-Phaser.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_fx_Saturator_Chebyshev.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_fx_Saturator_Chebyshev.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Saturator_Chebyshev.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_fx_STFT_Coherent_Extractor.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_fx_STFT_Coherent_Extractor.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Coherent_Extractor.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_STFT_Extractor.jsfx" type="effect">
@@ -126,25 +137,14 @@
       <version name="0.0.0">
         <source file="JM_fx_STFT_Transient_Split.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Transient_Split.jsfx</source>
       </version>
-    </reapack>
-    <reapack name="JM_fx_Thiran_Delay.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_fx_Thiran_Delay.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Thiran_Delay.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="JM_fx_Vowel_Filter.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_fx_Vowel_Filter.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Vowel_Filter.jsfx</source>
-      </version>
-    </reapack>
     <reapack name="JM_gen_DPOAE_Canceller.jsfx" type="effect">
       <version name="0.0.0">
         <source file="JM_gen_DPOAE_Canceller.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_DPOAE_Canceller.jsfx</source>
       </version>
     </reapack>
-    <reapack name="JM_gen_Logistic_Noise.jsfx" type="effect">
+    <reapack name="JM_gen_Noise_Logistic.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_gen_Logistic_Noise.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_Logistic_Noise.jsfx</source>
+        <source file="JM_gen_Noise_Logistic.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_Noise_Logistic.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_gen_Stern-Brocot_Stereochord.jsfx" type="effect">

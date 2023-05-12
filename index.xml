@@ -2,26 +2,6 @@
 <index version="1" name="Jozef Mackowiak">
   <category name="jsfx">
 
-    <reapack name="JM_ana_Autocorrelation.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_ana_Autocorrelation.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Autocorrelation.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="JM_ana_Bispectrum.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_ana_Bispectrum.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Bispectrum.jsfx.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="JM_ana_Cepstrum.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_ana_Cepstrum.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Cepstrum.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="JM_ana_Coherence.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_ana_Coherence.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Coherence.jsfx</source>
-      </version>
-    </reapack>
     <reapack name="JM_ana_Correlation.jsfx" type="effect">
       <version name="0.0.0">
         <source file="JM_ana_Correlation.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Correlation.jsfx</source>
@@ -37,24 +17,9 @@
         <source file="JM_ana_MCS_Vectorscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_MCS_Vectorscope.jsfx</source>
       </version>
     </reapack>
-    <reapack name="JM_ana_Phase_Wheel.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_ana_Phase_Wheel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Phase_Wheel.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="JM_ana_Phase_Wheel_v2.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_ana_Phase_Wheel_v2.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Phase_Wheel_v2.jsfx</source>
-      </version>
-    </reapack>
     <reapack name="JM_ana_Polar_Histogram.jsfx" type="effect">
       <version name="0.0.0">
         <source file="JM_ana_Polar_Histogram.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Polar_Histogram.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="JM_ana_Stereoscope.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_ana_Stereoscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Stereoscope.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_STFA.jsfx" type="effect">
@@ -62,14 +27,54 @@
         <source file="JM_ana_STFA.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFA.jsfx</source>
       </version>
     </reapack>
+    <reapack name="JM_ana_STFT_Acorr.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_ana_STFT_Acorr.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Acorr.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_ana_STFT_Bispec.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_ana_STFT_Bispec.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Bispec.jsfx.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_ana_STFT_Ceps.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_ana_STFT_Ceps.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Ceps.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_ana_STFT_Coher.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_ana_STFT_Coher.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Coher.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_ana_STFT_PF_Wheel.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_ana_STFT_PF_Wheel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_PF_Wheel.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_ana_STFT_PA_Wheel.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_ana_STFT_PA_Wheel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_PA_Wheel.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_ana_STFT_Stereoscope.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_ana_STFT_Stereoscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_Stereoscope.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_ana_STFT_Transfer_Function.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_ana_STFT_Transfer_Function.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_Transfer_Function.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="JM_ana_STFT_Stereoscope.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_ana_STFT_Stereoscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_Stereoscope.jsfx</source>
+      </version>
+    </reapack>
     <reapack name="JM_ana_Strobe_Tuner.jsfx" type="effect">
       <version name="0.0.0">
         <source file="JM_ana_Strobe_Tuner.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Strobe_Tuner.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="JM_ana_Transfer_Function.jsfx" type="effect">
-      <version name="0.0.0">
-        <source file="JM_ana_Transfer_Function.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Transfer_Function.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_Vectorscope.jsfx" type="effect">
@@ -137,9 +142,9 @@
         <source file="JM_gen_DPOAE_Canceller.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_DPOAE_Canceller.jsfx</source>
       </version>
     </reapack>
-    <reapack name="JM_gen_Logistic_Noise_Generator.jsfx" type="effect">
+    <reapack name="JM_gen_Logistic_Noise.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_gen_Logistic_Noise_Generator.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_Logistic_Noise_Generator.jsfx</source>
+        <source file="JM_gen_Logistic_Noise.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_Logistic_Noise.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_gen_Stern-Brocot_Stereochord.jsfx" type="effect">

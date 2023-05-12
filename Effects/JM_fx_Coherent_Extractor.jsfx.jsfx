@@ -12,6 +12,8 @@ about:
 License: MIT
 Copyright (C) 2023 Jozef Mackowiak
 
+// Based on the STFT-Based Effect Template by Geraintluff
+
 
 slider1:fft_size_index=5<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
 slider15:analysis_decay_factor=0.8<0,1,0.00001>-Analysis Decay Factor

@@ -9,6 +9,8 @@ about:
 License: MIT
 Copyright (C) 2023 Jozef Mackowiak
 
+// Based on the STFT-Based Effect Template by Geraintluff
+
 
 options: gfx_hz = 60;
 

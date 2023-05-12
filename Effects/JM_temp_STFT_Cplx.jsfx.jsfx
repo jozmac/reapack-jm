@@ -9,8 +9,8 @@ Copyright (C) 2023 Jozef Mackowiak
 
 // Based on the STFT template created by Geraint Luff
 
-//options: gfx_hz = 60;
 
+//options: gfx_hz = 60;
 
 in_pin:input A
 in_pin:input B

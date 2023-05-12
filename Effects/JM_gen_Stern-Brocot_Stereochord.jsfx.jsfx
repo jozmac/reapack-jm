@@ -6,13 +6,14 @@ about:
   # Stern-Brocot Stereochord
   Triad generator with two-dimansional snap-to-integer-ratio control panel.
   ### Features:
-  - simplest integer ratio snapping with variable error value 
+  - snapping to simplest integer ratio with variable error value 
   - multiple waveforms to choose from
   - oscilator frequency smoothing
   - ratio and frequency readouts
 
-Copyright (C) 2023 Jozef Mackowiak
 License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
 
 
 options: gfx_hz = 60;

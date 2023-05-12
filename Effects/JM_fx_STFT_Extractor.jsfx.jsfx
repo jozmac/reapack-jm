@@ -1,13 +1,16 @@
 desc:STFT Extractor [JM]
 author: Jozef Mackowiak
-license: MIT
 version: 0.0.0
 changelog: Initial Commit
 about:
   # STFT Extractor
   Utility for attenuating partials with given azimuth and phase difference in stereo field
 
-// based on the STFT template created by Geraint Luff
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the STFT template created by Geraint Luff
+
 
 slider1:fft_size_index=5<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
 slider2:pha_ang=0<-2,2,0.001>Phase Angle

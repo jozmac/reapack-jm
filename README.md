@@ -237,6 +237,14 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 ![04-05-23_reaper_554](https://user-images.githubusercontent.com/123021340/236192232-a28063d3-3277-4fbf-b8f2-3d45cdad71fa.png)
   Utility for attenuating partials with given azimuth and phase difference in stereo field.
 
+## Stereoscope EQ
+![14-05-23_reaper_623](https://github.com/jozmac/reapack-jm/assets/123021340/1ae04f1b-8179-46a1-b319-379339e82b3c)
+STFT Extractor + GUI
+  ### Controls:
+  - click+drag to change filter position
+  - scroll to change stereo width, 
+  - ctrl+scroll to change frequency bandwidth
+
 
 ## Coherent Extractor
 ![04-05-23_reaper_553](https://user-images.githubusercontent.com/123021340/236189788-b1079010-493e-4974-81f5-20e3a00d3c2d.png)

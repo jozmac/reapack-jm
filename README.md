@@ -135,12 +135,12 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 ## Strobe Tuner
 ![04-05-23_reaper_529](https://user-images.githubusercontent.com/123021340/236182222-77f9db15-5edf-4bdb-9a8b-3d9f05925857.gif)
 
-## Phase Wheel Analyser
+## Phase/Frequency Wheel Analyser
 ![04-05-23_reaper_533](https://user-images.githubusercontent.com/123021340/236182943-74c2e1ab-8a47-4ab3-ae05-6c958d0cd4e2.gif)
   
   Displays phase difference between two channels (frequency => distance from center)
 
-## Phase Wheel Analyser v2
+## Phase/Amplitude Wheel Analyser
 ![04-05-23_reaper_591](https://user-images.githubusercontent.com/123021340/236243032-9b31853d-0def-4f1b-8b93-ca792e36ab68.gif)
   
   The transfer function of the stereo signal from the direction of the frequency axis.
@@ -192,7 +192,7 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
   - sine wave delay modulation
   - parameter smoothing
 
-## K-Flanger
+## M-Flanger
 ![04-05-23_reaper_546](https://user-images.githubusercontent.com/123021340/236188538-83b97033-e04b-4d43-890e-656611beae66.png)
   Combination of flanger and stereo widener.
   ### Featires:
@@ -242,7 +242,7 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 ![04-05-23_reaper_553](https://user-images.githubusercontent.com/123021340/236189788-b1079010-493e-4974-81f5-20e3a00d3c2d.png)
   A tool for separating a coherent signal from a stereo signal.
 
-## IIR Phaser
+## M-Phaser
   Phaser based on IIR Hilbert transformer with three stereo widening modes
 
 

@@ -29,7 +29,7 @@
     </reapack>
     <reapack name="JM_ana_STFT_Bispec.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_STFT_Bispec.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Bispec.jsfx.jsfx</source>
+        <source file="JM_ana_STFT_Bispec.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Bispec.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_STFT_Ceps.jsfx" type="effect">

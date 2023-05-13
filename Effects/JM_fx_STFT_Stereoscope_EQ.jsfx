@@ -1,0 +1,811 @@
+desc:Stereoscope EQ [JM]
+author: Jozef Mackowiak
+version: 0.0.0
+changelog: Initial Commit
+about:
+  # Stereoscope EQ
+  Utility for attenuating partials with given azimuth and phase difference in stereo field with easy to use interface.
+  ### Controls:
+  - click+drag to change filter position
+  - scroll to change stereo width, 
+  - ctrl+scroll to change frequency bandwidth
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+// Based on the STFT template created by Geraint Luff
+
+
+slider1:fft_size_index=5<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
+slider2:pha_ang=0<-2,2,0.001>Phase Angle
+slider3:pha_ang_tol=2<0,2,0.001>Phase Angle tolerance
+slider4:pha_gain=0<-1,1,0.001>-Phase Gain
+slider5:mag_ang=0<-0.5,0.5,0.001>Magnitude Angle
+slider6:mag_ang_tol=0.25<0,0.5,0.001>Magnitude Angle tolerance
+slider7:mag_gain=0<-1,1,0.001>-Magnitude Gain
+slider8:overlap_factor=4<4,32,1>-Overlap Factor
+slider9:hpfreq=24000<0,24000,1:sqr=3>HPF [Hz]
+slider10:lpfreq=0<0,24000,1:sqr=3>LPF [Hz]
+
+// slider10:height=1<0,10,0.001>-Height
+slider11:width=1<0,2,0.001>-Width
+slider12:scx=1<0,1,0.001>-Scale X
+slider13:shx=0<-1,0,0.001>-Shift X
+slider14:blur=0.1<0,1,0.00001>-Time Blur
+//slider15:analysis_decay_factor=0.8<0,1,0.00001>Analysis Decay Factor
+slider16:coherence_decay_factor=0<0,1,0.00001>-Coherence Decay Factor
+slider17:mag_decay_factor=0<0,1,0.00001>-Amplitude Decay Factor
+//slider13:magnitude=0<0,1,{Off,On}>Magnitude
+slider18:overlap=16<1,16,1>-Overlap
+
+slider30:unwrap=0<0,1,1{Normal,Unwrapped}>-Mode
+
+slider32:param1=0.5<0,1,0.001>-Param1
+slider33:param2=0.2<0,1,0.001>-Param2
+slider34:param3=5<0,10,0.001>-Param3
+
+//slider64:smoothing_time_const=100<0,10000,1:sqr=3>Smoothing τ [ms]
+
+
+import Tale/complex.jsfx-inc
+
+@init
+//pha_ang_tol=2;
+//mag_ang_tol=0.5;
+mag_ang_tol_bufor = mag_ang_tol;
+
+function s() // smooth_p1 = p1.s();
+  instance(s)
+(
+  s += (this - s)*smoothing_coeff;
+);
+
+gfx_ext_retina = ext_noinit = 1;
+// multip = 1; multip2 = 1; mag_add=0;
+pi = $pi;
+pi2 = 2*pi;
+pidiv2 = $pi/2;
+twodivpi = 2/$pi;
+
+function process_stft_segment(fft_buffer, fft_size) local(fft_bin, rA, iA, rB, iB, norm, rH, iH, mag, pha) (
+  fft_bin = 0; // FFT bin number
+  loop(fft_size/2,
+    fft_bin2 = fft_bin ? (fft_size - fft_bin) : 0;
+    ///^^^/// fft_bin == 0 ? (fft_bin2 = 0):(fft_bin2 = fft_size - fft_bin);
+
+    // Unfold complex spectrum into two real spectra
+    rA =  fft_buffer[2*fft_bin  ] + fft_buffer[2*fft_bin2  ];
+    iA =  fft_buffer[2*fft_bin+1] - fft_buffer[2*fft_bin2+1];
+    rB =  fft_buffer[2*fft_bin+1] + fft_buffer[2*fft_bin2+1];
+    iB = -fft_buffer[2*fft_bin  ] + fft_buffer[2*fft_bin2  ];
+
+    
+    // Transfer Function H = B/A (complex division)
+    norm = sqr(rA) + sqr(iA);
+    rH = (rB * rA + iB * iA) / norm;
+    iH = (iB * rA - rB * iA) / norm;
+    
+    //amp = sqr(rH) + sqr(iH);
+    mag = -atan2(1,sqrt(rH^2 + iH^2))*twodivpi + 0.5;
+    pha = atan2(iH,rH)*twodivpi;
+    
+    /*
+    // Phase Filter
+    pha < pha_ang-pha_ang_tol || pha > pha_ang+pha_ang_tol ? (
+      rA = iA = rB = iB = 0;
+    );
+    //*/
+    
+    
+    //*
+    // Magnitude Filter
+    mag < mag_ang-mag_ang_tol || mag > mag_ang+mag_ang_tol ? (
+      rA = iA = rB = iB = 0;
+    );
+    //*/
+
+
+
+    //*
+    // Phase Filter
+    pha < pha_ang-pha_ang_tol || pha > pha_ang+pha_ang_tol ? (
+      rA = 0;
+      iA = 0;
+      rB = 0;
+      iB = 0;
+    );
+    //*/
+    
+    
+    /*
+    // Magnitude Filter
+    mag < mag_ang-mag_ang_tol || mag > mag_ang+mag_ang_tol ? (
+      rA = 0;
+      iA = 0;
+      rB = 0;
+      iB = 0;
+    );
+    //*/
+    
+    //*
+    // HPF LPF
+    fft_bin > fft_size*hpfreq/srate || fft_bin < fft_size*lpfreq/srate ? (
+      rA = iA = rB = iB = 0;
+    );
+    //*/
+    
+    
+    //*
+    // Re-fold back into complex spectrum
+    fft_buffer[2*fft_bin   ] = ( rA - iB)*0.5;
+    fft_buffer[2*fft_bin+1 ] = ( iA + rB)*0.5;
+    fft_buffer[2*fft_bin2  ] = ( rA + iB)*0.5;
+    fft_buffer[2*fft_bin2+1] = (-iA + rB)*0.5;
+    //*/
+    
+    fft_bin += 1;
+  );
+);
+
+function setup_stft_state(fft_size, first_time) (
+  //////////////////////// Setup block
+  // This is called when playback starts, or when the FFT size is changed
+  0;
+  ////////////////////////
+);
+
+function HSBtoRGB(hue,saturation,value,alpha) 
+ local (r,g,b,h,f,v,p,q,t) 
+( 
+   ( hue > 360) ? ( hue = hue % 360;) 
+   :( hue < 0 ) ? ( hue = hue % 360 ;); 
+   saturation = min ( max(saturation,0),1); 
+   v = floor( 255 * value); 
+   v = min ( max(v,0),255); 
+   (saturation == 0)? 
+   ( 
+   r = v ; g = v; b = v; 
+   ):( 
+   h = floor( hue / 60); 
+   f = hue / 60-h; 
+   p = floor( v * (1-saturation)); 
+   p = min ( max(p,0),255); 
+   q = floor( v * (1-f * saturation)); 
+   q = min ( max(q,0),255); 
+   t = floor( v * (1-(1-f) * saturation)); 
+   t = min ( max(t,0),255); 
+   (h==0)?(r=v;g=t;b=p;) 
+   :(h==1)?(r=q;g=v;b=p;) 
+   :(h==2)?(r=p;g=v;b=t;) 
+   :(h==3)?(r=p;g=q;b=v;) 
+   :(h==4)?(r=t;g=p;b=v;) 
+   :(h==5)?(r=v;g=p;b=q;) 
+   :( r=v;g=t;b=p;); 
+   ); 
+   //this.r = r; 
+   //this.g = g; 
+   //this.b = b; 
+   gfx_r = r/255;
+   gfx_g = g/255;
+   gfx_b = b/255;
+   gfx_a = alpha;
+   //gfx_set(r/255, g/255, b/255, alpha);
+); 
+
+
+MAX_FFT_SIZE = 32768;
+
+freemem = 0;
+freemem = (fft_buffer = freemem) + MAX_FFT_SIZE*2;
+freemem = (window_buffer = freemem) + MAX_FFT_SIZE;
+
+freemem = (fft_bufferA = freemem) + MAX_FFT_SIZE*2;
+freemem = (fft_bufferB = freemem) + MAX_FFT_SIZE*2;
+freemem = (S_AB_buffer = freemem) + MAX_FFT_SIZE*2;
+freemem = (S_AA_buffer = freemem) + MAX_FFT_SIZE;
+freemem = (S_BB_buffer = freemem) + MAX_FFT_SIZE;
+freemem = (mag_buffer = freemem) + MAX_FFT_SIZE;
+freemem = (mag_bufferSum = freemem) + MAX_FFT_SIZE;
+freemem = (crosmag_buffer = freemem) + MAX_FFT_SIZE;
+
+buffer_length = srate;
+buffer_index = 0;
+freemem = (input_buffer = freemem) + buffer_length*2;
+freemem = (output_buffer = freemem) + buffer_length*2;
+freemem = (gfx_input_buffer = freemem) + buffer_length*4;
+
+
+
+function window(r) local(s, s2, gaussian_width, x) (
+  // When squared, the Hann window adds up perfectly for overlap >= 4, so it's suitable for perfect reconstruction
+  (0.5 - 0.5*cos(r*2*$pi))/sqrt(0.375);
+);
+
+fft_size = 0;
+
+
+@slider
+smoothing_coeff = 1-exp(-1/abs(srate*smoothing_time_const*0.001)); 
+
+    //*
+    hp_y_slider = gfx_h - log(hpfreq*800/srate + 1) * hsc;
+    lp_y_slider = gfx_h - log(lpfreq*800/srate + 1) * hsc;
+    bw = (lp_y_slider-hp_y_slider)/gfx_h;
+    
+    // read_freq=((exp((gfx_h-mouse_y)/hsc))-1)/800*srate;
+    //hpfreq = min( ((exp((gfx_h-mouse_y+gfx_bw)/hsc))-1)/800*srate, srate*0.5);
+    //lpfreq = max( ((exp((gfx_h-mouse_y-gfx_bw)/hsc))-1)/800*srate, 0);
+
+
+@block
+
+//overlap_factor = 4; // Default is 6, but 4 gives better result
+overlap_factor = overlap;
+fft_size = 256<<fft_size_index;
+fft_interval = fft_size/overlap_factor;
+fft_scaling_factor = 1/overlap_factor/fft_size;
+
+fft_size != prev_fft_size ? (
+  setup_stft_state(fft_size, prev_fft_size == 0);
+  prev_fft_size = fft_size;
+  // Fill window buffer
+  i = 0;
+  loop(fft_size,
+    r = (i + 0.5)/fft_size;
+    window_buffer[i] = window(r);
+    i += 1;
+  );
+);
+
+pdc_delay = fft_size;
+pdc_bot_ch = 0;
+pdc_top_ch = 2;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@sample
+//p1.s();
+
+
+gfx_input_buffer[gfx_buffer_index*2  ] = spl0;
+gfx_input_buffer[gfx_buffer_index*2+1] = spl1;
+
+gfx_fft_counter += 1;
+gfx_buffer_index = (gfx_buffer_index + 1)%buffer_length;
+
+
+
+input_buffer[buffer_index*2  ] = spl0;
+input_buffer[buffer_index*2+1] = spl1;
+
+fft_counter += 1;
+fft_counter >= fft_interval ? (
+  fft_counter = 0;
+
+  // Copy input to buffer
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    i2 < 0 ? i2 += buffer_length;
+
+    fft_buffer[2*i] = input_buffer[2*i2]*window_buffer[i];
+    fft_buffer[2*i + 1] = input_buffer[2*i2 + 1]*window_buffer[i];
+
+    i += 1;
+  );
+
+  // Process buffer
+  fft(fft_buffer, fft_size);
+  fft_permute(fft_buffer, fft_size);
+
+  process_stft_segment(fft_buffer, fft_size);
+
+  fft_ipermute(fft_buffer, fft_size);
+  ifft(fft_buffer, fft_size);
+
+  // Add to output
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    (i2 < 0) ? i2 += buffer_length;
+
+    output_buffer[2*i2] += fft_buffer[2*i]*fft_scaling_factor*window_buffer[i];
+    output_buffer[2*i2 + 1] += fft_buffer[2*i + 1]*fft_scaling_factor*window_buffer[i];
+
+    i += 1;
+  );
+);
+
+output_index = buffer_index - fft_size;
+output_index < 0 ? output_index += buffer_length;
+spl0 = output_buffer[output_index*2];
+spl1 = output_buffer[output_index*2 + 1];
+output_buffer[output_index*2] = 0; // clear the sample we just read
+output_buffer[output_index*2 + 1] = 0;
+
+buffer_index = (buffer_index + 1)%buffer_length;
+
+
+
+
+
+
+
+
+@gfx
+  gfx_fft_counter >= fft_interval ? (
+    gfx_fft_counter = 0;
+  
+    // Copy input to buffer
+    gfx_bi = gfx_buffer_index - fft_size + 1;
+    gfx_i = 0;
+    loop(fft_size,
+      gfX_i2 = gfx_bi + gfx_i;
+      gfX_i2 < 0 ? gfX_i2 += buffer_length;
+      
+      //*
+      //delay_index = gfx_buffer_index - fft_size + i + 1;
+      fft_bufferA[gfx_i*2] = gfx_input_buffer[2*gfx_i2]*window_buffer[gfx_i];
+      fft_bufferA[gfx_i*2 + 1] = 0;
+      fft_bufferB[gfx_i*2] = gfx_input_buffer[2*gfx_i2 + 1]*window_buffer[gfx_i];
+      fft_bufferB[gfx_i*2 + 1] = 0;
+      //*/
+  
+      gfx_i += 1;
+    );
+  
+    // Process buffer
+    fft(fft_bufferA, fft_size);
+    fft(fft_bufferB, fft_size);
+    fft_permute(fft_bufferA, fft_size);
+    fft_permute(fft_bufferB, fft_size);
+    
+    gfx_i = 0;
+    while (gfx_i < fft_size) (
+      /*
+      rA = fft_bufferA[2*gfx_i];
+      iA = fft_bufferA[2*gfx_i + 1];
+      rB = fft_bufferB[2*gfx_i];
+      iB = fft_bufferB[2*gfx_i + 1];
+      //*/
+      
+      A.cplx_set(fft_bufferA[2*gfx_i], fft_bufferA[2*gfx_i+1]);
+      B.cplx_set(fft_bufferB[2*gfx_i], fft_bufferB[2*gfx_i+1]);
+      A_conj.cplx_conj(A);
+      B_conj.cplx_conj(B);
+    
+      //*
+      S_AA.cplx_mul(A_conj, A);
+      S_BB.cplx_mul(B_conj, B);
+      S_AB.cplx_mul(A_conj, B);
+      //*/
+      
+      /*
+      A_im_avg = A_buffer[2*gfx_i  ] = A_buffer[2*gfx_i  ]*coherence_decay_factor + A.im;
+      A_re_avg = A_buffer[2*gfx_i+1] = A_buffer[2*gfx_i+1]*coherence_decay_factor + A.re;
+      B_im_avg = B_buffer[2*gfx_i  ] = B_buffer[2*gfx_i  ]*coherence_decay_factor + B.im;
+      B_re_avg = B_buffer[2*gfx_i+1] = B_buffer[2*gfx_i+1]*coherence_decay_factor + B.re;
+      //*/
+      
+      
+      // Estymaty odpowiedzi czestotliwosciowej
+      H_0.cplx_div(B, A);        mag_buffer[gfx_i] = -atan(sqrt(H_0.re^2 + H_0.im^2))/pidiv2 + 0.5;
+      //bin_mag = sqrt(H_0.re^2 + H_0.im^2); //bin_mag = 1;
+      
+      //H_1.cplx_div(S_AB, S_AA);  mag_buffer[gfx_i] = -atan(sqrt(H_1.re^2 + H_1.im^2))/pidiv2 + 0.5;
+      //H_2.cplx_div(S_BB, S_BA);  mag_buffer[gfx_i] = -atan(sqrt(H_2.re^2 + H_2.im^2))/pidiv2 + 0.5;
+      //H_a.cplx_div(S_BB, S_AA);  mag_buffer[gfx_i] = -atan(sqrt(H_a.re))/pidiv2 + 0.5;
+      //H_s.cplx_sub(S_BB, S_AA);  mag_buffer[gfx_i] = -atan(sqrt(H_s.re^2 + H_s.im^2))/pidiv2 + 0.5;
+      
+      
+      //* Coherence
+      S_AB_im_avg = S_AB_buffer[2*gfx_i  ] = S_AB_buffer[2*gfx_i  ]*coherence_decay_factor + S_AB.im;
+      S_AB_re_avg = S_AB_buffer[2*gfx_i+1] = S_AB_buffer[2*gfx_i+1]*coherence_decay_factor + S_AB.re;
+      S_AA_re_avg = S_AA_buffer[2*gfx_i  ] = S_AA_buffer[2*gfx_i  ]*coherence_decay_factor + S_AA.re;
+      S_BB_re_avg = S_BB_buffer[2*gfx_i  ] = S_BB_buffer[2*gfx_i  ]*coherence_decay_factor + S_BB.re;
+      
+      S_AB_avg_abs_sqr = (S_AB_re_avg^2 + S_AB_im_avg^2);
+      
+      fft_bufferA[2*gfx_i  ] = coher = S_AB_avg_abs_sqr / (S_AA_re_avg*S_BB_re_avg);
+      fft_bufferA[2*gfx_i+1] = phase = -atan2(S_AB_im_avg, S_AB_re_avg);
+      
+      /*
+      pha_gain = -1;
+      //phase = 1;
+      pha_mul = 1+( pha_gain*(-cos((phase)) )-abs(pha_gain) )/2;
+      fft_bufferA[2*gfx_i+1] = pha_mul/2;
+      //*/
+      
+      /*
+      pha_gain = 4;
+      //phase = 1;
+      //phase = pha -atan2(H_0.im,H_0.re);
+      //pha_mul = 1+( pha_gain*(-cos((phase)) )-abs(pha_gain) )/2;
+      //pha_mul = min(1, max(0, param2*abs(-phase)/pi - param2 + 1))/2;
+      pha_mul =  min(1, max( 0, 1+( pha_gain*( cos((phase)) )-abs(pha_gain) )))/2;
+      fft_bufferA[2*gfx_i+1] = pha_mul;
+      //*/
+      
+      /* vocalrediso.ny
+      phase_width = $pi/2;
+      normA = sqrt(sqr(rA) + sqr(iA));
+      normB = sqrt(sqr(rB) + sqr(iB));
+      phase = acos((rA * rB + iA * iB) / (normA * normB)) / phase_width;
+      weight =(1 - min(1, max(0, phase)));
+      weight_norm =  weight * (1 - (sqr(normA - normB)/sqr(normA + normB))) / 2;
+      fft_bufferA[2*gfx_i+1] = weight_norm;
+      //*/
+      
+      
+      
+      /* Coherence
+      S_AB_im_avg = S_AB_buffer[2*gfx_i  ] = S_AB_buffer[2*gfx_i  ]*coherence_decay_factor + (S_AB.im)*bin_mag;
+      S_AB_re_avg = S_AB_buffer[2*gfx_i+1] = S_AB_buffer[2*gfx_i+1]*coherence_decay_factor + (S_AB.re)*bin_mag;
+      S_AA_re_avg = S_AA_buffer[2*gfx_i  ] = S_AA_buffer[2*gfx_i  ]*coherence_decay_factor + (S_AA.re)*bin_mag;
+      S_BB_re_avg = S_BB_buffer[2*gfx_i  ] = S_BB_buffer[2*gfx_i  ]*coherence_decay_factor + (S_BB.re)*bin_mag;
+      
+      S_AB_avg_abs_sqr = (S_AB_re_avg^2 + S_AB_im_avg^2);
+      
+      fft_bufferA[2*gfx_i  ] = coher = S_AB_avg_abs_sqr / (S_AA_re_avg*S_BB_re_avg);
+      fft_bufferA[2*gfx_i+1] = phase = -atan2(S_AB_im_avg,S_AB_re_avg);
+      //*/
+      
+      
+      //* ///<<<>>>///
+      unwrap ? (
+      
+        phase > pi/2 || phase < -pi/2 ? (mag_add = 1; multip =-1):(mag_add = 0; multip = 1);
+        
+        multip2 = 2;
+        /*
+        magni = mag_bufferSum[gfx_i];
+        magni = -(multip*magni+mag_add);
+        magni < 0 ? magni += 1;
+        //*/
+        
+        //mag_bufferSum[gfx_i] = magni;
+        //debugmax = min(debugmax,mag);
+  
+      ):(multip = 1; multip2 = 1; mag_add=0);
+      //*/
+      
+      
+      
+      mag_buffer[gfx_i] = (multip * mag_buffer[gfx_i] + mag_add)/multip2; // unwrapping multi
+      mag_buffer[gfx_i] > 0.5 ? mag_buffer[gfx_i] -= 1;
+      //mag_buffer[gfx_i] = atan(H_a.re);
+      
+      mag_bufferSum[gfx_i] = mag_buffer[gfx_i] + mag_bufferSum[gfx_i]*mag_decay_factor;
+      
+      crosmag_buffer[gfx_i] = sqrt(S_AA.re^2 + S_BB.re^2);
+      
+      gfx_i += 1;
+    );
+  
+  //  pass = 1;
+  );
+  
+  
+  gfx_r=gfx_g=gfx_b=0; gfx_a=(1-blur); // Time Blur
+  gfx_x=gfx_y=0;
+  gfx_rectto(gfx_w,gfx_h);
+  
+  gfx_clear=-1;
+  /* /// Clear buffer ///
+  mouse_cap || old_fft_size != fft_size ? (
+    gfx_clear=0;
+    //memset(delay_bufferSum, 0, fft_size);
+    memset(S_AB_buffer, 0, fft_size*2);
+    memset(S_AA_buffer, 0, fft_size);
+    memset(S_BB_buffer, 0, fft_size);
+    memset(mag_bufferSum, 0, fft_size);
+    old_fft_size = fft_size;
+  );
+  //*/
+  //pass ? (gfx_flush):(gfx_wait);
+  
+  
+  //*
+  //size = min(gfx_w,gfx_h)|0;
+  //gfx_setpixel(1,1,1);
+  gfx_set(1,1,1,1);
+  display_size = floor(fft_size*scx);
+  fft_size2 = fft_size*2;
+  //scalex = width*gfx_w/fft_size;
+  scalex = width*gfx_h/display_size;
+  scaley = height*gfx_w/fft_size;
+    ascale=gfx_w/$pi*0.25;
+    xscale=800/(fft_size-4);
+    sc=(gfx_w)*20/(-144 * log(10));
+    wsc=gfx_h/log(1+400);
+    circle_rad = 1.5 * gfx_ext_retina; //circle_rad = gfx_w/600;
+    debug=(10^(-500/20*2));
+    //z = mult*radius*gfx_h/2*(1/fft_size);
+    //old_x1=0;
+    old_x1=floor(shx*gfx_h);
+  //*/
+  
+    gfx_i = 0;
+    //loop(display_size/2,
+    loop(fft_size/2,
+  
+      mag = gfx_w/2-mag_bufferSum[gfx_i]*(1-mag_decay_factor)*gfx_w;
+      r_mag = fft_bufferA[2*gfx_i+1]; // phase
+      r_mag2 = r_mag*height*gfx_w/pi2;
+      
+      //x1 = gfx_h-gfx_i*scalex*2;
+      //x1 = 2*gfx_i*scalex + floor(shx*gfx_h);
+      //x1 < 0 ? (x1+=gfx_w);
+      //x1 = width*10*log10( gfx_i   /fft_size+1)*gfx_w;
+      x1 = gfx_h-width*log(1.0+gfx_i*xscale)*wsc;
+      
+      gfx_set(1,1,1,0.5);
+      
+      //crosmag = max(0,min(1,param1*log10(crosmag_buffer[gfx_i])*phase_alpha*(1-blur)+param2));
+      //crosmag = max(0,min(1,param1*log10(crosmag_buffer[gfx_i])*(1-blur)+param2));
+      crosmag = max(0,min(1,param1*log10(crosmag_buffer[gfx_i])+param2));
+      //HSBtoRGB(360*(r_mag + pi2)/pi/2,1,1,phase_alpha);
+      phase_hue = (r_mag + pi2)/pi*0.5;
+      phase_gate = abs(pha_ang*0.5+2*phase_hue-2);
+      phase_gate < pha_ang_tol ? HSBtoRGB(360*phase_hue,1,1,crosmag^param3) : gfx_set(1,1,1,0.02); //<<<<<<<
+      //HSBtoRGB(360*(r_mag + pi2)/pi/2,1,1,1);
+      gfx_circle(mag,x1,circle_rad,1);
+      //gfx_x=mag; gfx_y=x1; gfx_setpixel(gfx_r,gfx_g,gfx_b);
+      
+      // Phase analyser:
+      // gfx_rect(gfx_w-gfx_w*(phase_hue-0.5),gfx_h-circle_rad*4,1,circle_rad*4);
+
+      
+      
+      gfx_a *= 0.3;
+
+
+      //* phase
+      gfx_a = phase_alpha;
+      //gfx_y=gfx_h-x1; gfx_x=gfx_w-r_mag2-gfx_w/2;
+      gfx_y=x1; gfx_x=gfx_w-r_mag2-gfx_w/2;
+      col=1;
+      gfx_set(1,1,1,gfx_a);
+      //gfx_a = phase_alpha*0.3;
+      //gfx_circle(gfx_x,gfx_y,1,1);
+      gfx_setpixel(col,col,col);
+      //*/
+      
+      /*
+      old_x1 = x1;
+      old_l_mag = l_mag;
+      old_r_mag = r_mag;
+      old_r_mag2 = r_mag2;
+      old_mag = mag;
+      //*/
+      
+      gfx_i += 1;
+      //*/
+    );
+    
+    /*
+    coherence_avg = 0;
+    i = 0;
+    loop(fft_size,
+      coherence_avg += fft_bufferA[2*i];
+      i+=1;
+    );
+    coherence_avg *= 1/fft_size;
+  
+    gfx_set(1,1,1,1);
+    spacing = 10;
+    //*
+    //gfx_h > 300 ? (
+    gfx_x = 10; gfx_y = gfx_h - 15;
+    gfx_printf(" AVG Coherence: %1.2f", coherence_avg); gfx_x=10;gfx_y+=spacing;
+    //*/
+    
+    gfx_set(1,1,1,0.2);
+    //gfx_set(0.2,0.2,0.2,0.5);
+    //gfx_line(0, gfx_h/2, gfx_w, gfx_h/2);
+    gfx_line(gfx_w/2, 0, gfx_w/2, gfx_h);
+    unwrap ? (
+      gfx_line(gfx_w/4, 0, gfx_w/4, gfx_h);
+      gfx_line(3*gfx_w/4, 0, 3*gfx_w/4, gfx_h);
+    );
+    
+    hsc=gfx_h/log(1+400);
+    // cursor cross + readout
+    mouse_x>0 && mouse_x<gfx_w && mouse_y>0 && mouse_y<gfx_h? (
+      gfx_set(1,1,1,0.1);//gfx_line(0,mouse_y,gfx_w,mouse_y,1);
+      //gfx_line(mouse_x,0,mouse_x,gfx_h,1);
+      //gfx_line(0,mouse_y,gfx_w,mouse_y,1);
+      read_freq=((exp((gfx_h-mouse_y)/hsc))-1)/800*srate;
+      gfx_set(1,1,1,1);
+      //gfx_x=gfx_w-100;gfx_y = 5;
+      gfx_x=gfx_y=5;
+      gfx_printf("Angle: %d °", 360*(mouse_x-gfx_w/2)/gfx_w);
+      gfx_x=5; gfx_y+=13*scaling;
+      //gfx_printf("Freq: %.2fHz",read_freq);
+      gfx_printf("Freq: %.0f Hz",read_freq);
+      //gfx_x=gfx_w-160;gfx_y+=spacing;
+      //gfx_printf("dB value: %4.1f", 20.0*log10(abs((2*mouse_x/gfx_w)-1)^(1/scalex)));
+      //gfx_x=gfx_w-160;gfx_y+=spacing;
+      //gfx_printf("   value: %f", sign((2*mouse_x/gfx_w)-1)*(abs((2*mouse_x/gfx_w)-1))^(1/scalex));
+      //gfx_x=gfx_w-160;gfx_y+=spacing;
+      //gfx_printf("  height: %f", ((gfx_h-mouse_y)/gfx_h)^(1/scaley));
+      
+    );
+    
+    
+    
+    
+    /*
+    hsc=gfx_h/log(1+400);
+    gfx_x=gfx_y=0;
+    gfx_set(1,1,1,0.2); 
+    // draw vert grid
+    f=20;
+    gfx_y+=4;
+    ly=gfx_y;
+    while(
+      ty = log(1.0+(f/srate*2.0)*400)*hsc;
+      dotext = ty > gfx_x && f!=40 && f!=4000 && f != 15000 &&
+         (f<400 || f >= 1000 || f == 500) && (f<6000 || f>=10000);
+      //ty > ly ? ( ly=ty+4; gfx_line(0,gfx_h-ty,gfx_w - (dotext ? 0 : gfx_texth+2),gfx_h-ty,0); );
+      ty > ly ? ( ly=ty+4; gfx_line(0,gfx_h-ty,gfx_w,gfx_h-ty,0); );
+      dotext ? (
+        gfx_y=ty +3;
+        gfx_x = gfx_w-gfx_texth;
+        //f>=1000 ? gfx_printf("%dkHz",f/1000) : gfx_printf("%dHz",f);  // changing f*.001 to f/1000 because of strange issues when inserting by TrackFX_GetByName() (freq grid values are off; no, effect width is not the cause; OS: Ubuntu 14.04)
+      );
+      f += (f<100?10:f<1000?100:f<10000?1000:5000);
+      f < srate*0.5;
+    );
+    //*/
+    
+    
+    //gfx_setcursor(resource_id[,"custom cursor name"]);
+    //gfx_setcursor(32650, "IDC_APPSTARTING");
+    //gfx_setcursor(32512, "IDC_ARROW");
+    //gfx_setcursor(32515, "IDC_CROSS");
+    //gfx_setcursor(32649, "IDC_HAND");
+    //gfx_setcursor(32651, "IDC_HELP");
+    //gfx_setcursor(32513, "IDC_IBEAM");
+    //gfx_setcursor(32641, "IDC_ICON");
+    //gfx_setcursor(32648, "IDC_NO");
+    //gfx_setcursor(32640, "IDC_SIZE");
+    //gfx_setcursor(32646, "IDC_SIZEALL");
+    //gfx_setcursor(32643, "IDC_SIZENESW");
+    //gfx_setcursor(32645, "IDC_SIZENS");
+    //gfx_setcursor(32642, "IDC_SIZENWSE");
+    //gfx_setcursor(32644, "IDC_SIZEWE");
+    //gfx_setcursor(32516, "IDC_UPARROW");
+    //gfx_setcursor(32514, "IDC_WAIT");
+    
+    //scaling = gfx_ext_retina == 2 ? 1 : 0;
+    //scaling = min(scaling, (max(850,gfx_w) - 1343)/1343);
+    scaling = gfx_ext_retina;
+    dbg = gfx_getfont();
+    
+    //gfx_setfont(1,"Arial", gfx_h / 10,'b');
+    //gfx_setfont(1,"Arial", gfx_h*0.05, 'b');
+    //gfx_setfont(0);
+    
+    FONT_GRID = 4;
+    gfx_setfont(FONT_GRID, "Arial", 16 * (scaling));
+    
+    BAND_FONT = 5;
+    gfx_setfont(BAND_FONT, "Arial", 16 * (scaling));
+    
+    KNOB_FONT = 6;
+    gfx_setfont(KNOB_FONT, "Arial", 14 * (scaling));
+    
+    KNOB_FONT2 = 7;
+    test=(13 * (1+scaling));
+    gfx_setfont(KNOB_FONT2, "Arial", 13 * (scaling));
+    
+    HINT_FONT = 8;
+    gfx_setfont(HINT_FONT, "Arial", 13 * (scaling));
+    
+    TOGGLE_FONT = 9;
+    gfx_setfont(TOGGLE_FONT, "Arial", 16 * (scaling));
+    //*/
+    
+    gfx_setfont(BAND_FONT);
+
+
+    
+    //*
+    gfx_set(1,1,1,0.2);
+    //gfx_rect(gfx_w/2,gfx_h/2,200,200,1);
+    
+    // freq2height
+    hp_y = gfx_h - log(hpfreq*800/srate + 1) * hsc;
+    lp_y = gfx_h - log(lpfreq*800/srate + 1) * hsc;
+    
+    gfx_x = (0.5-mag_ang_tol + mag_ang)*gfx_w;
+    gfx_y = lp_y;
+    gfx_rectto((mag_ang+1 - (0.5-mag_ang_tol))*gfx_w, hp_y);
+    
+    
+    
+    
+    gfx_setcursor(32512, "IDC_ARROW");
+    mouse_cap ? (
+
+      mag_ang = (mouse_x-gfx_w/2)/gfx_w;
+      
+      //bw = 1;
+      gfx_bw = gfx_h*bw*0.5;
+      hpfreq = min( ((exp((gfx_h-mouse_y+gfx_bw)/hsc))-1)/800*srate, srate*0.5);
+      lpfreq = max( ((exp((gfx_h-mouse_y-gfx_bw)/hsc))-1)/800*srate, 0);
+      
+    );
+    
+    
+    wheel_mult = 0.01;
+    
+    
+    gfx_getchar();
+    //*
+    mouse_cap&4 ? ( // ctrl is pressed
+      wheel_mult = 0.0004;
+      bw + mouse_wheel*wheel_mult <= 0 || bw + mouse_wheel*wheel_mult > 1 ? mouse_wheel = 0;
+      bw += mouse_wheel*wheel_mult;
+      gfx_bw = gfx_h*bw*0.5;
+      mouse_wheel = 0;
+      hpfreq = min( ((exp((gfx_h-mouse_y+gfx_bw)/hsc))-1)/800*srate, srate*0.5);
+      lpfreq = max( ((exp((gfx_h-mouse_y-gfx_bw)/hsc))-1)/800*srate, 0);
+    ):(
+      wheel_mult = 0.0002;
+      mag_ang_tol + mouse_wheel*wheel_mult <= 0 || mag_ang_tol+mouse_wheel*wheel_mult > 0.5 ? mouse_wheel = 0;
+      mag_ang_tol += mouse_wheel*wheel_mult;
+      mouse_wheel = 0;
+    );
+    
+    
+    
+    /*
+    1: left mouse button
+    2: right mouse button
+    4: Control key (Windows), Command key (OSX)
+    8: Shift key
+    16: Alt key (Windows), Option key (OSX)
+    32: Windows key (Windows), Control key (OSX) -- REAPER 4.60+
+    64: middle mouse button -- REAPER 4.60+
+    
+    
+    /*
+    hue = 180;
+    s = 1;
+    v = 1;
+    h = 4;
+    rect = 0;
+    inv_gfx_w = 1/gfx_w;
+    loop(gfx_w, 
+      HSBtoRGB((360*rect*inv_gfx_w)+hue,s,v,1);
+      gfx_rect(rect,0,1,h);
+      rect += 1;
+    );
+
+//gfx_setcursor(32515, "IDC_CROSS");
+//gfx_setcursor(32645, "IDC_SIZENS");
+//gfx_setcursor(32644, "IDC_SIZEWE");
+
+
+
+
+
+

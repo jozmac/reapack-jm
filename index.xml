@@ -82,7 +82,6 @@
         <source file="JM_ana_Vectorscope_MCS.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Vectorscope_MCS.jsfx</source>
       </version>
     </reapack>
-    </reapack>
     <reapack name="JM_fx_Delay_Thiran.jsfx" type="effect">
       <version name="0.0.0">
         <source file="JM_fx_Delay_Thiran.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Delay_Thiran.jsfx</source>
@@ -133,10 +132,16 @@
         <source file="JM_fx_STFT_Lifter.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Lifter.jsfx</source>
       </version>
     </reapack>
+    <reapack name="JM_fx_STFT_Stereoscope_EQ.jsfx" type="effect">
+      <version name="0.0.0">
+        <source file="JM_fx_STFT_Stereoscope_EQ.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Stereoscope_EQ.jsfx</source>
+      </version>
+    </reapack>
     <reapack name="JM_fx_STFT_Transient_Split.jsfx" type="effect">
       <version name="0.0.0">
         <source file="JM_fx_STFT_Transient_Split.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Transient_Split.jsfx</source>
       </version>
+    </reapack>
     <reapack name="JM_gen_DPOAE_Canceller.jsfx" type="effect">
       <version name="0.0.0">
         <source file="JM_gen_DPOAE_Canceller.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_DPOAE_Canceller.jsfx</source>

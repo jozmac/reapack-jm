@@ -14,12 +14,12 @@
     </reapack>
     <reapack name="JM_ana_Histogram_Polar.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_Histogram_Polar.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Histogram_Polar.jsfx</source>
+        <source file="JM_ana_Histogram_Polar.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Histogram_Polar.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_STFA.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_STFA.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFA.jsfx</source>
+        <source file="JM_ana_STFA.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFA.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_STFT_Acorr.jsfx" type="effect">
@@ -44,157 +44,157 @@
     </reapack>
     <reapack name="JM_ana_STFT_PF_Wheel.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_STFT_PF_Wheel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_PF_Wheel.jsfx</source>
+        <source file="JM_ana_STFT_PF_Wheel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_PF_Wheel.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_STFT_PA_Wheel.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_STFT_PA_Wheel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_PA_Wheel.jsfx</source>
+        <source file="JM_ana_STFT_PA_Wheel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_PA_Wheel.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_STFT_Stereoscope.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_STFT_Stereoscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_Stereoscope.jsfx</source>
+        <source file="JM_ana_STFT_Stereoscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Stereoscope.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_STFT_Transfer_Function.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_STFT_Transfer_Function.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_Transfer_Function.jsfx</source>
+        <source file="JM_ana_STFT_Transfer_Function.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Transfer_Function.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_STFT_Stereoscope.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_STFT_Stereoscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_STFT_Stereoscope.jsfx</source>
+        <source file="JM_ana_STFT_Stereoscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Stereoscope.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_Tuner_Strobe.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_Tuner_Strobe.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Tuner_Strobe.jsfx</source>
+        <source file="JM_ana_Tuner_Strobe.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Tuner_Strobe.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_Vectorscope.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_Vectorscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Vectorscope.jsfx</source>
+        <source file="JM_ana_Vectorscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Vectorscope.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_ana_Vectorscope_MCS.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_ana_Vectorscope_MCS.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_ana_Vectorscope_MCS.jsfx</source>
+        <source file="JM_ana_Vectorscope_MCS.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Vectorscope_MCS.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_Delay_Thiran.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_Delay_Thiran.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Delay_Thiran.jsfx</source>
+        <source file="JM_fx_Delay_Thiran.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_Delay_Thiran.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_Filter_Median.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_Filter_Median.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Filter_Median.jsfx</source>
+        <source file="JM_fx_Filter_Median.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_Filter_Median.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_Filter_Vowel.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_Filter_Vowel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Filter_Vowel.jsfx</source>
+        <source file="JM_fx_Filter_Vowel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_Filter_Vowel.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_M-Flanger.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_M-Flanger.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_M-Flanger.jsfx</source>
+        <source file="JM_fx_M-Flanger.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_M-Flanger.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_M-Phaser.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_M-Phaser.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_M-Phaser.jsfx</source>
+        <source file="JM_fx_M-Phaser.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_M-Phaser.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_Saturator_Chebyshev.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_Saturator_Chebyshev.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_Saturator_Chebyshev.jsfx</source>
+        <source file="JM_fx_Saturator_Chebyshev.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_Saturator_Chebyshev.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_STFT_Coherent_Extractor.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_STFT_Coherent_Extractor.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Coherent_Extractor.jsfx</source>
+        <source file="JM_fx_STFT_Coherent_Extractor.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_STFT_Coherent_Extractor.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_STFT_Extractor.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_STFT_Extractor.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Extractor.jsfx</source>
+        <source file="JM_fx_STFT_Extractor.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_STFT_Extractor.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_STFT_Frequency_Shifter.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_STFT_Frequency_Shifter.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Frequency_Shifter.jsfx</source>
+        <source file="JM_fx_STFT_Frequency_Shifter.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_STFT_Frequency_Shifter.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_STFT_Lifter.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_STFT_Lifter.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Lifter.jsfx</source>
+        <source file="JM_fx_STFT_Lifter.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_STFT_Lifter.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_STFT_Stereoscope_EQ.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_STFT_Stereoscope_EQ.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Stereoscope_EQ.jsfx</source>
+        <source file="JM_fx_STFT_Stereoscope_EQ.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_STFT_Stereoscope_EQ.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_fx_STFT_Transient_Split.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_fx_STFT_Transient_Split.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_fx_STFT_Transient_Split.jsfx</source>
+        <source file="JM_fx_STFT_Transient_Split.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_fx_STFT_Transient_Split.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_gen_DPOAE_Canceller.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_gen_DPOAE_Canceller.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_DPOAE_Canceller.jsfx</source>
+        <source file="JM_gen_DPOAE_Canceller.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_gen_DPOAE_Canceller.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_gen_Noise_Logistic.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_gen_Noise_Logistic.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_Noise_Logistic.jsfx</source>
+        <source file="JM_gen_Noise_Logistic.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_gen_Noise_Logistic.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_gen_Stern-Brocot_Stereochord.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_gen_Stern-Brocot_Stereochord.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_Stern-Brocot_Stereochord.jsfx</source>
+        <source file="JM_gen_Stern-Brocot_Stereochord.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_gen_Stern-Brocot_Stereochord.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_gen_Tetrad_Spiral_Farey.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_gen_Tetrad_Spiral_Farey.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_gen_Tetrad_Spiral_Farey.jsfx</source>
+        <source file="JM_gen_Tetrad_Spiral_Farey.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_gen_Tetrad_Spiral_Farey.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_temp_STFT_Cplx.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_temp_STFT_Cplx.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_temp_STFT_Cplx.jsfx</source>
+        <source file="JM_temp_STFT_Cplx.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_temp_STFT_Cplx.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_temp_STFT_Cplx_Kaiser.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_temp_STFT_Cplx_Kaiser.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_temp_STFT_Cplx_Kaiser.jsfx</source>
+        <source file="JM_temp_STFT_Cplx_Kaiser.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_temp_STFT_Cplx_Kaiser.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_temp_STFT_dual-channel.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_temp_STFT_dual-channel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_temp_STFT_dual-channel.jsfx</source>
+        <source file="JM_temp_STFT_dual-channel.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_temp_STFT_dual-channel.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_temp_STFT-Based_Complex.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_temp_STFT-Based_Complex.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_temp_STFT-Based_Complex.jsfx</source>
+        <source file="JM_temp_STFT-Based_Complex.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_temp_STFT-Based_Complex.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_util_Crossfeed.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_util_Crossfeed.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_util_Crossfeed.jsfx</source>
+        <source file="JM_util_Crossfeed.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_util_Crossfeed.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_util_Proximity.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_util_Proximity.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_util_Proximity.jsfx</source>
+        <source file="JM_util_Proximity.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_util_Proximity.jsfx</source>
       </version>
     </reapack>
     <reapack name="JM_util_Stereo_Tool.jsfx" type="effect">
       <version name="0.0.0">
-        <source file="JM_util_Stereo_Tool.jsfx">https://github.com/jozmac/reapack-jm/raw/master/JM_util_Stereo_Tool.jsfx</source>
+        <source file="JM_util_Stereo_Tool.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_util_Stereo_Tool.jsfx</source>
       </version>
     </reapack>
   

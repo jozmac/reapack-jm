@@ -15,7 +15,7 @@ Copyright (C) 2023 Jozef Mackowiak
 
 
 slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
-slider2:mode=0<0,1,1{Long-Pass,Short-Pass,Moment-Reject>Mode
+slider2:mode=2<0,2,1{Long-Pass,Short-Pass,Moment-Reject>Mode
 slider4:freq=1<0,1000,0.01>Quefrency [ms]
 slider5:bandw=1<0,100,0.001>Bandwidth [ms]
 slider25:attenuation=0<0,1,0.001>Attenuation
@@ -395,6 +395,10 @@ import _JM/jm.jsfx-inc
   output_buffer[output_index*2+1] = 0;
   
   buffer_index = (buffer_index + 1)%buffer_length;
+
+
+  spl0 = max(-1, min(1, spl0));
+  spl1 = max(-1, min(1, spl1));
   
   
 @gfx

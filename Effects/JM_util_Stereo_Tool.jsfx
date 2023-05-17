@@ -21,8 +21,7 @@ slider4:lr_invert=0<0,1,1{Off,On}>LR Invert
 //slider3:0<-1000,1000,1>Freq shift [Hz]
 slider12:5<0,10,0.01>Smooth Coeff (0 = Off)
 
-// import _JM/jm.jsfx-inc
-import functions.jsfx-inc
+imoport JM.jsfx-inc
 
 /// TODO: Pan, Multiplyer, Volume
 

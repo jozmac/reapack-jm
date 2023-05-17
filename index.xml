@@ -2,6 +2,11 @@
 <index version="1" name="Jozef Mackowiak">
   <category name="jsfx">
 
+    <reapack name="JM.jsfx-inc" type="effect">
+      <version name="0.0.0">
+        <source file="JM.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM.jsfx-inc</source>
+      </version>
+    </reapack>
     <reapack name="JM_ana_Correlation.jsfx" type="effect">
       <version name="0.0.0">
         <source file="JM_ana_Correlation.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Correlation.jsfx</source>

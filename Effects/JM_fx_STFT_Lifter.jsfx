@@ -26,8 +26,7 @@ slider28:overlap=4<0,32,1>Overlap
 
 import Tale/complex.jsfx-inc
 //import Tale/window.jsfx-inc
-// import _JM/jm.jsfx-inc
-import functions.jsfx-inc
+import JM.jsfx-inc
 
 
 @init

@@ -16,7 +16,8 @@ Copyright (C) 2023 Jozef Mackowiak
 import Tale/window.jsfx-inc
 import Tale/complex.jsfx-inc
 import _JM/STFT.jsfx-inc
-import _JM/jm.jsfx-inc
+// import _JM/jm.jsfx-inc
+import functions.jsfx-inc
 
 slider1:window_ms=10<1,50>window length [ms]
 slider3:max_gain_db=40<0,100,1>max band gain [dB]

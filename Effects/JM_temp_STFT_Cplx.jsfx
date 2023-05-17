@@ -25,7 +25,8 @@ out_pin:output B
 import Tale/window.jsfx-inc
 import Tale/complex.jsfx-inc
 import _JM/STFT.jsfx-inc
-import _JM/jm.jsfx-inc
+// import _JM/jm.jsfx-inc
+import functions.jsfx-inc
 
 slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
 slider62:4<1,30,1{Rectangle,Triangle,Parzen,Welch,Hann,Hamming,Blackman,Nuttall,Blackman-Nuttall,Blackman-Harris,SRS Flat Top,Rife-Vincent I,Rife-Vincent II,Rife-Vincent III,Cosine,Bohman,Gaussian,Confined Gaussian,Tukey,Planck-taper,Kaiser 2.0,Kaiser 3.0,Dolph-Chebyshev,Poisson 1.0,Poisson 6.9,Bartlett-Hann,Planck-Bessel,Hann-Poisson,Lanczos,Cauchy,Connes}>Window

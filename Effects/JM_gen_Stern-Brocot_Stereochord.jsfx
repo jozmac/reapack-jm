@@ -32,7 +32,7 @@ slider11:0.5<0.000001,0.999999,0.00001>Division 2
 
 
 import Tale/poly_blep.jsfx-inc
-import _JM/jm.jsfx-inc
+// import _JM/jm.jsfx-inc
 
 options:want_all_kb
 

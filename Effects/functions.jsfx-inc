@@ -1,0 +1,1960 @@
+desc:JM Library
+// Józef Maćkowiak 05/2022
+
+/*
+dec2frac (d,error)
+RMS(input, ms)
+onepole(val,targ,coeff)
+get_coeff(ms)
+tanh(x)
+log2(x)
+moveto (x,y)
+moveby (x,y)
+xcross(x,y,size_x,size_y)
+tcross(x,y,size_x,size_y)
+drawCentsSymbol()
+setcolor (p)
+
+round (x)
+roundDown (x)
+roundOut (x)
+mod (num, base)
+mod2 (i, j)
+GCD (a, b)
+findX (radius, angle)
+findY (radius, angle)
+findSpot (c)
+int2str(intIn)
+freq2note(f)
+note2notename(n,upper)
+from_frequency(hz)
+round(aValue)
+db2amp(aGain)
+amp2db(aGain)
+clipValue(aValue, aMin, aMax)
+
+smooth_parameter(target)
+initialize_smoother(cutoff)
+interpolator_init(slider_idx)
+interpolator_block()
+instance(delta, next_changepoint_t, next_val, idx)
+interpolate()
+
+HSBtoRGB(hue,saturation,value) 
+
+C4 = (440*2^(-9/12));
+
+// __________________________________________________________________
+TODO
+- n points polygon
+- 
+
+
+// __________________________________________________________________
+*/
+
+@init
+
+function dec2frac (d,error) local (df) instance(top,bot)(
+  df = top = bot = 1;
+  while(
+    //df < d ? (top+=1):(bot+=1; top=floor(d*bot));
+    df < d ? (top+=1):(bot+=1);
+    df = top/bot;
+  abs(df-d)>error);
+  
+  d == 1?(top=bot=1); /// <-- To Fix ///
+  //top/bot;
+);
+
+function mod1(f,mod) ( f-floor(f/mod)*mod );
+
+function mod (num, base) (      // -3 modulo 10 is 7, but -3 % 10 = 3
+  num - base * floor (num / base);    // 13.3 modulo 10 = 3.3, but 13.3 % 10 = 3
+);            // x mod -y = -(-x mod y)
+
+function mod2 (i, j) (        // returns the smaller of i or its inverse
+  i = mod (i, j);        // mod2 (7, 10) = 3 not 7
+  i > j / 2 ? i = j - i;
+  i;
+);
+
+function GCD (a, b) local (c) (      // returns the greatest common divisor of a & b
+  while (a > 0) (
+    a < b ? (c = a; a = b; b = c);    // if a is smaller, swap a and b
+    a %= b;
+  );
+  max (a, b);
+);
+
+function RMS(input, ms)
+  instance(out, rms_s )
+(
+  coeff = exp(-1/(srate*ms*0.001)); // usually 0.999..
+  rms_s = (rms_s * coeff) + ((1 - coeff) * input * input);
+  out = sqrt(rms_s);
+  out;
+);
+
+  function tau2alpha(tau) // time constant [s] to smoothing factor
+  (
+    1-exp(-1/(tau*srate));
+  );
+  
+  function alpha2tau(alpha) // smoothing factor ot time constant [s]
+  (
+    -1/(srate*log(1-alpha));
+  );
+  
+  function mtau2alpha(tau) // time constant [ms] to smoothing factor
+  (
+    1-exp(-1/(tau*0.001*srate));
+  );
+  
+  function alpha2mtau(alpha) // smoothing factor ot time constant [ms]
+  (
+    -1000/(srate*log(1-alpha));
+  );
+  
+  function log2(x)
+  (
+    log(x)/log(2);
+  );
+  
+
+//// thisdt = onepole(thisdt,newdt,smooth_coeff); ////
+function onepole(val,targ,coeff) ( coeff*val + (1-coeff)*targ; );
+function get_coeff(ms) ( exp(-1/(srate*ms*0.001)); );
+
+
+function toggler(x) (
+  x == 0 ? (x=1):(x=0); );
+
+function xy(x y)
+  ( gfx_x = x; gfx_y = y; );
+    
+function rgb(r g b)
+  ( gfx_r = r; gfx_g = g; gfx_b = b; );
+  
+
+
+// Tale
+function scale(x) ( 1/1200 + 1199/1200 * (exp(6*x) - 1) * /* 1/(exp(6) - 1) */ 0.0024849116568445855 );
+function gain(x) ( x <= -120 ? 0 : exp(/* log(10)/20 */ 0.11512925464970228 * x) );
+
+
+function pan(gain, pos)
+  // global(gain0, gain1)
+(
+  // REAPER default 0 dB pan law (thanks Justin!)
+  // http://www.askjf.com/index.php?q=2342s
+
+  pos *= 0.25*$pi;
+  gain *= sqrt(2) * (1 - sqrt(0.5) * (1 / cos(pos) - 1));
+
+  pos += 0.25*$pi;
+  gain0 = cos(pos) * gain;
+  gain1 = sin(pos) * gain;
+);
+
+
+// https://www.mathworks.com/help/audio/measurements-and-spatial-audio.html
+
+function hz2mel(freq) // O'Shaughnessy, Douglas. (1987)
+(
+  1127*log(1+freq/700);
+);
+
+function mel2hz(mel) // O'Shaughnessy, Douglas. (1987)
+(
+  700*(exp(mel/1127)-1);
+);
+
+function hz2erb(freq) // Glasberg, Brian C. J. Moore: Hearing Research, 47 (1990), 103-138
+(
+  // A = (1000*log(10))/(24.7*4.37);
+  A = 248.53873235268429708;
+  A*log10(1+freq*0.0047);
+);
+
+function erb2hz(erb) // Glasberg, Brian C. J. Moore: Hearing Research, 47 (1990), 103-138
+(
+  // A = (1000*log(10))/(24.7*4.37);
+  invA = 0.00402351774523806;
+  (10^(erb*invA)-1)/0.00437;
+);
+
+// Copyright 2012 The CARFAC Authors
+function hz_to_erb(CF_Hz) // Glasberg, Brian C. J. Moore: Hearing Research, 47 (1990), 103-138
+(
+ERB_Q = 1000/(24.7*4.37); // ~ 9.26449198158218994
+ERB_break_freq = 1000/4.37; // ~ 228.83295194508009153
+ERB = (ERB_break_freq + CF_Hz) / ERB_Q;
+);
+
+function erb_to_hz(erb_nr) // Glasberg, Brian C. J. Moore: Hearing Research, 47 (1990), 103-138
+(
+ERB_Q = 1000/(24.7*4.37); // ~ 9.26449198158218994
+ERB_break_freq = 1000/4.37; // ~ 228.83295194508009153
+ERB_Q * erb_nr - ERB_break_freq;
+);
+
+function hz_to_erb(CF_Hz, ERB_break_freq) // Glasberg, Brian C. J. Moore: Hearing Research, 47 (1990), 103-138
+(
+ERB_Q = 1000/(24.7*4.37); // ~ 9.26449198158218994
+ERB = (ERB_break_freq + CF_Hz) / ERB_Q;
+);
+
+function hz_to_erb(CF_Hz, ERB_break_freq, ERB_Q) // Glasberg, Brian C. J. Moore: Hearing Research, 47 (1990), 103-138
+(
+ERB = (ERB_break_freq + CF_Hz) / ERB_Q;
+);
+
+
+function coch2hz(normalized_cochlea_length) // Greenwood, D. D. (1990)
+(
+	165.4*(10^(2.1*normalized_cochlea_length)-0.88);
+);
+
+function hz2coch(freq) // Greenwood, D. D. (1990)
+(
+	// log10(freq/165.4 + 0.88)/2.1;
+	log10(freq*0.00604594921402660 + 0.88)*0.47619047619047619;
+	
+);
+
+function hz2bark(freq) // Traunmüller, Hartmut. (1990)
+(
+  bark = (26.81*freq)/(1960+freq)-0.53;
+  bark < 2 ? (bark = bark+0.15*(2-bark)):
+  bark > 20.1 ? (bark = bark+0.22*(bark-20.1));
+  bark;
+);
+
+function bark2hz(bark) // Traunmüller, Hartmut. (1990)
+(
+  bark < 2 ? (bark = (bark-0.3)/0.85):
+  bark > 20.1 ? (bark = (bark+4.422)/1.22);
+  1960*(bark+0.53)/(26.28-bark);
+);
+
+function phon2sone(phon) // ISO 532-1: Zwicker Method
+(
+  phon < 1 ? (
+    (phon/40)^(1/0.35)  ):(
+    2^((phon-40)*0.1)  );
+);
+
+function sone2phon(sone) // ISO 532-1: Zwicker Method
+(
+  phon < 1 ? (
+    40*sone^0.35  ):(
+    40+10*log(sone)/log(2));
+);
+
+
+
+//*
+function init_log(a,b)
+(
+  log_a  = log(a);
+  log_ba = log(b) - log_a;
+);
+
+function lin2log(lin_val)
+(
+  (log(lin_val)-log_a)/log_ba;
+);
+
+function log2lin(log_val)
+(
+  exp(log_ba*log_val+log_a);
+);
+//*/
+
+/*
+function lin2log(lin_val,a,b)
+(
+  log_a  = log(a);
+  log_ba = log(b) - log_a;
+  (log(lin_val)-log_a)/log_ba;
+);
+
+function log2lin(log_val,a,b)
+(
+  log_a  = log(a);
+  log_ba = log(b) - log_a;
+  exp(log_ba*log_val+log_a);
+);
+//*/
+
+function rad2deg(radians) (
+  radians * 180 / $pi;
+);
+function deg2rad(degrees) (
+  degrees / 180 * $pi;
+);
+
+
+function freq2msg2(freq)(
+  12*log(freq/(440*2^(-69/12)))/log(2);
+);
+
+function freq2msg2(msg2)(
+  exp(msg2*log(2)/12)*(440*2^(-69/12));
+);
+
+
+function midi2hz(midinote)
+(
+    440.0 * pow(2.0, (midinote - 69) / 12.0);
+);
+
+function hz2midi(freq)
+(
+    12.0 * log2(freq / 440.0) + 69;
+);
+
+function cent2rat(cents)
+(
+    10^((log10(2)/1200)*cents);
+);
+
+function rat2cent(ratio)
+(
+    1200/log(2)*log(ratio);
+);
+
+function mtot(midinote, centralkey)
+(
+    pow(1.0594630943592953, midinote - centralkey);
+);
+
+function ttos(transpo)
+(
+    12.0 * log2(transpo);
+);
+
+function wrap(input mini maxi)
+(
+    while (input < mini) (
+        input += mini;
+    );
+    while (input >= maxi) (
+        input -= maxi;
+    );
+    input;
+);
+
+function clip(input mini maxi)
+(
+    max(min(input, maxi), mini);
+);
+
+/* TOCHECK
+function smoothclip(input)
+(
+    input = max(min(input, 1), -1);
+	input -= input^3/3;
+);
+//*/
+
+function scale(x xmin xmax ymin ymax ex)
+(
+    x -= xmin;
+    x /= (xmax - xmin);
+    x ^= ex;
+    x *= (ymax - ymin);
+    x + ymin;
+);
+
+function map(value, from.minimum, from.maximum, to.minimum, to.maximum) (
+  (value - from.minimum) / (from.maximum - from.minimum) * (to.maximum - to.minimum) + to.minimum;
+);
+function clip(value, minimum, maximum) (
+  min(max(value, minimum), maximum);
+);
+function clip(value, limit) (
+  _.clip(value, -limit, limit);
+);
+function follower(follower, target, maximum_change) (
+  follower + _.clip(target - follower, maximum_change);
+);
+function follower(follower, target) (
+  _.follower(follower, target, 0.0001);
+);
+
+function wrap.minimum(value, minimum, maximum) (
+  value >= minimum ? value : value + (maximum - minimum);
+);
+function wrap.minimum(value, maximum) (
+  _.wrap.minimum(value, 0, maximum);
+);
+function wrap.maximum(value, minimum, maximum) (
+  value < maximum ? value : value - (maximum - minimum);
+);
+function wrap.maximum(value, maximum) (
+  _.wrap.maximum(value, 0, maximum);
+);
+function wrap(value, minimum, maximum) (
+  _.wrap.maximum(_.wrap.minimum(value, minimum, maximum), minimum, maximum);
+);
+function wrap(value, maximum) (
+  _.wrap(value, 0, maximum);
+);
+
+
+
+
+function softSat(x)(  x = min(1,max(-1,x));  x*(1.5 -0.5*x*x); );
+
+  function cubic3(x) (
+  (abs(x)>1) ? sign(x)*0.6666666667 : (x-(x*x*x)/3);
+  );
+
+  function cubic4(x) (
+  (abs(x)>1.1547005383) ? sign(x)*0.7698003589 : (x-(x*x*x)/4);
+  );
+
+  function cubic5(x) (
+  (abs(x)>1.2909944487) ? sign(x)*0.8606629658 : (x-(x*x*x)/5);
+  );
+
+  function cubic6(x) (
+  (abs(x)>1.4142135623) ? sign(x)*0.9428090416 : (x-(x*x*x)/6);
+  );
+
+/*
+function tanh(x)(
+    (exp(2*x) - 1) / (exp(2*x) + 1);
+);
+//*/
+
+function log2(x)(
+    log(x) / log(2);
+);
+
+function sinh(x) (
+  (exp(x) - exp(-x)) / 2;
+);
+function cosh(x) (
+  (exp(x) + exp(-x)) / 2;
+);
+function tanh(x)
+local(e_2x) (
+  e_2x = exp(2 * x);
+  (e_2x - 1) / (e_2x + 1);
+);
+function coth(x)
+local(e_2x) (
+  e_2x = exp(2 * x);
+  (e_2x + 1) / (e_2x - 1);
+);
+function sech(x) (
+  2 / (exp(x) + exp(-x));
+);
+function csch(x) (
+  2 / (exp(x) - exp(-x));
+);
+
+function arsinh(x) (
+  log(x + sqrt(sqr(x) + 1));
+);
+function arcosh(x) (
+  log(x + sqrt(sqr(x) - 1));
+);
+function artanh(x) (
+  log((1 + x) / (1 - x)) / 2;
+);
+function arcoth(x) (
+  log((x + 1) / (x - 1)) / 2;
+);
+function arsech(x) (
+  log((1 + sqrt(1 - sqr(x))) / x);
+);
+function arcsch(x) (
+  log(1 / x + sqrt((1 / sqr(x)) + 1));
+);
+function sign_sqrt(number) (
+  sqrt(abs(number)) * sign(number);
+);
+
+function moveto (x,y) (
+  gfx_x = x; gfx_y = y;
+);
+
+function moveby (x,y) (
+  gfx_x += x; gfx_y += y;
+);
+
+function movetopolar (x,y,radius,angle) (
+  gfx_x = x+sin(angle)*radius;
+  gfx_y = y-cos(angle)*radius;
+);
+
+function movebypolar (x,y,radius,angle) (
+  gfx_x += x+sin(angle)*radius;
+  gfx_y += y-cos(angle)*radius;
+);
+
+function linepolar (x,y,radius,angle,aa) (
+  gfx_line(x,y,x+sin(angle)*radius,y-cos(angle)*radius,aa);
+);
+
+function linetopolar (radius,angle,aa) (
+  gfx_lineto(gfx_x + sin(angle)*radius,gfx_y - cos(angle)*radius,aa);
+);
+
+
+function pixel(x,y,r,g,b)(
+  gfx_x = x; gfx_y = y;
+  gfx_setpixel(r,g,b);
+);
+
+function xcross(x,y,size_x,size_y)(
+  gfx_line(x-size_x,y+size_y,x+size_x,y-size_y);
+  gfx_line(x+size_x,y+size_y,x-size_x,y-size_y);
+);
+
+function tcross(x,y,size_x,size_y)(
+  gfx_line(x,y+size_y,x,y-size_y);
+  gfx_line(x+size_x,y,x-size_x,y);
+);
+
+function xcrosspoints(x,y,size_x,size_y,r,g,b)(
+  gfx_x = x-size_x; gfx_y = y+size_y;
+  gfx_setpixel(r,g,b);
+  gfx_x = x+size_x; gfx_y = y-size_y;
+  gfx_setpixel(r,g,b);
+  gfx_x = x+size_x; gfx_y = y+size_y;
+  gfx_setpixel(r,g,b);
+  gfx_x = x-size_x; gfx_y = y-size_y;
+  gfx_setpixel(r,g,b);
+);
+
+function tcrosspoints(x,y,size_x,size_y,r,g,b)(
+  gfx_x = x; gfx_y = y+size_y;
+  gfx_setpixel(r,g,b);
+  gfx_y = y-size_y;
+  gfx_setpixel(r,g,b);
+  gfx_x = x+size_x; gfx_y = y;
+  gfx_setpixel(r,g,b);
+  gfx_x = x-size_x;
+  gfx_setpixel(r,g,b);
+);
+
+function polygon(x,y,n,radius,angle)(
+ loop(n,
+   gfx_line(x+sin(angle)*radius,y-cos(angle)*radius,x+sin(angle+=2*$pi/n)*radius,y-cos(angle)*radius);
+ );
+);
+
+function stargenerator(x,y,n,radius,angle,generator,aa)(
+ loop(n,
+   gfx_line(x+sin(angle)*radius,y-cos(angle)*radius,x+sin(angle+=2*$pi/(n*generator))*radius,y-cos(angle)*radius,aa);
+ );
+);
+
+function circles(x,y,radius,n,fill,aa) local(i) (
+ i = radius;
+ loop(n,
+   //gfx_line(x+sin(angle)*radius,y-cos(angle)*radius,x+sin(angle+=2*$pi/(n*generator))*radius,y-cos(angle)*radius,aa);
+   gfx_circle(x,y,i+=radius,fill,aa);
+ );
+);
+
+function rays(x,y,n,radius,angle,aa)(
+ loop(n,
+   gfx_line(x,y,x+sin(angle)*radius,y-cos(angle)*radius,aa);
+   angle += 2*$pi/n;
+ );
+);
+
+function polygonpoints(x,y,n,radius,angle,r,g,b)(
+ loop(n,
+   gfx_x = x+sin(angle)*radius; gfx_y = y-cos(angle)*radius;
+   gfx_setpixel(1,1,1);
+   angle += 2*$pi/n;
+ );
+);
+
+function drawCentsSymbol () (
+  gfx_drawstr ("c"); moveby (-5, 0);
+  gfx_lineto (gfx_x, gfx_y + 8, 0);
+);
+
+function drawOrdinal (n) (      // write numbers in an ordinal format
+    n == 1 ? gfx_drawstr ("1st") 
+  : n == 2 ? gfx_drawstr ("2nd")
+  : n == 3 ? gfx_drawstr ("3rd")
+  : (gfx_drawNumber (n, 0); gfx_drawstr ("th"));
+);
+
+function setcolor (p) (          // a rainbow of stars
+  gfx_r = 1 + cos (2 * $pi * p / numGenchains + 1 * $pi / 3); 
+  gfx_g = 1 + cos (2 * $pi * p / numGenchains + 5 * $pi / 3);
+  gfx_b = 1 + cos (2 * $pi * p / numGenchains + 3 * $pi / 3);
+);
+
+function round(x) (        // round (1.5) = 2, round (-1.5) = -2
+  (x + 0.5 * sign(x))|0;    // rounds outwards away from zero
+);
+
+function roundUp (x) (        // round (1.5) = 2, round (-1.5) = -1
+  floor (x + 0.5);        // rounds towards infinity
+);
+
+function roundDown (x) (      // roundDown (1.5) = 1, roundDown (-1.5) = -2
+  -floor (-x + 0.5);        // rounds towards negative infinity
+);
+
+function roundOut(x) (        // roundOut (1.5) = 2, roundOut (-1.5) = -2
+  (x + 0.5 * sign(x))|0;    // rounds outwards away from zero
+);
+
+function roundIn(x) (        // roundIn (1.5) = 1, roundOut (-1.5) = -1
+  sign(x) * ceil(abs(x) - 0.5);    // rounds inwards to zero
+);
+
+function ceilOut(x)(
+  x > 0 ? ceil(x) : floor(x);
+);
+
+/*
+function findX (radius, angle) (      // angle as a fraction of 360 degrees
+  roundUp (radius * sin (2 * $pi * angle));    // 360 degrees = 2 pi radians
+);
+
+function findY (radius, angle) (      // angle as a fraction of 360 degrees
+  roundUp (radius * cos (2 * $pi * angle));    // 360 degrees = 2 pi radians
+);
+
+
+function findSpot (c) (          // spot on the circle for c cents
+  x = x0 + findX (r, c / 1200);        // 1 octave = 360 degrees
+  y = y0 - findY (r, c / 1200);        // 0 cents is 12 o'clock
+);
+*/
+
+
+function int2str(intIn) local (outStr) (
+  strcpy(outStr=#,"");
+  sprintf(outStr,"%d",intIn);
+  outStr;
+);
+function freq2note(f) (
+  round(12*(log(f/440)/log(2))+69);
+);
+function note2notename(n,upper) local(oct,nn,keys) (
+  upper ? keys="CCDDEFFGGAAH" : keys="ccddeffggaah";
+  oct=floor(n/12);oct-=1;
+  n%=12;
+  strcpy_substr(nn=#,keys,n,1);
+  n==1 || n==3 || n==6 || n==8 || n==10 ? strcat(nn,"#");
+  strcat(nn,int2str(oct));
+  nn;
+);
+
+
+
+/*
+// NOT WORKING !!!
+function from_frequency(hz)
+local(octave, float_note, note, note_label, offset)
+global()
+(
+  note = log(hz / 261.6255653005986) / log(2);
+  octave = floor(note);
+  float_note = 12 * (note - octave);
+  note = floor(float_note + 0.5);
+  offset = float_note - note;
+  note_label = note < 1 ? "C-" : note < 2 ? "C#" : note < 3 ? "D-" : note < 4 ? "D#" : note < 5 ? "E-" : note < 6 ? "F-" : note < 7 ? "F#" : note < 8 ? "G-" : note < 9 ? "G#" : note < 10 ? "A-" : note < 11 ? "A#" : "B";
+  sprintf(16, "%s%d (%+.2g ct)", note_label, octave + 4, offset)
+);
+//*/
+
+
+
+
+/*---------------------------------------------------------------------
+  Mathematical functions
+---------------------------------------------------------------------*/
+
+
+/********************************************************************
+Maths: Round to nearest integer
+********************************************************************/
+function round(aValue)
+(
+  (aValue >= 0.) ? ceil(aValue + 0.5) : ceil(aValue - 0.5);
+);
+
+
+/********************************************************************
+Maths: Convert linear gain to decibel
+********************************************************************/
+function db2amp(aGain)
+(
+  pow(10.0, aGain * 0.05);  // returns linear gain
+);
+
+
+/********************************************************************
+Maths: Convert linear gain to decibel
+********************************************************************/
+function amp2db(aGain)
+(
+  20 * log10(aGain);       // returns dB gain
+);
+
+
+/********************************************************************
+Maths: Clip value
+********************************************************************/
+function clipValue(aValue, aMin, aMax) local(lTemp, lTest)
+(
+  lTemp = aValue;
+  
+  lTemp < aMin ? (
+    lTemp = aMin;
+  ) : (
+    lTemp > aMax ? (
+      lTemp = aMax;
+    );
+  );
+  lTemp      // return lTemp
+);
+
+
+
+
+//////////////////////////////////////////////////////////////////
+
+
+function smooth_parameter(target)
+instance(s, coeff)
+global()
+local(y, v)
+(
+  v = coeff*(target - s);
+  y = v + s;
+  s = y + v;
+  y
+);
+
+function initialize_smoother(cutoff)
+instance(coeff)
+global(srate)
+local(g)
+( 
+  g = tan($pi*cutoff/srate);
+  coeff = g/(1+g);  
+);
+
+function interpolator_init(slider_idx)
+instance(next_val, idx, s)
+local()
+global()
+(
+  s = slider(slider_idx);
+  next_val = slider(slider_idx);
+  idx = slider_idx;
+);
+
+function interpolator_block()
+instance(delta, next_changepoint_t, next_val, idx)
+local(next_changepoint_y)
+global(samplesblock)
+(
+  next_changepoint_t = slider_next_chg(idx, next_changepoint_y);
+  next_changepoint_t > 0 ? 
+  (
+    next_val = slider(idx);
+  ) : (
+    next_changepoint_y = slider(idx);
+    next_changepoint_t = samplesblock;
+  );
+    
+  delta = (next_changepoint_y - next_val) / next_changepoint_t;
+);
+  
+function interpolate()
+instance(delta, next_changepoint_t, next_val, idx, coeff)
+local(current_value, next_changepoint_y)
+global(current_sample)
+(
+  current_value = next_val;
+  current_sample == next_changepoint_t ? 
+  (
+    delta = 0;
+    next_changepoint_t = slider_next_chg(idx, next_changepoint_y);
+    delta = next_changepoint_t > current_sample ? (next_changepoint_y - current_value) / (next_changepoint_t-current_sample) : 0;
+  );
+    
+  next_val = current_value + delta;
+    
+  coeff > 0 ? this.smooth_parameter(current_value) : current_value
+);
+
+
+
+
+// TB Pro Audio
+//////////////////////////////////////////////////////////////////////////////
+// Param Smoother
+function SParam_Reset(_init_val)
+(
+  this.runave   = _init_val;
+);
+
+function SParam_Init(_init_val, _min_step)
+(
+  this.SParam_Reset(_init_val);
+  this.min_step = _min_step;
+);
+
+function SParam_Set(_time_s, _srate)
+(
+  this.coef = pow(10,-1.0/(_time_s * _srate));
+);
+
+function SParam_Process(_in0)
+(
+  this.maxspl = _in0;
+  (abs(this.runave - this.maxspl) > this.min_step) ?
+  (
+    this.runave = this.maxspl + this.coef * (this.runave - this.maxspl);
+  ):
+  (
+    this.runave = this.maxspl; 
+  );
+  
+  this.runave;
+);
+
+function SParam_Get()
+(
+  this.runave;
+);
+
+
+// KAWA
+
+function HSBtoRGB(hue,saturation,value) 
+ local (r,g,b,h,f,v,p,q,t) 
+( 
+   ( hue > 360) ? ( hue = hue % 360;) 
+   :( hue < 0 ) ? ( hue = hue % 360 ;); 
+   saturation = min ( max(saturation,0),1); 
+   v = floor( 255 * value); 
+   v = min ( max(v,0),255); 
+   (saturation == 0)? 
+   ( 
+   r = v ; g = v; b = v; 
+   ):( 
+   h = floor( hue / 60); 
+   f = hue / 60-h; 
+   p = floor( v * (1-saturation)); 
+   p = min ( max(p,0),255); 
+   q = floor( v * (1-f * saturation)); 
+   q = min ( max(q,0),255); 
+   t = floor( v * (1-(1-f) * saturation)); 
+   t = min ( max(t,0),255); 
+   (h==0)?(r=v;g=t;b=p;) 
+   :(h==1)?(r=q;g=v;b=p;) 
+   :(h==2)?(r=p;g=v;b=t;) 
+   :(h==3)?(r=p;g=q;b=v;) 
+   :(h==4)?(r=t;g=p;b=v;) 
+   :(h==5)?(r=v;g=p;b=q;) 
+   :( r=v;g=t;b=p;); 
+   ); 
+   this.r = r; 
+   this.g = g; 
+   this.b = b; 
+   gfx_r = r/255;
+   gfx_g = g/255;
+   gfx_b = b/255;
+); 
+
+function HSBtoRGB(hue,saturation,value,alpha) (
+	HSBtoRGB(hue,saturation,value);
+	gfx_a = alpha;
+); 
+
+
+
+function get_float_from_string(str) 
+( 
+ matchi("*?-*?%{float_value}f*?", str) ? ( 
+ -float_value; 
+ ) : ( 
+ matchi("*?%{float_value}f*?", str) ? 
+ ( 
+ float_value; 
+ ); 
+ ); 
+); 
+
+
+DEFINE_MIN_DB = -96.0; 
+DEFINE_MIN_DB_VALUE = (10 ^ (DEFINE_MIN_DB *0.05 )); 
+function valueToDecivel( value ) local ( out ) 
+( 
+ ( value < DEFINE_MIN_DB_VALUE)? 
+ ( 
+ out = DEFINE_MIN_DB; 
+ ):( 
+ out = log10(value) *20; 
+ ); 
+ out; 
+); 
+function decivelToValue( db ) local ( out ) 
+( 
+ out = (10.0 ^ (db *0.05 )); 
+ ( out < DEFINE_MIN_DB_VALUE ) ? ( out = DEFINE_MIN_DB_VALUE; ); 
+ out; 
+); 
+function getManhattanDist(x1,y1,x2,y2)local(distance) 
+( 
+ distance =abs(x1 -x2) + abs(y1 -y2); 
+ distance; 
+); 
+function getEuclideanDist(x1,y1,x2,y2)local(horizDistance,vertDistance,distance) 
+( 
+ horizDistance =abs(x1 - x2); 
+ vertDistance =abs(y1 - y2); 
+ distance = sqrt( (horizDistance ^ 2) + (vertDistance ^ 2) ); 
+ distance; 
+); 
+function getChebyshevDist(x1,y1,x2,y2)local (distHoriz,distVert,distanceOut) 
+( 
+ distHoriz = abs(x1 - x2); 
+ distVert = abs(y1 - y2); 
+ ( distHoriz > distVert) ? ( 
+ distanceOut = distHoriz; 
+ ):( 
+ distanceOut= distVert; 
+ ); 
+ distanceOut; 
+); 
+
+
+function get1thNote_Time (Tempo) ((60/Tempo)*4;); 
+function get2thNote_Time (Tempo) ((60/Tempo)*2;); 
+function get4thNote_Time (Tempo) ((60/Tempo);); 
+function get8thNote_Time (Tempo) ((60/Tempo)/2;); 
+function get16thNote_Time(Tempo) ((60/Tempo)/4;); 
+function get32thNote_Time(Tempo) ((60/Tempo)/8;); 
+function get1thNote_Rate (Tempo) ( 1/(get1thNote_Time(Tempo)); ); 
+function get2thNote_Rate (Tempo) ( 1/(get2thNote_Time(Tempo)); ); 
+function get4thNote_Rate (Tempo) ( 1/(get4thNote_Time(Tempo)); ); 
+function get8thNote_Rate (Tempo) ( 1/(get8thNote_Time(Tempo)); ); 
+function get16thNote_Rate(Tempo) ( 1/(get16thNote_Time(Tempo)); ); 
+function get32thNote_Rate(Tempo) ( 1/(get32thNote_Time(Tempo)); ); 
+function get1thNote_Sample (Tempo,sampleRate_) ( sampleRate_ * get1thNote_Time (Tempo); ); 
+function get2thNote_Sample (Tempo,sampleRate_) ( sampleRate_ * get2thNote_Time (Tempo); ); 
+function get4thNote_Sample (Tempo,sampleRate_) ( sampleRate_ * get4thNote_Time (Tempo); ); 
+function get8thNote_Sample (Tempo,sampleRate_) ( sampleRate_ * get8thNote_Time (Tempo); ); 
+function get16thNote_Sample(Tempo,sampleRate_) ( sampleRate_ * get16thNote_Time(Tempo); ); 
+function get32thNote_Sample(Tempo,sampleRate_) ( sampleRate_ * get32thNote_Time(Tempo); ); 
+function get1thNote_Pqn (Tempo) ( 4/1; ); 
+function get2thNote_Pqn (Tempo) ( 2/1; ); 
+function get4thNote_Pqn (Tempo) ( 1/1; ); 
+function get8thNote_Pqn (Tempo) ( 1/2; ); 
+function get16thNote_Pqn (Tempo) ( 1/4; ); 
+function get32thNote_Pqn (Tempo) ( 1/8; ); 
+function sample2Ppq (sampleNum,Tempo,sampleRate_) ( sampleNum / get4thNote_Sample(Tempo,sampleRate_);); 
+function sample2Sec (sampleNum,sampleRate_) ( sampleNum / ( sampleRate_ ) ;); 
+function sample2MSec (sampleNum,sampleRate_) ( sampleNum / ( sampleRate_ )*1000;); 
+function sample2Rate (sampleNum,sampleRate_) ( sampleNum / sampleRate_ ;); 
+function pqn2SampleNum (pqnNum,Tempo,sampleRate_) ( pqnNum * get4thNote_Sample(Tempo,sampleRate_);); 
+function pqn2Rate (pqnNum,Tempo,sampleRate_) ( sample2Rate(pqn2SampleNum( pqnNum,Tempo,sampleRate_),sampleRate_);); 
+function pqn2Sec (pqnNum,Tempo,sampleRate_) ( sample2Sec (pqn2SampleNum( pqnNum,Tempo,sampleRate_),sampleRate_);); 
+function time2Sample (sec,sampleRate_) ( sec * sampleRate_ ;); 
+function time2Rate (sec) ( 1 / sec ;); 
+function time2Pqn (sec,Tempo) ( sec / get4thNote_Time(Tempo);); 
+
+
+function drawDotGrid(xwidth,ywidth,radius) 
+ local (_xDrawNum,_yDrawNum,count_x,count_y) 
+( 
+ _xDrawNum = gfx_w / xwidth; 
+ _yDrawNum = gfx_h / ywidth; 
+ count_y = 0; 
+ while (count_y < _yDrawNum ) 
+ ( 
+ count_x = 0; 
+ while (count_x < _xDrawNum ) 
+ ( 
+ gfx_r=1; gfx_g=1; 
+ gfx_b=1; gfx_a=0.5; 
+ gfx_circle( xwidth * count_x 
+ , ywidth * count_y 
+ , radius,true); 
+ count_x +=1; 
+ ); 
+ count_y +=1; 
+ ); 
+); 
+
+
+
+
+// nitsuj
+
+/*
+ * Cubic hermite, given A,B,C,D and time (t) return cubic interpolation
+ * http://paulbourke.net/miscellaneous/interpolation/
+ */
+function cubic_hermite(A, B, C, D, t) local(a0, a1, a2, a3, t2)
+(
+   t2 = t * t;
+
+   a0 = D - C - A + B;
+   a1 = A - B - a0;
+   a2 = C - A;
+   a3 = B;
+
+   a0 * t * t2 + a1 * t2 + a2 * t + a3;
+);
+
+
+
+function sinc(x) (
+  abs(x) < 0.000001 ? 1 : sin(x)/x;
+);
+
+
+
+// Sonic Anomaly
+/*
+function FollowerInit(attack,release,smoothing) (
+  this.a = exp(-1/(srate*attack/1000));
+  this.r = exp(-1/(srate*release/1000));
+  this.s = exp(-1/(srate*smoothing/1000));
+  this.a2 = 1-this.a;
+  this.r2 = 1-this.r;
+);
+
+function Follower(in) (
+  this.tmp = max(in + this.s * (this.tmp-in),in);
+  this.e <  this.tmp ? (
+    this.e = this.tmp;
+  ) : (
+    this.e = this.r * this.e + this.r2 * this.tmp;
+  );
+);
+
+  amp_LO = 0.001;
+  dB_LO = -60.0;
+
+function peak_dB (a) local (p, dB)
+(
+  a <= amp_LO ? p = dB_LO : dB = 8.6562*log(a);
+);
+
+function peak (sample) local (in) instance (p)
+(
+  in = abs(sample);
+  in > p ? p = in : p = p*decay;
+);
+
+function LFcut(input)
+instance(out,n0,weight)
+(
+  out = input - (n0+=((input-n0)*weight));
+);
+
+function limiter(input,threshold)
+instance(env,hpf) (
+  env = hpf.LFcut( max(abs(input),threshold)-threshold);
+);
+
+function Curve(input) (
+  this.dB = 20 * log10( abs(input) + 0.0000001 );
+  this.env = this.dB - min(this.dB,threshCoef)  + 0.0000001;
+  this.env = this.env^2 / (this.env+param.knee);
+  this.env *= ratioCoef;
+  this.env = 10 ^ (this.env/20);
+);
+
+function FillEnvLut(start,end,step) (
+  this.len = end-start;
+  this.maxVal = this.len * step;
+  this.start = start;
+  this.end = end;
+  this.invStep = 1/step;
+  lutMem = start;
+  this.i = 0;
+  loop(this.len,
+    this.v = this.i * step;
+    lutMem[this.i] = Curve(this.v);
+    this.i += 1;
+  );
+);
+
+function GetLutVal(in) (
+  this.index = max(min(in * this.invStep,this.end),1);
+  this.floorIndex = floor(this.index);
+  lutMem = this.start;
+  this.lo = lutMem[this.floorIndex];
+  this.hi = lutMem[this.floorIndex+1];
+  this.frac = this.index - this.floorIndex;
+  Interpolate(this.lo, this.hi, this.frac);
+);
+
+function SampleSniffer(input) (
+  this.splCount += 1;
+  this.in.max = max(abs(input),this.in.max);
+  
+  (this.splCount > this.maxscount) ? (
+    this.in.max > 0.00000001 ? (
+      this.out = 1;
+      this.maxscount = SplSniffer.timeOut;
+    ) : (
+      this.out = 0;
+      this.maxscount = 10;
+    );
+    this.in.max = 0;
+    this.splCount = 0;
+  );
+  this.out;
+);
+
+function CompressorPeakSlow(in) (
+  this.dB = 20 * log10( abs(in) + 0.0000001 );
+  this.env = this.dB - min(this.dB,threshCoef) + 0.0000001;
+  this.env = this.env^2 / (this.env+param.knee);
+  this.env *= ratioCoef;
+  this.env = 10 ^ (this.env/20);
+  
+  this.rmod = 1/this.e1.Follower(this.env);
+  this.e0.r = Interpolate(this.e0.minRelease,this.e0.maxRelease,this.rmod);
+  this.e0.r2 = 1-this.e0.r;
+  
+  this.env = this.e0.Follower(this.env);
+);
+
+function CompressorPeak(in) (
+  this.sn.SampleSniffer(in) ? (
+    this.env = l0.GetLutVal(abs(in));
+    
+    this.rmod = 1/this.e1.Follower(this.env);
+    this.e0.r = Interpolate(this.e0.minRelease,this.e0.maxRelease,this.rmod);
+    this.e0.r2 = 1-this.e0.r;
+    
+    this.env = this.e0.Follower(this.env);
+  ) : (
+    1;
+  );
+);
+
+
+function CompressorRMS(in) (  
+  this.env = l0.GetLutVal(abs(in));
+  this.env = this.r.rms(this.env);
+);
+
+function CompressorComb() (
+
+  param.chlink ? (
+    in.A = max(in.L,in.R);
+    in.L = (in.L * param.chlinkInv) + (in.A * param.chlink);
+    in.R = (in.R * param.chlinkInv) + (in.A * param.chlink);
+  );
+
+  in.L.max = max(abs(in.L),in.L.max);
+  in.R.max = max(abs(in.R),in.R.max);
+  
+  splcount += 1;
+  
+  (splcount > usfactor) ? (
+    envR.L = cr0.CompressorRMS(in.L.max * 3.16) * param.rbal;
+    envR.R = cr1.CompressorRMS(in.R.max * 3.16) * param.rbal;
+    splcount = 1; in.L.max = in.R.max = 0;
+  );
+   
+  envP.L = cp0.CompressorPeak(in.L) * param.pbal;
+  envP.R = cp1.CompressorPeak(in.R) * param.pbal;
+    
+  env.L = envR.L + envP.L;
+  env.R = envR.R + envP.R;
+  
+);
+
+
+function HFLF_init(freq)
+instance(n0,weight)
+(
+  n0 = 0;
+  weight = 1-exp(-2*$pi*freq/srate);
+);
+
+function HFcut(input)
+instance(out,n0,weight)
+(
+  out = (n0+=((input-n0+0.000000001)*weight));
+);
+
+function LFcut(input)
+instance(out,n0,weight)
+(
+  out = input - (n0+=((input-n0+0.000000001)*weight));
+);
+
+function Lerp(A, B, X) (
+  A + ((B-A)*X);
+);
+
+function delay_init(samples,index)
+instance (len,sloop,splay)
+(
+  len = samples > maxDelay ? maxDelay : samples;
+  sloop = splay = maxDelay * index;
+);
+
+function delay(input)
+instance(sindex,splay,sloop,len)
+(
+  sloop[sindex] = input;
+  sindex > len ? sindex = 0 : sindex += 1;
+  splay[sindex];
+);
+
+function compressor_init(th_db,attack_s,release_s,ratio,knee_db,enabled) (
+  this.th = th_db - knee_db;
+  this.att = exp(-1/(srate*attack_s));
+  this.rel = exp(-1/(srate*release_s));
+  this.rat = 1-(1/ratio);
+  this.knee = knee_db;
+  this.ena = enabled;
+);
+
+function compressor(input)
+instance(delayedInput,d,ena,dB,env,th,knee,rat,rmodin,rmod,e0,rel,e1,att,s,smooth)
+global(smpl,t100,t20,prm.punch,logConst)
+(
+
+  delayedInput = d.delay(input);
+  ena ? (
+      dB = 20 * log10( max(abs(input),0.0000001) );
+      env = dB - min(dB,th);
+      env = env^2 / (env+knee);
+      env = env * rat;
+      env = exp(logConst*env);
+    
+    rmodin = max(rmodin,env);
+    !(smpl % 4) ? (
+      rmod = e0.follower(rmodin,0,t20,0);
+      rmod = interpolate(t100,rel,1/rmod);
+      rmodin = 0;
+    );
+    
+    env = e1.follower(env,att,rmod,t20);
+    env = max(env,1);
+    
+    prm.punch ? (
+      env = s += smooth * ( env - s );
+    );
+    
+    delayedInput / env;
+    
+  ) : (
+    env = 1;
+    delayedInput;
+  );
+  
+);
+
+trw = 1-exp(-1/(1666 / 1000 * srate));
+trf = 1-exp(-1/(1 / 1000 * srate));
+
+function transient_init(amount) (
+  this.amo = amount;
+);
+
+function transient(input)
+instance(amo,rms,s,peak,e0,peak2,e1,env)
+global(smpl,trw,t005,t100,t20,t50)
+(
+  amo ? (
+    !(smpl % 2) ? (
+      rms = sqrt(s +=  trw * ( input^2 - s )) * 2;
+    );
+    peak = e0.follower(max(abs(input),rms),t005,t100,t20);
+    peak2 = e1.follower(peak,t50,0,0);
+    env = (-1/( sqrt(peak - peak2) +1) +1) * 0.5 * amo;
+  ) : (env = 0);
+);
+
+function CalcX(angle) (
+  this.x = sin(angle*0.0174532925) * width;
+  this.out = (this.x+1) * 0.5;
+);
+
+
+function CalcY(angle) (
+  this.y = cos(angle*0.0174532925) * width;
+  this.out = (this.y+1) * 0.5;
+);
+
+function CalcXY()
+(
+  x = CalcX(angle);
+  xInv = 1-x;
+  y = CalcY(angle);
+  yInv = 1-y;
+);
+
+function Rotator() (
+  angle += rotatorAngle;
+  angle < 0 ? angle += 360;
+  angle >= 360 ? angle -= 360;
+  CalcXY();
+);
+
+function TempoRotator() (
+  angle += rotatorAngle * (tempo/60/4);
+  angle < 0 ? angle += 360;
+  angle >= 360 ? angle -= 360;
+  CalcXY();
+);
+
+function megafilter(input)
+instance(mX1,mX2,mY1,mY2,b0,b1,b2,a0,a1,a2,output)
+(
+  output = (b0/a0)*input + (b1/a0)*mX1 + (b2/a0)*mX2 - (a1/a0)*mY1 - (a2/a0)*mY2; 
+  mX2 = mX1;
+  mX1 = input;
+  mY2 = mY1;
+  mY1 = output;
+  
+);
+
+function megafilter_init(freq,Q,gain,type)
+instance(omega,tsin,tcos,alpha,b0,b1,b2,a0,a1,a2,A,beta)
+(
+  type = max(type,1);
+  type = min(type,8);
+  Q = max(Q,0.01);
+  Q = min(Q,10);
+  freq = max(freq,0.1);
+  freq = min(freq,srate/2);
+
+  A = pow(10.0,(gain/40.0));
+  omega = 2*$pi*freq/srate;
+  tsin = sin(omega);
+  tcos = cos(omega);
+  alpha = tsin/(2.0*Q);
+  beta =sqrt(A)/Q;
+  temp = freq+Q+gain+type;
+  
+  type == 1 ? (
+  //low-pass
+  b0 = (1-tcos)/2;
+  b1 = 1-tcos;
+  b2 = (1-tcos)/2;
+  a0 = 1+alpha;
+  a1 = -2*tcos;
+  a2 = 1-alpha;
+  );
+  type == 2 ? (
+  // hi-pass
+  b0 = (1+tcos)/2;
+  b1 = -(1+tcos);
+  b2 = (1+tcos)/2;
+  a0 = 1+alpha;
+  a1 = -2*tcos;
+  a2 = 1-alpha;
+  );
+  
+);
+//*/
+
+
+
+
+/* Veto
+
+function round(in) (
+  in=floor(in+0.5*sign(in));
+);
+function int2str(intIn) local (outStr) (
+  strcpy(outStr=#,"");
+  sprintf(outStr,"%d",intIn);
+  outStr;
+);
+function freq2note(f) (
+  round(12*(log(f/440)/log(2))+69);
+);
+function note2notename(n,upper) local(oct,nn,keys) (
+  upper ? keys="CCDDEFFGGAAH" : keys="ccddeffggaah";
+  oct=floor(n/12);oct-=1;
+  n%=12;
+  strcpy_substr(nn=#,keys,n,1);
+  n==1 || n==3 || n==6 || n==8 || n==10 ? strcat(nn,"#");
+  strcat(nn,int2str(oct));
+  nn;
+);
+
+//*/
+
+
+
+/* Sault interpolate
+
+// from http://paulbourke.net/miscellaneous/interpolation/
+
+function interpolate_linear(x1,x2,mu)
+ instance(out)
+(
+  out = x1*(1-mu) + x2*mu;
+);
+
+
+function interpolate_cosine(x1,x2,mu)
+ instance(mu2,out)
+(
+  mu2 = (1 - cos(mu * $pi))/2;
+  out = x1*(1-mu2) + x2*mu2;
+);
+
+
+function interpolate_smooth(x1,x2,mu)
+ instance(out)
+(
+  mu = mu * mu * (3 - (2 * mu));
+  out = x1 + ((x2 - x1) * mu);
+);
+
+
+// from www.xoxos.net/sem/dsp2public.pdf
+// xoxos' formula has tension and bias set to 0
+
+function interpolate_hermite(x0,x1,x2,x3,mu)
+ instance(a,b,c,d,out)
+(
+  a = ((3 * (x1- x2)) - x0 + x3) * 0.5;
+  b = x2 + x2 + x0 - (5*x1 + x3) * 0.5;
+  c = (x2 - x0) * 0.5;
+  d = mu;
+  out = ((a*d+b)*d+c)*d+x1;
+);
+
+
+// Thiran first-order all-pass
+
+
+function interpolate_allpass_init(d)
+ instance(a,x1,y1)
+(
+  a = (1-d)/(1+d);
+  a = min(max(a,0),1);
+  x1 = y1 = 0;
+);
+
+
+function interpolate_allpass(in)
+ instance(out,x1,y1,a)
+(
+  out = a * in + x1 - a * y1;
+  x1 = in;
+  y1 = out;
+  out;
+);
+
+
+// Thiran second-order all-pass
+//
+// from "Alias-Free Virtual Analog Oscillators Using a Feedback Delay Loop" 
+// http://dafx09.como.polimi.it/proceedings/papers/paper_72.pdf
+
+
+function interpolate_allpass2_init(d)
+(
+  this.a1 = -(d-2)/(d+1);
+  this.a2 = ((d-1)*(d-2))/((d+1)*(d+2));
+  this.x1 = this.x2 = this.y1 = this.y2 = 0;
+);
+
+
+function interpolate_allpass2(in)
+ instance(out,y1,y2,x1,x2,a1,a2)
+(
+  out = a2*in + a1*x1 + x2;
+  out -= (a1*y1 + a2*y2);
+  y2 = y1;
+  y1 = out;
+  x2 = x1;
+  x1 = in;
+  out;
+);
+
+
+// from RBJ's Audio Cookbook
+
+
+function interpolate_rbj_ap_init(frac)
+ instance(w0, cosw0, sinw0, alpha, a1)
+(
+  w0 = 2 * $pi * frac/srate;
+  cosw0 = cos(w0);
+  sinw0 = sin(w0);
+  alpha = sinw0 / 2;	// setting Q to 1
+  this.b01 = 1 - alpha;
+  this.b11 = -2 *cosw0;
+  this.b21 = 1 + alpha;
+  this.a01 = 1 + alpha;
+  this.a11 = -2 * cosw0;
+  this.a21 = 1 - alpha;
+  this.b01 /= this.a01;
+  this.b11 /= this.a01;
+  this.b21 /= this.a01;
+  this.a11 /= this.a01;
+  this.a21 /= this.a01;
+  this.x11 = this.x21 = 0;
+  this.y11 = this.y21 = 0;
+  this.oin = this.in = 0;
+);
+
+
+function interpolate_rbj_ap(in)
+ instance(oin, out)
+(
+  oin = in;
+  out = this.b01 * in + this.b11 * this.x11 + this.b21 * this.x21;
+  out += -this.a11 * this.y11 - this.a21 * this.y21;
+  this.x21 = this.x11;
+  this.x11 = this.oin;
+  this.y21 = this.y11;
+  this.y11 = out;
+  out;
+);
+
+
+// from http://www.cs.nuim.ie/~matthewh/VST.html
+
+function interpolate_fir_init(frac)
+ instance(b0,b1,b2,t,d,g,a)
+(
+  d = frac;
+  t = (1-d)/(1+d);
+  g = 10^(-6/(srate*1)); // 1 = "tau"
+  b0 = 0.5 * g * t;
+  b1 = 0.5 * (t + 1);
+  b2 = 0.5 * g;
+  a = t;
+);
+
+
+function interpolate_fir(in)
+  instance(out,x1,x2)
+(
+  out = this.b0 * in + x1;
+  x1 = this.b1 * in + x2 - this.a * out;
+  x2 = this.b2 * in;
+  out;
+);
+
+
+// from http://www.acoustics.hut.fi/~vpv/publications/vesan_vaitos/ch3_pt2_lagrange.pdf
+
+// 2nd order Lagrange interpolation
+
+
+function interpolate_lagrange2_init(frac)
+ instance(h0,h1,h2)
+(
+  h0 = 0.5 * (frac-1) * (frac-2);
+  h1 = -frac * (frac-2);
+  h2 = 0.5 * frac * (frac-1);
+);
+
+
+function interpolate_lagrange2(in)
+ instance(out,x1,x2)
+(
+  out = this.h0 * in + this.h1 * x1 + this.h2 * x2;
+  x2 = x1;
+  x1 = in;
+  out;
+);
+
+
+// 3rd order Lagrange interpolation
+
+
+function interpolate_lagrange3_init(frac)
+ instance(h0,h1,h2,h3)
+(
+  h0 = (frac-1) * (frac-2) * (frac-3)/-6;
+  h1 = 0.5 * frac * (frac-2) * (frac-3);
+  h2 = -0.5 * frac * (frac-1) * (frac-3);
+  h3 = (frac * (frac-1) * (frac-2))/6;
+);
+
+
+function interpolate_lagrange3(in)
+ instance(out,x1,x2,x3)
+(
+  out = this.h0 * in + this.h1 * x1 + this.h2 * x2 + this.h3 * x3;
+  x3 = x2;
+  x2 = x1;
+  x1 = in;
+  out;
+);
+
+//*/
+
+
+
+
+/*
+  // Some radian constants to minimize per-sample calculations
+  quarterPi = $PI * 0.25; //  45°
+  pi        = $PI;        // 180°
+  oneDot5Pi = $PI * 1.5;  // 270°
+  twoPi     = $PI * 2.0;  // 360°
+//*/
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+// JM plot
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function minmax(buf, buf_len)
+instance(buf_min, buf_min_i, buf_max, buf_max_i)
+local(b)
+(
+  b=0;
+  loop(buf_len,
+    val = buf[b];
+    buf_min > val ? (buf_min = val; buf_min_i = b); // Find max
+    buf_max < val ? (buf_max = val; buf_max_i = b); // Find min
+    b+=1;
+  );
+);
+
+//c1.minmax(buf, gfx_w);
+  
+function plot(buf, buf_len)
+instance(buf_min, buf_min_i, buf_max, buf_max_i, yrange)
+local(i, val, yscale, x_step, istep, lines, mult, first_line)
+(
+  buf_min =   10^20; // Reset buffers
+  buf_max = -(10^20);
+  //*
+  i=0;
+  loop(buf_len,
+    //buf[i] = 20*log10(abs(buf[i]));
+    val = buf[i];
+    buf_min > val ? (buf_min = val; buf_min_i = i); // Find max
+    buf_max < val ? (buf_max = val; buf_max_i = i); // Find min
+    i+=1;
+  );
+  //*/
+  
+  yrange = buf_max-buf_min;
+  yscale = gfx_h/(yrange);
+  
+  gfx_x = 0;
+  x_step = gfx_w / buf_len;
+  i = 0;
+  gfx_set(1,1,1,1);
+  loop(buf_len,
+    gfx_y = gfx_h - (buf[i] - buf_min) * yscale; // values normalized to 0-1 range
+    gfx_setpixel(1,1,1); 
+    //gfx_circle(gfx_x,gfx_y,6,0,0);
+    
+    i == buf_max_i ? (gfx_circle(gfx_x,gfx_y,6,0,0);); //gfx_line(gfx_x,0,gfx_x,gfx_h));
+    i == buf_min_i ? (gfx_circle(gfx_x,gfx_y,6,0,0);); //gfx_line(gfx_x,0,gfx_x,gfx_h));
+    gfx_x += x_step;
+    
+    i+=1;
+  );
+  
+  
+  // Draw Lines
+  gfx_set(1,0,0,1);
+  gfx_y = gfx_h - (0 - buf_min) * yscale; // Zero line
+  gfx_line(0,gfx_y,gfx_w,gfx_y);
+  
+  istep = 10^floor(log10(yrange*0.5));
+  istep10 = 10^round(log10(yrange*0.5));
+  mult = 10^floor(log10(yrange));
+  first_line = mult* floor(buf_min / mult);
+  //lines = floor(yrange)/istep;
+  lines = 15;
+  
+  i = first_line; // Draw lines w/ numbers
+  loop(lines*2,
+    gfx_set(1,1,1,0.2);
+    gfx_y = gfx_h - (i - buf_min) * yscale;
+    gfx_line(0,gfx_y,gfx_w,gfx_y);
+    
+    gfx_x = 2; gfx_y-=10;
+    gfx_set(1,1,1,1);
+    gfx_printf("%G" ,i);
+    i+=istep;
+  );
+  
+  gfx_set(1,1,1,0.1); // Draw lines w/o numbers
+  i = first_line;
+  loop(lines*20,
+    gfx_y = gfx_h - (i - buf_min) * yscale;
+    gfx_line(0,gfx_y,gfx_w,gfx_y);
+    i+=istep10/10;
+  );
+  
+);
+
+
+function plot(buf, buf_len, step, offset)
+instance(buf_min, buf_min_i, buf_max, buf_max_i, yrange)
+local(i, val, yscale, x_step, istep, lines, mult, first_line)
+(
+  buf_min =   10^20; // Reset buffers
+  buf_max = -(10^20);
+  
+  //*
+  i=0;
+  loop(buf_len,
+    val = buf[i*step+offset];
+    buf_min > val ? (buf_min = val; buf_min_i = i); // Find max
+    buf_max < val ? (buf_max = val; buf_max_i = i); // Find min
+    i+=1;
+  );
+  //*/
+  
+  yrange = buf_max-buf_min;
+  yscale = gfx_h/(yrange);
+  
+  gfx_x = 0;
+  x_step = step * gfx_w / buf_len;
+  i = 0;
+  gfx_set(1,1,1,1);
+  loop(buf_len,
+    gfx_y = gfx_h - (buf[i*step+offset] - buf_min) * yscale; // values normalized to 0-1 range
+    gfx_setpixel(1,1,1); 
+    //gfx_circle(gfx_x,gfx_y,6,0,0);
+    
+    i == buf_max_i ? (gfx_circle(gfx_x,gfx_y,6,0,0);); //gfx_line(gfx_x,0,gfx_x,gfx_h));
+    i == buf_min_i ? (gfx_circle(gfx_x,gfx_y,6,0,0);); //gfx_line(gfx_x,0,gfx_x,gfx_h));
+    gfx_x += x_step;
+    
+    i+=1;
+  );
+  
+  
+  // Draw Lines
+  gfx_set(1,0,0,1);
+  gfx_y = gfx_h - (0 - buf_min) * yscale; // Zero line
+  gfx_line(0,gfx_y,gfx_w,gfx_y);
+  
+  istep = 10^floor(log10(yrange*0.5));
+  istep10 = 10^round(log10(yrange*0.5));
+  mult = 10^floor(log10(yrange));
+  first_line = mult* floor(buf_min / mult);
+  //lines = floor(yrange)/istep;
+  lines = 15;
+  
+  i = first_line; // Draw lines w/ numbers
+  loop(lines*2,
+    gfx_set(1,1,1,0.2);
+    gfx_y = gfx_h - (i - buf_min) * yscale;
+    gfx_line(0,gfx_y,gfx_w,gfx_y);
+    
+    gfx_x = 2; gfx_y-=10;
+    gfx_set(1,1,1,1);
+    gfx_printf("%G" ,i);
+    i+=istep;
+  );
+  
+  gfx_set(1,1,1,0.1); // Draw lines w/o numbers
+  i = first_line;
+  loop(lines*20,
+    gfx_y = gfx_h - (i - buf_min) * yscale;
+    gfx_line(0,gfx_y,gfx_w,gfx_y);
+    i+=istep10/10;
+  );
+  
+);
+
+
+function plot(buf, buf_len, step, offset, minimum, maximum)
+instance(buf_min, buf_min_i, buf_max, buf_max_i, yrange)
+local(i, val, yscale, x_step, istep, lines, mult, first_line)
+(
+  buf_min =   10^20; // Reset buffers
+  buf_max = -(10^20);
+  
+  //*
+  i=0;
+  loop(buf_len,
+    val = buf[i*step+offset];
+    buf_min > val ? (buf_min = val; buf_min_i = i); // Find max
+    buf_max < val ? (buf_max = val; buf_max_i = i); // Find min
+    i+=1;
+  );
+  //*/
+  buf_min = minimum; // Reset buffers
+  buf_max = maximum;
+  
+  yrange = buf_max-buf_min;
+  yscale = gfx_h/(yrange);
+  
+  gfx_x = 0;
+  x_step = step * gfx_w / buf_len;
+  i = 0;
+  gfx_set(1,1,1,1);
+  loop(buf_len,
+    gfx_y = gfx_h - (buf[i*step+offset] - buf_min) * yscale; // values normalized to 0-1 range
+    gfx_setpixel(1,1,1); 
+    //gfx_circle(gfx_x,gfx_y,6,0,0);
+    
+    i == buf_max_i ? (gfx_circle(gfx_x,gfx_y,6,0,0);); //gfx_line(gfx_x,0,gfx_x,gfx_h));
+    i == buf_min_i ? (gfx_circle(gfx_x,gfx_y,6,0,0);); //gfx_line(gfx_x,0,gfx_x,gfx_h));
+    gfx_x += x_step;
+    
+    i+=1;
+  );
+  
+  
+  // Draw Lines
+  gfx_set(1,0,0,1);
+  gfx_y = gfx_h - (0 - buf_min) * yscale; // Zero line
+  gfx_line(0,gfx_y,gfx_w,gfx_y);
+  
+  istep = 10^floor(log10(yrange*0.5));
+  istep10 = 10^round(log10(yrange*0.5));
+  mult = 10^floor(log10(yrange));
+  first_line = mult* floor(buf_min / mult);
+  //lines = floor(yrange)/istep;
+  lines = 15;
+  
+  i = first_line; // Draw lines w/ numbers
+  loop(lines*2,
+    gfx_set(1,1,1,0.2);
+    gfx_y = gfx_h - (i - buf_min) * yscale;
+    gfx_line(0,gfx_y,gfx_w,gfx_y);
+    
+    gfx_x = 2; gfx_y-=10;
+    gfx_set(1,1,1,1);
+    gfx_printf("%G" ,i);
+    i+=istep;
+  );
+  
+  gfx_set(1,1,1,0.1); // Draw lines w/o numbers
+  i = first_line;
+  loop(lines*20,
+    gfx_y = gfx_h - (i - buf_min) * yscale;
+    gfx_line(0,gfx_y,gfx_w,gfx_y);
+    i+=istep10/10;
+  );
+  
+);
+
+
+
+
+
+
+
+// JackUtilities
+
+function round(N) (0|(N+sign(N)*0.5));
+
+default_comparison_tolerence = 10^-5; // standard
+function equal(A, B, tolerence) ((A===B) || (abs(A-B)/(abs(A)+abs(B))<tolerence));
+function equal(A, B) (equal(A, B, default_comparison_tolerence));
+
+
+//chokechold
+// Accelerated 1/x calculation
+function fastReciprocal (value) (sqr(invsqrt(value)));
+
+function soft (sample) local (exp2x)
+(
+exp2x = exp(2.0 * sample);
+(exp2x - 1.0) * fastReciprocal(exp2x + 1.0);
+);
+
+// Basic linear interpolation -- constant speed
+//
+function linearInterpolation (value1, value2, position)
+(
+(value1 * (1.0 - position) + value2 * position);
+);
+//
+// Decelerated interpolation -- fast start, slow stop
+function decelerate (value)
+(
+linearInterpolation(0.0, 1.0, 1.0 - sqr(1.0 - value));
+);
+
+
+
+function reverseLogTaper(val)
+(
+  (val*1.1)/(val+0.1);
+);
+
+function logTaper(val)
+(
+  (-0.1*val)/(val-1.1);
+);
+
+
+/*
+function reverseLogTaper(val)
+(
+  (-0.85*x-x)/(-1.7*val-0.15);
+);
+
+function logTaper(val)
+(
+  (0.85*val-val)/(1.7*val-1.85);
+);
+//*/
+
+
+
+//____Smashed Transistors__________________________________________________________________
+//diamond angle 0..4 (fast atan2)
+function diamAngle(x y) (
+  y >= 0 ? (
+    x >= 0 ?     y / (x + y) : 1 + x / (x - y);
+  ) : (
+    x < 0  ? 2 + y / (x + y) : 3 + x / (x - y); 
+  );
+);
+
+
+
+
+
+  //*
+  function freq2notename(freq) local(nn,keys) (
+    nf = 12*(log(freq/440)/log(2))+69;
+    n = round(nf);
+    cent = 100 * (nf-n);
+    keys="CCDDEFFGGAAH";
+    oct=floor(n/12);oct-=1;
+    n%=12;
+    strcpy_substr(nn=#,keys,n,1);
+    n==1 || n==3 || n==6 || n==8 || n==10 ? strcat(nn,"#"):strcat(nn," ");
+    strcat(nn,int2str(oct));
+    strcat(nn,sprintf(16, " [%+3.fc]", cent));
+    nn
+  );
+  //*/

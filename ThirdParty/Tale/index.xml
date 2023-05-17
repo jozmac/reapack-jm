@@ -2,7 +2,7 @@
 <index version="1" name="Jozef Mackowiak Tale JSFX Redistribution">
   <category name="Tale">
     <reapack name="Tale" type="effect">
-      <version name="0.0.0">
+      <version name="1.0">
         <source file="adsr.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/adsr.jsfx-inc</source>
         <source file="array.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/array.jsfx-inc</source>
         <source file="complex.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/complex.jsfx-inc</source>

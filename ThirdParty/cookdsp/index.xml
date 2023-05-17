@@ -2,7 +2,7 @@
 <index version="1" name="Jozef Mackowiak CookDSP Redistribution">
   <category name="cookdsp">
     <reapack name="cookdsp" type="effect">
-      <version name="0.0.0">
+      <version name="1.0">
         <source file="cookdsp/analysis.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/cookdsp/analysis.jsfx-inc</source>
         <source file="cookdsp/buffer.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/cookdsp/buffer.jsfx-inc</source>
         <source file="cookdsp/cookdsp.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/cookdsp/cookdsp.jsfx-inc</source>

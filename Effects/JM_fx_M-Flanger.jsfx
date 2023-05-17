@@ -1,11 +1,11 @@
 desc:K-Flanger [JM]
 author: Jozef Mackowiak
-version: 0.0.0
+version: 1.0
 changelog: Initial Commit
 about:
   # K-Flanger
   Combination of flanger and stereo widener.
-  ### Featires:
+  ### Features:
   - high quality fractional delay algorhithm
   - feedback rotation
   - three stereo widening modes

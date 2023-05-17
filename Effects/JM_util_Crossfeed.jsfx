@@ -1,6 +1,6 @@
 desc:Crossfeed [JM]
 author: Jozef Mackowiak
-version: 0.0.0
+version: 1.0
 changelog: Initial Commit
 about:
   # Crossfeed
@@ -377,8 +377,8 @@ mode == 2 ? ( //Hyperrealistic
 );
 //*/
 
-spl0 = (1-amount)*spl0org + amount*s1;
-spl1 = (1-amount)*spl1org + amount*s0;
+spl0 = (1-amount)*spl1org + amount*s0;
+spl1 = (1-amount)*spl0org + amount*s1;
 
 spl0 *= 1.1;
 spl1 *= 1.1;

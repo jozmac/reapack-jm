@@ -195,7 +195,7 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 ## M-Flanger
 ![04-05-23_reaper_546](https://user-images.githubusercontent.com/123021340/236188538-83b97033-e04b-4d43-890e-656611beae66.png)
   Combination of flanger and stereo widener.
-  ### Featires:
+  ### Features:
   - high quality fractional delay algorhithm
   - feedback rotation
   - three stereo widening modes

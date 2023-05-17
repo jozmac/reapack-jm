@@ -32,7 +32,7 @@
       </version>
     </reapack>
     <reapack name="Tale" type="effect">
-      <version name="0.0.0">
+      <version name="1.0">
         <source file="adsr.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/adsr.jsfx-inc</source>
         <source file="array.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/array.jsfx-inc</source>
         <source file="complex.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/Tale/complex.jsfx-inc</source>
@@ -55,7 +55,7 @@
       </version>
     </reapack>
     <reapack name="cookdsp" type="effect">
-      <version name="0.0.0">
+      <version name="1.0">
         <source file="cookdsp/analysis.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/cookdsp/analysis.jsfx-inc</source>
         <source file="cookdsp/buffer.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/cookdsp/buffer.jsfx-inc</source>
         <source file="cookdsp/cookdsp.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/cookdsp/cookdsp.jsfx-inc</source>

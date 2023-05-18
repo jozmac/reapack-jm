@@ -1,0 +1,557 @@
+desc:STFT Library
+/*
+  Józef Maćkowiak 01/2023
+  // Geraint Luff's STFT template modification
+  STFT template code by Geraint Luff: https://forum.cockos.com/showthread.php?t=225955
+  window.jsfx-inc and complex.jsfx-inc libraries by Theo Niessink: https://www.taletn.com/reaper/
+//*/
+
+import Tale/window.jsfx-inc
+import Tale/complex.jsfx-inc
+
+
+@init
+
+  pi2 = 2*$pi;
+  invsrate = 1/srate;
+
+function stft_process(fft_buffer, fft_size) local(fft_bin) (
+  fft_bin = 0; // FFT bin number
+  loop(fft_size/2,
+    fft_bin2 = fft_bin ? (fft_size - fft_bin) : 0;
+    //fft_bin2 = fft_bin ? (fft_size - fft_bin) : fft_size;
+    ///^^^/// fft_bin == 0 ? (fft_bin2 = 0):(fft_bin2 = fft_size - fft_bin);
+    
+    /*
+    // Unfold complex spectrum into two real spectra
+    A.re =  fft_buffer[2*fft_bin  ] + fft_buffer[2*fft_bin2  ];
+    A.im =  fft_buffer[2*fft_bin+1] - fft_buffer[2*fft_bin2+1];
+    B.re =  fft_buffer[2*fft_bin+1] + fft_buffer[2*fft_bin2+1];
+    B.im = -fft_buffer[2*fft_bin  ] + fft_buffer[2*fft_bin2  ];
+    //*/
+    
+    A.cplx_set(fft_buffer[2*fft_bin  ] + fft_buffer[2*fft_bin2  ],  fft_buffer[2*fft_bin+1] - fft_buffer[2*fft_bin2+1]);
+    B.cplx_set(fft_buffer[2*fft_bin+1] + fft_buffer[2*fft_bin2+1], -fft_buffer[2*fft_bin  ] + fft_buffer[2*fft_bin2  ]);
+    
+    /*
+    A.cplx_set(fft_buffer0[2*fft_bin  ] + fft_buffer0[2*fft_bin2  ],  fft_buffer0[2*fft_bin+1] - fft_buffer0[2*fft_bin2+1]);
+    B.cplx_set(fft_buffer0[2*fft_bin+1] + fft_buffer0[2*fft_bin2+1], -fft_buffer0[2*fft_bin  ] + fft_buffer0[2*fft_bin2  ]);
+    C.cplx_set(fft_buffer1[2*fft_bin  ] + fft_buffer1[2*fft_bin2  ],  fft_buffer1[2*fft_bin+1] - fft_buffer1[2*fft_bin2+1]);
+    D.cplx_set(fft_buffer1[2*fft_bin+1] + fft_buffer1[2*fft_bin2+1], -fft_buffer1[2*fft_bin  ] + fft_buffer1[2*fft_bin2  ]);
+    //*/
+    
+    /*
+    A.conj.cplx_conj(A);
+    B.conj.cplx_conj(B);
+    
+    G_AA.cplx_mul(A.conj, A);
+    G_BB.cplx_mul(B.conj, B);
+    G_AB.cplx_mul(A.conj, B);
+    G_BA.cplx_mul(B.conj, A);
+    
+    G_AB_im_avg = G_AB_buffer[2*i  ] = G_AB_buffer[2*i  ] * smoothing_coeff + G_AB.im;
+    G_AB_re_avg = G_AB_buffer[2*i+1] = G_AB_buffer[2*i+1] * smoothing_coeff + G_AB.re;
+    G_AA_re_avg = G_AA_buffer[2*i  ] = G_AA_buffer[2*i  ] * smoothing_coeff + G_AA.re;
+    G_BB_re_avg = G_BB_buffer[2*i  ] = G_BB_buffer[2*i  ] * smoothing_coeff + G_BB.re;
+    G_AB_avg_abs_sqr = sqr(G_AB_re_avg) + sqr(G_AB_im_avg);
+    coherence = G_AB_avg_abs_sqr / (G_AA_re_avg * G_BB_re_avg);
+    
+    
+    A.cplx_log(A);
+    B.cplx_log(B);
+    
+    A.cplx_exp(A);
+    B.cplx_exp(B);
+    
+    
+    A.arg = A.cplx_arg();
+    A.abs = A.cplx_abs();
+    B.arg = B.cplx_arg();
+    B.abs = B.cplx_abs();
+    
+    A.cplx_polar(A.abs, A.arg);
+    B.cplx_polar(B.abs, B.arg);
+    
+    
+    H.cplx_div(B, A);
+    H.abs = H.cplx_abs(); // H.abs = sqrt(sqr(H.re) + sqr(H.im));
+    H.arg = H.cplx_arg(); // H.arg = -atan2(H.im, H.re);
+    H.cplx_polar(H.abs, H.arg);
+    H_1.cplx_div(G_AB, G_AA); H_1.abs = H_1.cplx_abs(); H_1.arg = H_1.cplx_arg(); // FRF estimates
+    H_2.cplx_div(G_BB, G_BA); H_2.abs = H_2.cplx_abs(); H_2.arg = H_2.cplx_arg();
+    H_a.cplx_div(G_BB, G_AA); H_a.abs = H_a.cplx_abs(); H_a.arg = H_a.cplx_arg();
+    
+    
+    //*/
+    
+    /*
+    //////////////////////// Main STFT block
+    // The interesting bit - as a placeholder, let's implement a lowpass at 1kHz
+    fft_bin > 1000*fft_size/srate ? (
+      A.re = 0;
+      A.im = 0;
+      B.re = 0;
+      B.im = 0;
+    );
+    ////////////////////////
+    //*/
+
+    // Re-fold back into complex spectrum
+    fft_buffer[2*fft_bin   ] = ( A.re - B.im)*0.5;
+    fft_buffer[2*fft_bin+1 ] = ( A.im + B.re)*0.5;
+    fft_buffer[2*fft_bin2  ] = ( A.re + B.im)*0.5;
+    fft_buffer[2*fft_bin2+1] = (-A.im + B.re)*0.5;
+
+    fft_bin += 1;
+  );
+);
+  
+
+function setup_stft_state(fft_size, first_time) (
+  //////////////////////// Setup block
+  // This is called when playback starts, or when the FFT size is changed
+  0;
+  ////////////////////////
+);
+  
+  
+function window(r)(
+  // When squared, the Hann window adds up perfectly for overlap >= 4, so it's suitable for perfect reconstruction
+  //(0.5 - 0.5*cos(r*2*$pi))*invsqrt(0.375); // cheper version
+  (0.5 - 0.5*cos(r*2*$pi))/sqrt(0.375);
+);
+
+
+function stft_block(overlap_factor)
+  global(fft_size_index,fft_size,fft_interval,fft_scaling_factor,window_buffer,prev_fft_size)
+  local(i,r)
+(
+  //overlap_factor = 4;
+  fft_size = 256<<fft_size_index;
+  fft_interval = fft_size/overlap_factor;
+  fft_scaling_factor = 1/overlap_factor/fft_size;
+  
+  fft_size != prev_fft_size ? (
+    setup_stft_state(fft_size, prev_fft_size == 0);
+    prev_fft_size = fft_size;
+    // Fill window buffer
+    i = 0;
+    loop(fft_size,
+      r = (i + 0.5)/fft_size;
+      window_buffer[i] = window(r);
+      //window_buffer[i] = wnd_hann(r, 2)/sqrt(0.375);
+      //window_buffer[i] = wnd(wnd, i, n)/sqrt(0.375);
+      i += 1;
+    );
+  );
+); 
+
+
+function stft_in()
+  global(bi,buffer_index,fft_size,buffer_length,fft_buffer,input_buffer,window_buffer,)
+  local(i,i2)
+(
+  // Copy input to buffer
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    i2 < 0 ? i2 += buffer_length;
+  
+    fft_buffer[2*i  ] = input_buffer[2*i2  ]*window_buffer[i];
+    fft_buffer[2*i+1] = input_buffer[2*i2+1]*window_buffer[i];
+  
+    i += 1;
+  );
+);
+
+
+function stft_OA()
+  global(bi,buffer_index,fft_size,buffer_length,output_buffer,fft_buffer,fft_scaling_factor,window_buffer)
+  local(i,i2)
+(
+  // Add to output
+  bi = buffer_index - fft_size + 1;
+  i = 0;
+  loop(fft_size,
+    i2 = bi + i;
+    (i2 < 0) ? i2 += buffer_length;
+  
+    output_buffer[2*i2  ] += fft_buffer[2*i  ]*fft_scaling_factor*window_buffer[i];
+    output_buffer[2*i2+1] += fft_buffer[2*i+1]*fft_scaling_factor*window_buffer[i];
+  
+    i += 1;
+  );
+);
+
+
+function stft_out()
+  global(output_index,buffer_index,fft_size,buffer_length,spl0,spl1,output_buffer)
+(
+  output_index = buffer_index - fft_size;
+  output_index < 0 ? output_index += buffer_length;
+  spl0 = output_buffer[output_index*2  ];
+  spl1 = output_buffer[output_index*2+1];
+  output_buffer[output_index*2  ] = 0; // clear the sample we just read
+  output_buffer[output_index*2+1] = 0;
+  
+  buffer_index = (buffer_index + 1)%buffer_length;
+);
+
+
+
+
+////////////////////////////////////////////////////////////////////////////
+
+function bessel0(x) local(significanceLimit, result, term, m) (
+  result = 0;
+  term = 1;
+  m = 0;
+  while (term  > result*0.000001) (
+    result += term;
+    m += 1;
+    term *= (x*x)/(4*m*m);
+  );
+  result;
+);
+function kaiser_fill(buffer, length, beta) local(invB0, i, r, arg) (
+  invB0 = 1/bessel0(beta);
+  i = 0;
+  loop(length,
+    r = (2*i + 1)/length - 1;
+    arg = sqrt(1 - r*r);
+    buffer[i] = bessel0(beta*arg)*invB0;
+    i += 1;
+  );
+);
+function force_perfect_reconstruction(buffer, size, stride) local(i, i2, sum2, factor) (
+  i = 0;
+  loop (stride,
+    sum2 = 0;
+    i2 = i;
+    while (i2 < size) (
+      sum2 += buffer[i2]*buffer[i2];
+      i2 += stride;
+    );
+    factor = sqrt(1/sum2);
+    i2 = i;
+    while (i2 < size) (
+      buffer[i2] = buffer[i2]*factor;
+      i2 += stride;
+    );
+    i += 1;
+  );
+);
+
+
+function wnd(wnd, i, n)
+(
+  wnd == 1 ? wnd_rect(i, n) :
+  wnd == 2 ? wnd_bartlett(i, n) :
+  wnd == 3 ? wnd_parzen(i, n) :
+  wnd == 4 ? wnd_welch(i, n) :
+  wnd == 5 ? wnd_hann(i, n) :
+  wnd == 6 ? wnd_hamming(i, n) :
+  wnd == 7 ? wnd_blackman(i, n) :
+  wnd == 8 ? wnd_nuttall(i, n) :
+  wnd == 9 ? wnd_blackman_nuttall(i, n) :
+  wnd == 10 ? wnd_blackman_harris(i, n) :
+  wnd == 11 ? wnd_flat_top(i, n) :
+  wnd == 12 ? wnd_rife_vincent1(i, n, 2) :
+  wnd == 13 ? wnd_rife_vincent2(i, n, 3, 0.001) :
+  wnd == 14 ? wnd_rife_vincent3(i, n, 3) :
+  wnd == 15 ? wnd_cos(i, n) :
+  wnd == 16 ? wnd_bohman(i, n) :
+  wnd == 17 ? wnd_gauss(i, n, 0.4) :
+  wnd == 18 ? wnd_gauss_conf(i, n, 0.1) :
+  wnd == 19 ? wnd_tukey(i, n, 0.5) :
+  wnd == 20 ? wnd_planck_taper(i, n, 0.1) :
+  wnd == 21 ? wnd_kaiser(i, n, 2) :
+  wnd == 22 ? wnd_kaiser(i, n, 3) :
+  wnd == 23 ? wnd_dolph_chebyshev(i, n, 5) :
+  wnd == 24 ? wnd_poisson(i, n, 1) :
+  wnd == 25 ? wnd_poisson(i, n, 60 / (20*log10($e))) :
+  wnd == 26 ? wnd_bartlett_hann(i, n) :
+  wnd == 27 ? wnd_planck_bessel(i, n, 0.1, 4.45) :
+  wnd == 28 ? wnd_hann_poisson(i, n, 2) :
+  wnd == 29 ? wnd_lanczos(i, n) :
+  wnd == 30 ? wnd_cauchy(i, n, 3) :
+  wnd == 31 ? wnd_connes(i, n, 1);
+);
+
+
+function stft_block(overlap_factor,window_type)
+  global(fft_size_index,fft_size,fft_interval,fft_scaling_factor,window_buffer,prev_fft_size,window_type,prev_window_type,window_samples)
+  local(i,r)
+(
+  //overlap_factor = 4;
+  fft_size = 256<<fft_size_index;
+  fft_interval = fft_size/overlap_factor;
+  fft_scaling_factor = 1/overlap_factor/fft_size;
+  window_samples = fft_size;
+  
+  fft_size != prev_fft_size || window_type != prev_window_type ? (
+    setup_stft_state(fft_size, prev_fft_size == 0);
+    prev_fft_size = fft_size;
+    prev_window_type = window_type;
+    // Fill window buffer
+    i = 0;
+    loop(fft_size,
+      r = (i + 0.5)/fft_size;
+      //window_buffer[i] = window(r);
+      //window_buffer[i] = wnd_hann(r, 2)/sqrt(0.375);
+      window_buffer[i] = wnd(window_type, r, 2)/sqrt(0.375);
+      //window_buffer[i] = wnd(window_type, r, 2);
+      //force_perfect_reconstruction(window_buffer, window_samples, fft_interval);
+      i += 1;
+    );
+  );
+); 
+
+
+
+// slider1:window_ms=10<1,50>window length (ms)
+// slider3:max_gain_db=40<0,100,1>max band gain (dB)
+
+function stft_block_kaiser(overlap_factor,window_ms,max_gain_db)
+  global(max_gain,window_samples,srate,MAX_FFT_SIZE,fft_size,fft_interval,fft_scaling_factor,prev_window_samples,window_buffer,prev_fft_size,freemem)
+  local(i,kaiser_alpha,kaiser_bandwidth)
+  (
+  
+  /*
+  window_ms=10;
+  max_gain_db=40;
+  //*/
+  
+  max_gain = pow(10, max_gain_db*0.05);
+  
+  //overlap_factor = 6;
+  window_samples = min(ceil(window_ms*0.001*srate), MAX_FFT_SIZE);
+  fft_size = 16;
+  while (fft_size < window_samples) (
+    fft_size *= 2;
+  );
+  fft_interval = ceil(window_samples/overlap_factor);
+  fft_scaling_factor = 1/fft_size;
+  
+  window_samples != prev_window_samples ? (
+    prev_window_samples = window_samples;
+  
+    kaiser_bandwidth = overlap_factor + 2/(overlap_factor*overlap_factor); // heuristic optimal
+    kaiser_alpha = sqrt(kaiser_bandwidth*kaiser_bandwidth*0.25 - 1);
+    kaiser_fill(window_buffer, window_samples, kaiser_alpha*$pi);
+    force_perfect_reconstruction(window_buffer, window_samples, fft_interval);
+  
+    i = window_samples;
+    while (i < fft_size) (
+      window_buffer[i] = 0;
+      i += 1;
+    );
+  );
+  
+  fft_size != prev_fft_size ? (
+    setup_stft_state(fft_size, freemem);
+    prev_fft_size = fft_size;
+  );
+);
+
+
+
+
+
+
+function fft_norm(fft_bufferA, fft_bufferB, fft_size) local(fft_bin) (
+  fft_bin = 0;
+  loop(fft_size,
+    
+    A.cplx_set(fft_bufferA[2*fft_bin], fft_bufferA[2*fft_bin+1]);
+    B.cplx_set(fft_bufferB[2*fft_bin], fft_bufferB[2*fft_bin+1]);
+    
+    A.cplx_mul_real(A, inv_fft_size);
+    B.cplx_mul_real(B, inv_fft_size);
+    
+    fft_bufferA[2*fft_bin  ] = A.re;
+    fft_bufferA[2*fft_bin+1] = A.im;
+    fft_bufferB[2*fft_bin  ] = B.re;
+    fft_bufferB[2*fft_bin+1] = B.im;
+    
+    fft_bin += 1;
+  );
+);
+
+
+function stft_log(fft_bufferA, fft_bufferB, fft_size) local(fft_bin) (
+  fft_bin = 0;
+  loop(fft_size,
+    
+    A.cplx_set(fft_bufferA[2*fft_bin], fft_bufferA[2*fft_bin+1]);
+    B.cplx_set(fft_bufferB[2*fft_bin], fft_bufferB[2*fft_bin+1]);
+    
+    //A.cplx_mul_real(A, inv_fft_size); B.cplx_mul_real(B, inv_fft_size);
+    
+    A.cplx_log(A);
+    B.cplx_log(B);
+    
+    fft_bufferA[2*fft_bin  ] = A.re;
+    fft_bufferA[2*fft_bin+1] = A.im;
+    fft_bufferB[2*fft_bin  ] = B.re;
+    fft_bufferB[2*fft_bin+1] = B.im;
+    
+    fft_bin += 1;
+  );
+);
+
+
+function stft_exp(fft_bufferA, fft_bufferB, fft_size) local(fft_bin) (
+  fft_bin = 0;
+  loop(fft_size,
+    
+    A.cplx_set(fft_bufferA[2*fft_bin], fft_bufferA[2*fft_bin+1]);
+    B.cplx_set(fft_bufferB[2*fft_bin], fft_bufferB[2*fft_bin+1]);
+    
+    //A.cplx_mul_real(A, inv_fft_size); B.cplx_mul_real(B, inv_fft_size);
+    
+    A.cplx_exp(A);
+    B.cplx_exp(B);
+    
+    fft_bufferA[2*fft_bin  ] = A.re;
+    fft_bufferA[2*fft_bin+1] = A.im;
+    fft_bufferB[2*fft_bin  ] = B.re;
+    fft_bufferB[2*fft_bin+1] = B.im;
+    
+    fft_bin += 1;
+  );
+);
+
+
+function stft_split(fft_buffer0, fft_buffer1, fft_size) 
+  //global(fft_buffer1)
+  local(fft_bin,fft_bin2,A.re,A.im,B.re,B.im) 
+  (
+  fft_bin = 1;
+  loop(fft_size/2,
+    fft_bin2 = fft_size - fft_bin;
+    
+    //*
+    // Unfold complex spectrum into two real spectra
+    A.re =  fft_buffer0[2*fft_bin  ] + fft_buffer0[2*fft_bin2  ];
+    A.im =  fft_buffer0[2*fft_bin+1] - fft_buffer0[2*fft_bin2+1];
+    B.re =  fft_buffer0[2*fft_bin+1] + fft_buffer0[2*fft_bin2+1];
+    B.im = -fft_buffer0[2*fft_bin  ] + fft_buffer0[2*fft_bin2  ];
+    //*/
+    
+    /*
+    // Unfold complex spectrum into two real spectra
+    A.re = 0;
+    A.im = 0;
+    B.re = 0;
+    B.im = 0;
+    //*/
+    
+    /*
+    fft_buffer0[2*fft_bin  ] = fft_buffer0[2*fft_bin2  ] =  fft_buffer0[2*fft_bin  ] + fft_buffer0[2*fft_bin2  ];
+    fft_buffer0[2*fft_bin+1] = fft_buffer0[2*fft_bin2+1] =  fft_buffer0[2*fft_bin+1] - fft_buffer0[2*fft_bin2+1];
+    fft_buffer1[2*fft_bin  ] = fft_buffer1[2*fft_bin2  ] =  fft_buffer0[2*fft_bin+1] + fft_buffer0[2*fft_bin2+1];
+    fft_buffer1[2*fft_bin+1] = fft_buffer1[2*fft_bin2+1] = -fft_buffer0[2*fft_bin  ] + fft_buffer0[2*fft_bin2  ];
+    //*/
+    
+    /*
+    fft_buffer0[2*fft_bin  ] =  fft_buffer0[2*fft_bin  ] + fft_buffer0[2*fft_bin2  ];
+    fft_buffer0[2*fft_bin+1] =  fft_buffer0[2*fft_bin+1] - fft_buffer0[2*fft_bin2+1];
+    fft_buffer1[2*fft_bin  ] =  fft_buffer0[2*fft_bin+1] + fft_buffer0[2*fft_bin2+1];
+    fft_buffer1[2*fft_bin+1] = -fft_buffer0[2*fft_bin  ] + fft_buffer0[2*fft_bin2  ];
+    //*/
+    
+    //*
+    fft_buffer0[2*fft_bin   ] = A.re;
+    fft_buffer0[2*fft_bin +1] = A.im;
+    fft_buffer1[2*fft_bin   ] = B.re;
+    fft_buffer1[2*fft_bin +1] = B.im;
+    
+    fft_buffer0[2*fft_bin2  ] = A.re;
+    fft_buffer0[2*fft_bin2+1] = -A.im;
+    fft_buffer1[2*fft_bin2  ] = B.re;
+    fft_buffer1[2*fft_bin2+1] = -B.im;
+    
+    //fft_buffer0[2*fft_bin2  ] = 0;
+    //fft_buffer0[2*fft_bin2+1] = 0;
+    //fft_buffer1[2*fft_bin2  ] = 0;
+    //fft_buffer1[2*fft_bin2+1] = 0;
+    //*/
+    
+    fft_bin += 1;
+  );
+);
+
+
+function stft_join(fft_buffer0, fft_buffer1, fft_size) 
+  local(fft_bin,fft_bin2,A.re,A.im,B.re,B.im) 
+  (
+  fft_bin = 1;
+  loop(fft_size/2,
+    fft_bin2 = fft_size - fft_bin;
+    
+    /*
+    // Re-fold back into complex spectrum
+    fft_buffer[2*fft_bin   ] = ( A.re - B.im)*0.5;
+    fft_buffer[2*fft_bin+1 ] = ( A.im + B.re)*0.5;
+    fft_buffer[2*fft_bin2  ] = ( A.re + B.im)*0.5;
+    fft_buffer[2*fft_bin2+1] = (-A.im + B.re)*0.5;
+    //*/
+    
+    
+    /*
+    fft_buffer0[2*fft_bin   ] = ( fft_buffer0[2*fft_bin  ] - fft_buffer1[2*fft_bin+1]) * 0.5;
+    fft_buffer0[2*fft_bin+1 ] = ( fft_buffer0[2*fft_bin+1] + fft_buffer1[2*fft_bin  ]) * 0.5;
+    fft_buffer0[2*fft_bin2  ] = ( fft_buffer0[2*fft_bin  ] + fft_buffer1[2*fft_bin+1]) * 0.5;
+    fft_buffer0[2*fft_bin2+1] = (-fft_buffer0[2*fft_bin+1] + fft_buffer1[2*fft_bin  ]) * 0.5;
+    //*/
+    
+    //*
+    A.re = ( fft_buffer0[2*fft_bin  ] - fft_buffer1[2*fft_bin+1]) * 0.5;
+    A.im = ( fft_buffer0[2*fft_bin+1] + fft_buffer1[2*fft_bin  ]) * 0.5;
+    B.re = ( fft_buffer0[2*fft_bin  ] + fft_buffer1[2*fft_bin+1]) * 0.5;
+    B.im = (-fft_buffer0[2*fft_bin+1] + fft_buffer1[2*fft_bin  ]) * 0.5;
+    //*/
+    
+    //*
+    fft_buffer0[2*fft_bin   ] = A.re;
+    fft_buffer0[2*fft_bin+1 ] = A.im;
+    fft_buffer0[2*fft_bin2  ] = B.re;
+    fft_buffer0[2*fft_bin2+1] = B.im;
+    //*/
+    
+    fft_bin += 1;
+  );
+);
+
+
+function stft_process_4ch(fft_buffer, fft_size) local(fft_bin,fft_bin2) (
+  fft_bin = 0; // FFT bin number
+  loop(fft_size/2,
+    fft_bin2 = fft_size - fft_bin;
+    
+    A.cplx_set(fft_buffer[2*fft_bin  ] + fft_buffer[2*fft_bin2  ],  fft_buffer[2*fft_bin+1] - fft_buffer[2*fft_bin2+1]);
+    B.cplx_set(fft_buffer[2*fft_bin+1] + fft_buffer[2*fft_bin2+1], -fft_buffer[2*fft_bin  ] + fft_buffer[2*fft_bin2  ]);
+    C.cplx_set(fft_buffer[4*fft_bin  ] + fft_buffer[4*fft_bin2  ],  fft_buffer[4*fft_bin+1] - fft_buffer[4*fft_bin2+1]);
+    D.cplx_set(fft_buffer[4*fft_bin+1] + fft_buffer[4*fft_bin2+1], -fft_buffer[4*fft_bin  ] + fft_buffer[4*fft_bin2  ]);
+    
+    //*
+    fft_bin > 1000*fft_size/srate ? (
+      A.re = 0;
+      A.im = 0;
+      B.re = 0;
+      B.im = 0;
+    );
+    //*/
+
+    // Re-fold back into complex spectrum
+    fft_buffer[2*fft_bin   ] = ( A.re - B.im)*0.5;
+    fft_buffer[2*fft_bin+1 ] = ( A.im + B.re)*0.5;
+    fft_buffer[2*fft_bin2  ] = ( A.re + B.im)*0.5;
+    fft_buffer[2*fft_bin2+1] = (-A.im + B.re)*0.5;
+
+    fft_bin += 1;
+  );
+  fft_buffer[fft_size] = fft_buffer[fft_size+1] = 0; // Remove energy at nyquist
+);

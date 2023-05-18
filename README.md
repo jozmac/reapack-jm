@@ -2,7 +2,6 @@
 DONE:
 - gifs or screenshots (smallest possible)
 TODO:
-- donation link PayPal
 - early developement stage info, help, support, ideas
 - descriptions - in jsfx files and in README
 - Plugin Doctor template, jsfx demo project, plugin chains
@@ -12,6 +11,9 @@ TODO:
 - new name for correlation meter and k-flanger (m-flanger, klanger, mlanger)
 - rename all plugins to jm_type_name.jsfx
 - logo
+
+Also, a distance slider which would works with the delay slider will be nice. 😉
+Finally I think it would be nice to have a simple gain slider in it cause it can change the overall level of the track.
 
 
 

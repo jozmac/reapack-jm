@@ -36,7 +36,7 @@ slider14:blur=0.1<0,1,0.00001>-Time Blur
 slider16:coherence_decay_factor=0<0,1,0.00001>-Coherence Decay Factor
 slider17:mag_decay_factor=0<0,1,0.00001>-Amplitude Decay Factor
 //slider13:magnitude=0<0,1,{Off,On}>Magnitude
-slider18:overlap=16<1,16,1>-Overlap
+slider18:overlap=4<1,16,1>-Overlap
 
 slider30:unwrap=0<0,1,1{Normal,Unwrapped}>-Mode
 
@@ -245,6 +245,8 @@ fft_size = 256<<fft_size_index;
 fft_interval = fft_size/overlap_factor;
 fft_scaling_factor = 1/overlap_factor/fft_size;
 
+gfx_fft_interval = fft_size/16;
+
 fft_size != prev_fft_size ? (
   setup_stft_state(fft_size, prev_fft_size == 0);
   prev_fft_size = fft_size;
@@ -349,7 +351,7 @@ buffer_index = (buffer_index + 1)%buffer_length;
 
 
 @gfx
-  gfx_fft_counter >= fft_interval ? (
+  gfx_fft_counter >= gfx_fft_interval ? (
     gfx_fft_counter = 0;
   
     // Copy input to buffer

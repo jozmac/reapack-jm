@@ -237,7 +237,7 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 
 ## STFT Extractor
 ![04-05-23_reaper_554](https://user-images.githubusercontent.com/123021340/236192232-a28063d3-3277-4fbf-b8f2-3d45cdad71fa.png)
-  Utility for attenuating partials with given azimuth and phase difference in stereo field.
+  Utility for attenuating partials with given azimuth and phase difference in stereo field. Can be used for example as a reverb remover (but only works if the reverb is uncorrelated between channels).
 
 ## Stereoscope EQ
 ![14-05-23_reaper_623](https://github.com/jozmac/reapack-jm/assets/123021340/1ae04f1b-8179-46a1-b319-379339e82b3c)

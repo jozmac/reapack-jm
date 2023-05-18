@@ -25,7 +25,7 @@ slider11:width=1<0,2,0.001>-Width
 slider12:scx=1<0,1,0.001>-Scale X
 slider13:shx=0<-1,0,0.001>-Shift X
 slider14:blur=0<0,1,0.00001>-Time Blur
-slider15:analysis_decay_factor=0.8<0,1,0.00001>Analysis Decay Factor
+slider15:analysis_decay_factor=0.97<0,1,0.00001:sqr=0.1>Analysis Decay Factor
 //slider13:magnitude=0<0,1,{Off,On}>Magnitude
 slider16:overlap=16<1,32,1>-Overlap
 

@@ -18,10 +18,10 @@ slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
 slider2:mode=2<0,2,1{Long-Pass,Short-Pass,Moment-Reject>Mode
 slider4:freq=1<0,1000,0.01>Quefrency [ms]
 slider5:bandw=1<0,100,0.001>Bandwidth [ms]
-slider25:attenuation=0<0,1,0.001>Attenuation
+slider25:attenuation=0<0,1,0.001>Multiplier
 slider26:decay1_factor=0.8<0,1,0.00001>Decay 1 Factor
 slider27:decay2_factor=0.8<0,1,0.00001>Decay 2 Factor
-slider28:overlap=4<0,32,1>Overlap
+slider28:overlap=4<1,32,1>Overlap
 //slider64:smoothing_time_const=100<0,10000,1>Smoothing τ [ms]
 
 import Tale/complex.jsfx-inc

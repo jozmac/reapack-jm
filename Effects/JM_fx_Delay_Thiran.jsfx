@@ -40,7 +40,7 @@ slider15:0<0,3,1{Normal,Invert Left,Invert Right,Invert Both}> Out Polarity Mode
 //slider16:0<0,1,1{Convert, Add}> Unit Mode
 //slider17:0<0,3,1{Normal,Invert Left,Invert Right,Invert Both}> Modulation Mode
 slider18:0<0,100,0.01>SC Depth [ms]
-slider19:0<0,1,1{Off,On}>PDC Compensate
+slider19:0<0,1,1{Off,On}>-PDC Compensate
 slider20:18<-50,50,1>-Temperature [°C]
 
 %slider30:0<0,1,1{Off,On}>Latency Compensation

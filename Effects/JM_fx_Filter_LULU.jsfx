@@ -1,0 +1,81 @@
+desc:LULU Filter [JM]
+author: Jozef Mackowiak
+version: 1.0
+changelog: Initial Commit
+about:
+  # LULU Filter
+
+License: MIT
+Copyright (C) 2023 Jozef Mackowiak
+
+slider1:mode=0<0,1,1{LU,UL}>Mode
+
+in_pin:left input
+in_pin:right input
+out_pin:left output
+out_pin:right output
+
+@init
+  /* Width 1
+  function L()( // L operator
+    this.l1 = this;
+    
+    this.min1 = this.min;
+    this.min = min(this, this.l1);
+    
+    this.L = max(this.min, this.min1);
+    this.L;
+  );
+  
+  function U()( // U operator
+    this.l1 = this;
+    
+    this.max1 = this.max;
+    this.max = max(this, this.l1);
+    
+    this.U = min(this.max, this.max1);
+    this.U;
+  );
+  //*/
+  
+  //* Width 2
+  function L()( // L operator
+    this.l2 = this.l1;
+    this.l1 = this;
+    
+    this.min2 = this.min1;
+    this.min1 = this.min;
+    this.min = min(min(this, this.l1), this.l2);
+    
+    this.L = max(max(this.min, this.min1), this.min2);
+    this.L;
+  );
+  
+  function U()( // U operator
+    this.l2 = this.l1;
+    this.l1 = this;
+    
+    this.max2 = this.max1;
+    this.max1 = this.max;
+    this.max = max(max(this, this.l1), this.l2);
+    
+    this.U = min(min(this.max, this.max1), this.max2);
+    this.U;
+  );
+  //*/
+
+@sample
+s0 = spl0;
+s1 = spl1;
+
+mode ? (
+  s0.U();
+  s1.U();
+  spl0 = s0.U.L();
+  spl1 = s1.U.L();
+):( 
+  s0.L();
+  s1.L();
+  spl0 = s0.L.U();
+  spl1 = s1.L.U();
+);

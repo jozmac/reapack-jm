@@ -17,7 +17,7 @@ Copyright (C) 2023 Jozef Mackowiak
 // Based on the pitch lib (C) Joep Vanlier 2020
 
 
-// TODO: Angle calculation - fix 180deg+, head circuit, distance
+// TODO: Angle calculation - fix 180deg+, head circuit
 
 
 options: gfx_hz = 60;
@@ -33,7 +33,7 @@ slider2:0<0,100,1>-Integer Delay [spls]
 slider3:0<0,0.99999,0.01>-Fractional Delay [spls]
 slider4:0.27<0,1,0.0001>Delay [ms]
 slider5:20000<0,20000,1>-Delay [Hz]
-slider6:0<0,0.3,0.001>-Delay [m]
+slider6:0.1<0,0.3,0.001>-Delay [m]
 
 slider12:5<0,10,0.01>-Smooth Coeff (0 = Off)
 
@@ -59,6 +59,104 @@ multi=0.57;
 multi2=0.125;
 sqrt2div2 = sqrt(2)/2;
 sqrt2 = sqrt(2);
+
+function calc () (
+
+  (oldms != slider4) ? (
+    oldms    = slider4;
+
+      old = oldl = srate*oldms/1000;
+      oldh  = old | 0;
+      oldl  = old - oldh;
+      oldhz = 1/(old+1)*(srate);
+      oldm = old/srate*(331.5+0.6*slider20);
+  
+    slider1 = old ;
+    slider2 = oldh;
+    slider3 = oldl;
+
+    slider5 = oldhz;
+    slider6 = oldm;
+  );
+
+  (oldhz != slider5) ? (
+    oldhz   = slider5;
+  
+      old   = 1/oldhz*(srate)-1;
+      oldh  = old | 0;
+      oldl  = old - oldh;
+      oldms = 1000*old/srate;
+      oldm = old/srate*(331.5+0.6*slider20);
+  
+    slider1 = old ;
+    slider2 = oldh;
+    slider3 = oldl;
+    slider4 = oldms;
+
+    slider6 = oldm;
+  );  
+
+  (oldm != slider6) ? (
+    oldm    = slider6;
+  
+      old   = oldm*srate/((331.5+0.6*slider20));
+      oldh  = old | 0;
+      oldl  = old - oldh;
+      oldhz = 1/(old+1)*(srate);
+      oldms = 1000*old/srate;
+  
+    slider1 = old;
+    slider2 = oldh;
+    slider3 = oldl;
+    slider4 = oldms;
+    slider5 = oldhz;
+  ); 
+  
+  (oldh != slider2) || (oldl != slider3) ? (
+    oldh    = slider2;
+    oldl    = slider3;
+  
+      old   = oldh + oldl;
+      oldh  = old | 0;
+      oldl  = old - oldh;
+      oldms = 1000*old/srate;
+      oldhz = 1/(old+1)*(srate);
+      oldm = old/srate*(331.5+0.6*slider20);
+  
+    slider1 = old ;
+  
+    slider4 = oldms;
+    slider5 = oldhz;
+    slider6 = oldm;
+  ); 
+  
+  old != slider1 ? (
+    oldh    = slider1;
+    oldh    = oldh | 0;
+
+      oldl  = oldh;
+      oldh  = oldh | 0;
+      oldl  = oldl - oldh;
+      old   = oldh + oldl;
+      oldms = 1000*old/srate;
+      oldhz = 1/(old+1)*(srate);
+      oldm  = old/srate*(331.5+0.6*slider20);
+ 
+    slider1 = old;
+    slider2 = oldh;
+    slider3 = oldl;
+    slider4 = oldms;
+    slider5 = oldhz;
+    slider6 = oldm;
+  );  
+);
+
+  old    = -1;
+  oldl   = -1;
+  oldh   = -1;
+  oldms  = -1;
+  oldhz  = -1;
+  oldm   = -1;
   
 
 function pitchlibInitBuffer(scopebuffer_in, scopebuffermax_in)
@@ -199,6 +297,7 @@ global(current_sample)
 M_interpolator.interpolator_init(1); //init delay value interpolation
 
 @slider
+calc();
 slider1 = srate*slider4/1000;
 next_gain=10^(gain_db/20);
 

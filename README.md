@@ -1,63 +1,20 @@
 <!--
 DONE:
 - gifs or screenshots (smallest possible)
-TODO:
 - early developement stage info, help, support, ideas
 - descriptions - in jsfx files and in README
+- rename all plugins to jm_type_name.jsfx
+- new name for correlation meter and k-flanger (m-flanger, klanger, mlanger)
+TODO:
 - Plugin Doctor template, jsfx demo project, plugin chains
 - Mixing template
 - reaper jsfx folder cleanup - faster load times
 - 4k compatibility
-- new name for correlation meter and k-flanger (m-flanger, klanger, mlanger)
-- rename all plugins to jm_type_name.jsfx
 - logo
-
-Also, a distance slider which would works with the delay slider will be nice. 😉
-Finally I think it would be nice to have a simple gain slider in it cause it can change the overall level of the track.
-
+- reapack-index (X-Raym)
+- creossfader distance and gain (X-Raym)
 
 
-desc: Dual Time Adjustment
-author: Michael Schnell (mschnell@bschnell.de)
-version: 2.0
-changelog: add positive Midi delay
-donation: United Nations Foundation http://www.unfoundation.org/
-about:
-  ## Description
-
-  Apply a positive or negative delay to up to two audio channel in a track and optionally to Midi
-
-     modes:
-   - Stereo: All Sliders are coupled
-   - Dual: Two channels with two coupled sliders each 
-
-
-
-desc:Saike Swellotron (No GUI, No PDC) [JM]
-tags: ambient, soundscape, long, reverb, convolution, stft
-version: 0.09
-author: Joep Vanlier
-changelog: Add about section.
-about:
-  # Swellotron
-  Swellotron computes the spectrum of both signals (using the STFT), multiplies the magnitudes in the spectral domain and puts the result of that in an energy buffer. This energy buffer is drained proportionally to its contents. The energy buffer is then used to resynthesize the sound, but this time with a random phase.
-  In plain terms, it behaves almost like a reverb, where frequencies that both sounds have in common are emphasized and frequencies where the sounds differ are attenuated. This will almost always lead to something that sounds pretty harmonic.
-  [Screenshot](https://i.imgur.com/ikizwwk.gif)
-  ### Demos
-  You can find demos of the plugin [here](https://www.youtube.com/watch?v=PSaL8BvYdKk) and [here](https://www.youtube.com/watch?v=Ggojmb9wd5U).
-  ### Features:
-  - FFT Reverberation
-  - Shimmer: Copies energy to twice the frequency (leading to iterative octave doubling).
-  - Aether: Same as shimmer but for fifths.
-  - Scorch: Input saturation.
-  - Ruin: Output saturation.
-  - Diffusion: Spectral blur.
-  - Ice: Chops small bandwidth bits from the energy at random, and copies them to a higher frequency (at 1x or 2x the frequency), thereby giving narrowband high frequency sounds (sounding very cold).
-
-Copyright (C) 2019 Joep Vanlier
-License: MIT
-
--- Based on the STFT-Based Effect Template by Geraintluff
 -->
 
 

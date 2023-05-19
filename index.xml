@@ -188,7 +188,7 @@
       </version>
     </reapack>
     <reapack name="JM_util_Crossfeed.jsfx" type="effect">
-      <version name="1.0">
+      <version name="1.1">
         <source file="JM_util_Crossfeed.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_util_Crossfeed.jsfx</source>
       </version>
     </reapack>

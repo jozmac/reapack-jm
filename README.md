@@ -257,8 +257,12 @@ STFT Extractor + GUI
   Utility plugin inspired by the Goodhertz CanOpener
   ### Features:
   - three crossfeed algorhithms
+    - Filter - removes stereo information from lower frequency band
+    - Delay - standard crossfeed algorhithm
+    - Allpass - interaural phase difference mapping using the allpass filter - has worse spatial reproduction, but does not affect the timbre of the upper frequency bands
   - delay value readouts
   - speaker angle visualization
+  - Equal-loudness contour compensation (approx. ISO 226-2003)
 
 ## Proximity Processor
 ![04-05-23_reaper_562](https://user-images.githubusercontent.com/123021340/236191716-ac359225-08fa-4e7c-8922-288352cef26d.gif)

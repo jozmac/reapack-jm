@@ -22,7 +22,7 @@ slider3:0<-10,10,0.001>Shift [Hz]
 slider4:wet=0.5<0,1,0.001>Width
 
 slider20:0.5<0,10,0.001>Smooth Coeff (0 = Off)
-slider26:xchannel=0<0,1,1{Off,Additive,Subtractive>X Channel Mode
+slider26:xchannel=0<0,1,1{Off,Additive,Subtractive}>X Channel Mode
 
 import cookdsp.jsfx-inc
   

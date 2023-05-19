@@ -47,7 +47,7 @@ slider22:mul=1<0,100,1>Multiplyer
 slider23:wet=0.5<0,1,0.001>Dry / Wet / MS Invert
 slider24:cut_freq=200<0,10000,1>Side Cut [Hz]
 slider25:0<0,1,0.001>Phase
-slider26:xchannel=0<0,1,1{Off,Additive,Subtractive>X Channel Mode
+slider26:xchannel=0<0,1,1{Off,Additive,Subtractive}>X Channel Mode
 
 %slider30:0<0,1,1{Off,On}>Latency Compensation
 

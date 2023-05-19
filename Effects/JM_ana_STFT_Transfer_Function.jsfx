@@ -18,8 +18,8 @@ Copyright (C) 2023 Jozef Mackowiak
 
 options: gfx_hz = 60;
 
-/slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
-slider1:fft_size_index=4<0,6,1{256,512,1024,2048,4096,8192,16384>FFT size
+/slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768}>FFT size
+slider1:fft_size_index=4<0,6,1{256,512,1024,2048,4096,8192,16384}>FFT size
 slider10:height=1<0,10,0.001>-Height
 slider11:width=1<0,2,0.001>-Width
 slider12:scx=1<0,1,0.001>-Scale X

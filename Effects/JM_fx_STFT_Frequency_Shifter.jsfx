@@ -17,7 +17,7 @@ Copyright (C) 2023 Jozef Mackowiak
 // based on the STFT template created by Geraint Luff
 
 
-slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
+slider1:fft_size_index=2<0,7,1{256,512,1024,2048,4096,8192,16384,32768}>FFT size
 slider2:12000<0,24000,1>Cutoff Frequency
 slider3:0<-1,1,0.001>Freq Multiplyer
 slider4:0<-20000,20000,10>Freq [Hz]

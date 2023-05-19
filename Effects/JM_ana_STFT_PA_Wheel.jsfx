@@ -20,7 +20,7 @@ in_pin:left input
 in_pin:right input
 out_pin:none
 
-slider1:fft_size_index=7<0,7,1{256,512,1024,2048,4096,8192,16384,32768>FFT size
+slider1:fft_size_index=7<0,7,1{256,512,1024,2048,4096,8192,16384,32768}>FFT size
 slider11:radius=1<0,8,0.00001>Radius
 slider12:blur=0.5<0,1,0.00001>Time Blur
 //slider13:magnitude=0<0,1,{Off,On}>-Magnitude

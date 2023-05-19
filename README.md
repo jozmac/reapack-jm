@@ -106,6 +106,8 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 
 ## Stereoscope
 ![04-05-23_reaper_543](https://user-images.githubusercontent.com/123021340/236187181-32e9eb96-016d-4dd3-a050-45fedaa93f59.gif)
+
+
   Azimuth-frequency graph of stereo signal. Useful for calibrating analog equipment, checking correlation of partials of piano recording, analysis of flanger, phaser or stereo widener plugins, etc.
   ### Features:
   - two modes:
@@ -125,6 +127,8 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 
 ## Polar Histogram
 ![04-05-23_reaper_551](https://user-images.githubusercontent.com/123021340/236188405-e01e7de2-9419-44e4-8381-6c3ea05e541b.gif)
+
+
    Displays stereo angle histogram
    ### Features:
    - peak, hold and energy indicator
@@ -132,6 +136,8 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 
 ## Correlation Meter
 ![02-05-23_reaper_485](https://user-images.githubusercontent.com/123021340/235800419-0f8c1543-c696-4ce6-9ea1-05b242d222a0.gif)
+
+
   Correlation, balance and azimuth meter.
 
 ## Bispectrum Analyser
@@ -143,6 +149,8 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 
 ## Thiran Delay
 ![04-05-23_reaper_545](https://user-images.githubusercontent.com/123021340/236188483-258a6729-b3e8-4a9c-b70b-591de17336e1.png)
+
+
   Delay effect with allpass fractional delay algorithm.
   ### Features:
   - linked sliders with 6 unit types
@@ -153,6 +161,8 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 
 ## M-Flanger
 ![04-05-23_reaper_546](https://user-images.githubusercontent.com/123021340/236188538-83b97033-e04b-4d43-890e-656611beae66.png)
+
+
   Combination of flanger and stereo widener.
   ### Features:
   - high quality fractional delay algorhithm
@@ -164,6 +174,8 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 
 ## Chebyshev Saturator
 ![04-05-23_reaper_587](https://user-images.githubusercontent.com/123021340/236242101-9ceb42b5-0192-42d4-a82b-c347319e6ab5.gif)
+
+
   Utility for emphasizing given harmonics.
   ### Features:
   - chebyshev polynomials from 1st to 9th order
@@ -175,6 +187,8 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 
 ## Transient Split
 ![04-05-23_reaper_556](https://user-images.githubusercontent.com/123021340/236189545-cc3b8e93-c1fa-4867-866c-0c3a5f9d4ed8.png)
+
+
   A tool that allows you to extract transients or stationary signals from the input signal.
   
 ## STFT Frequency Shifter
@@ -194,10 +208,14 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
 
 ## STFT Extractor
 ![04-05-23_reaper_554](https://user-images.githubusercontent.com/123021340/236192232-a28063d3-3277-4fbf-b8f2-3d45cdad71fa.png)
+
+
   Utility for attenuating partials with given azimuth and phase difference in stereo field. Can be used for example as a reverb remover (but only works if the reverb is uncorrelated between channels).
 
 ## Stereoscope EQ
 ![14-05-23_reaper_623](https://github.com/jozmac/reapack-jm/assets/123021340/1ae04f1b-8179-46a1-b319-379339e82b3c)
+
+
 STFT Extractor + GUI
   ### Controls:
   - click+drag to change filter position
@@ -207,6 +225,8 @@ STFT Extractor + GUI
 
 ## Coherent Extractor
 ![04-05-23_reaper_553](https://user-images.githubusercontent.com/123021340/236189788-b1079010-493e-4974-81f5-20e3a00d3c2d.png)
+
+
   A tool for separating a coherent signal from a stereo signal.
 
 ## M-Phaser
@@ -218,10 +238,14 @@ STFT Extractor + GUI
 
 ## Logistic Noise Generator
 ![04-05-23_reaper_570](https://user-images.githubusercontent.com/123021340/236191867-5ee7c738-0fd5-40b0-a4d3-957816a89346.gif)
+
+
   Noise generator based on the logistic map equation.
 
 ## Stern-Brocot Stereochord
 ![04-05-23_reaper_572](https://user-images.githubusercontent.com/123021340/236191889-dad9fc18-2a51-4eca-8bb1-6b85997f027c.gif)
+
+
   Triad generator with two-dimansional snap-to-integer-ratio control panel.
   ### Features:
   - snapping to simplest integer ratio with variable error value
@@ -231,6 +255,8 @@ STFT Extractor + GUI
 
 ## Farey Tetrad Spiral 
 ![04-05-23_reaper_574](https://user-images.githubusercontent.com/123021340/236191959-bc89c8d1-4c56-491e-a5d2-69ab7207d078.gif)
+
+
   Four-oscillator generator with spiral visualization.
   ### Features:
   - visualization of combination tones (F1-F2, 2*F1-F2, F1-2*F2)
@@ -242,6 +268,8 @@ STFT Extractor + GUI
 
 ## DPOAE Canceller
 ![04-05-23_reaper_597](https://user-images.githubusercontent.com/123021340/236298587-64f227c4-2efe-48ab-b30b-b5c55311ac98.gif)
+
+
   Generator of two periodic signals and three phase-locked signals for canceling otoacoustic emissions (F1-F2, 2*F1-F2, F1-2*F2).
   ### Features:
   - three methods of changing frequency
@@ -254,6 +282,8 @@ STFT Extractor + GUI
 
 ## Crossfeed
 ![04-05-23_reaper_560](https://user-images.githubusercontent.com/123021340/236190142-a5ee30ed-8329-429b-b260-e5e071a0a0e2.gif)
+
+
   Utility plugin inspired by the Goodhertz CanOpener
   ### Features:
   - three crossfeed algorhithms
@@ -266,6 +296,8 @@ STFT Extractor + GUI
 
 ## Proximity Processor
 ![04-05-23_reaper_562](https://user-images.githubusercontent.com/123021340/236191716-ac359225-08fa-4e7c-8922-288352cef26d.gif)
+
+
   A tool for positioning sound object in stereo field.
   ### Features:
   - MCP dockable GUI
@@ -276,6 +308,7 @@ STFT Extractor + GUI
 
 ## Stereo Tool
 ![04-05-23_reaper_564](https://user-images.githubusercontent.com/123021340/236191762-829398cc-ed97-4279-8359-2477347fd318.gif)
+
 Utility for modyfying azimuth, balance and width of stereo field.
 
 

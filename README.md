@@ -6,13 +6,14 @@ DONE:
 - rename all plugins to jm_type_name.jsfx
 - new name for correlation meter and k-flanger (m-flanger, klanger, mlanger)
 TODO:
+- Blog explaining analysers - goals, situation (TonE)
 - Plugin Doctor template, jsfx demo project, plugin chains
 - Mixing template
 - reaper jsfx folder cleanup - faster load times
 - 4k compatibility
 - logo
 - reapack-index (X-Raym)
-- creossfader distance and gain (X-Raym)
+- creossfader angle slider (X-Raym)
 
 
 -->

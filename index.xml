@@ -282,5 +282,12 @@
       </version>
     </reapack>
 
+    <reapack name="sault" type="effect">
+      <version name="1.0">
+        <source file="sault/st-oversampler.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/sault/st-oversampler.jsfx-inc</source>
+        <source file="sault/elliptic-lp.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/sault/elliptic-lp.jsfx-inc</source>
+      </version>
+    </reapack>
+
   </category>
 </index>

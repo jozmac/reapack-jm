@@ -67,11 +67,6 @@
         <source file="JM_ana_STFT_Transfer_Function.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Transfer_Function.jsfx</source>
       </version>
     </reapack>
-    <reapack name="JM_ana_STFT_Stereoscope.jsfx" type="effect">
-      <version name="1.0">
-        <source file="JM_ana_STFT_Stereoscope.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_STFT_Stereoscope.jsfx</source>
-      </version>
-    </reapack>
     <reapack name="JM_ana_Tuner_Strobe.jsfx" type="effect">
       <version name="1.0">
         <source file="JM_ana_Tuner_Strobe.jsfx">https://github.com/jozmac/reapack-jm/raw/master/Effects/JM_ana_Tuner_Strobe.jsfx</source>
@@ -261,7 +256,7 @@
         <source file="ABLevelMatching/gfx.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/gfx.jsfx-inc</source>
         <source file="ABLevelMatching/manual.pdf" type="data">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/manual.pdf</source>
         <source file="ABLevelMatching/memorymanager.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/memorymanager.jsfx-inc</source>
-        <source file="ABLevelMatching/TBProAudio_common.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/TBProAudio_common.jsfx-inc</source>
+        <source file="ABLevelMatching/tbproaudio_common.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/ABLevelMatchingJSFX/tbproaudio_common.jsfx-inc</source>
       </version>
     </reapack>
     <reapack name="AutoGainStaging" type="effect">
@@ -270,7 +265,7 @@
         <source file="AutoGainStagingJSFX/AutoGainStage_src">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/AutoGainStage_src</source>
         <source file="AutoGainStagingJSFX/audiomeasurement.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/audiomeasurement.jsfx-inc</source>
         <source file="AutoGainStagingJSFX/memorymanager.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/memorymanager.jsfx-inc</source>
-        <source file="AutoGainStagingJSFX/TBProAudio_common.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/TBProAudio_common.jsfx-inc</source>
+        <source file="AutoGainStagingJSFX/tbproaudio_common.jsfx-inc">https://github.com/jozmac/reapack-jm/raw/master/ThirdParty/TBProAudio/AutoGainStagingJSFX/tbproaudio_common.jsfx-inc</source>
       </version>
     </reapack>
     <reapack name="EBUR128LM" type="effect">

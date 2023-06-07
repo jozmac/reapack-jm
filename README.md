@@ -193,6 +193,7 @@ Displays crosscorrelation function of two channels or autocorrelation of mono si
   A tool that allows you to extract transients or stationary signals from the input signal.
   
 ## STFT Frequency Shifter
+A plug-in for performing [single-sideband modulation](https://en.wikipedia.org/wiki/Single-sideband_modulation) (SSB)
 ![04-05-23_reaper_552](https://user-images.githubusercontent.com/123021340/236194913-11a5a454-f7d9-42d0-b8dd-483b7b9a874c.png)
   ### Features:
   - FFT brickwall antialiasing filter

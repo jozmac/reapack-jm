@@ -332,12 +332,12 @@ Retunes incoming MIDI notes into ratio-based tuning systems.
 
 It lets you work with just intonation-style ratios directly from the GUI: each pitch-class strip shows the current numerator, denominator, and applied cent offset. You can edit ratios by clicking, dragging, or using the scroll wheel, and the display updates live while notes are playing. This is a MIDI FX plugin, not an audio processor. It is intended for REAPER users who want to explore adaptive tuning, just intonation, harmonic ratios, and microtonal MIDI workflows without leaving the JSFX environment.
 
-Click and drag (or scroll) ratio parts to edit numerator and denominator
-Double-click ratio part to reset to default
-Click note names to set as the root note
-Per-degree cent offset display
-Composite period and frequency display
-Adjustable pitch bend range (to work with different synths)
+- Click and drag (or scroll) ratio parts to edit numerator and denominator
+- Double-click ratio part to reset to default
+- Click note names to set as the root note
+- Per-degree cent offset display
+- Composite period and frequency display
+- Adjustable pitch bend range (to work with different synths)
 
 Root note modes:
 - Constant root mode

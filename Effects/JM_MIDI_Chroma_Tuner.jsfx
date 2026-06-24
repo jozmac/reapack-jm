@@ -1,0 +1,1746 @@
+desc:MIDI Chroma Tuner [JM]
+author: Jozef Mackowiak
+version: 1.0
+changelog: Initial Commit
+about:
+  # MIDI Chroma Tuner
+  Retunes incoming MIDI notes into ratio-based tuning systems.
+  ### Features:
+  - Click and drag (or scroll) ratio parts to edit numerator and denominator
+  - Double-click ratio part to reset to default
+  - Click note names to set as the root note
+  - Per-degree cent offset display
+  - Composite period and frequency display
+  -Adjustable pitch bend range (to work with different synths)
+
+  Root note modes:
+  - Constant root mode
+  - most played note
+  - lowest active note
+  - shortest composite cycle
+  - shortest composite cycle - automatic ratio
+
+License: MIT
+Copyright (C) 2026 Jozef Mackowiak
+
+slider1:root_mode=0<0,4,1{Constant,Most played,Lowest,Shortest cycle,Shortest cycle auto ratio}>Root note mode
+slider2:const_root=0<0,11,1{C,C#,D,D#,E,F,F#,G,G#,A,A#,B}>Constant root
+slider3:pb_range=2<0.5,12,0.01>Pitch bend range (semitones)
+slider4:out_channels=12<1,16,1>-Output note channels
+slider5:send_rpn=1<0,1,1{No,Yes}>-Send PB-range RPN
+slider6:broadcast_ctrl=1<0,1,1{No,Yes}>-Broadcast CC/PC/AT
+slider7:use_sustain=1<0,1,1{No,Yes}>-Use sustain pedal
+slider8:max_ratio_part=64<2,256,1>-Max GUI ratio integer
+
+slider9:ratio0_num=1<1,256,1>-Degree 0 numerator
+slider10:ratio0_den=1<1,256,1>-Degree 0 denominator
+slider11:ratio1_num=16<1,256,1>-Degree 1 numerator
+slider12:ratio1_den=15<1,256,1>-Degree 1 denominator
+slider13:ratio2_num=9<1,256,1>-Degree 2 numerator
+slider14:ratio2_den=8<1,256,1>-Degree 2 denominator
+slider15:ratio3_num=6<1,256,1>-Degree 3 numerator
+slider16:ratio3_den=5<1,256,1>-Degree 3 denominator
+slider17:ratio4_num=5<1,256,1>-Degree 4 numerator
+slider18:ratio4_den=4<1,256,1>-Degree 4 denominator
+slider19:ratio5_num=4<1,256,1>-Degree 5 numerator
+slider20:ratio5_den=3<1,256,1>-Degree 5 denominator
+slider21:ratio6_num=45<1,256,1>-Degree 6 numerator
+slider22:ratio6_den=32<1,256,1>-Degree 6 denominator
+slider23:ratio7_num=3<1,256,1>-Degree 7 numerator
+slider24:ratio7_den=2<1,256,1>-Degree 7 denominator
+slider25:ratio8_num=8<1,256,1>-Degree 8 numerator
+slider26:ratio8_den=5<1,256,1>-Degree 8 denominator
+slider27:ratio9_num=5<1,256,1>-Degree 9 numerator
+slider28:ratio9_den=3<1,256,1>-Degree 9 denominator
+slider29:ratio10_num=9<1,256,1>-Degree 10 numerator
+slider30:ratio10_den=5<1,256,1>-Degree 10 denominator
+slider31:ratio11_num=15<1,256,1>-Degree 11 numerator
+slider32:ratio11_den=8<1,256,1>-Degree 11 denominator
+slider33:auto_cycle_mode=0<0,1,1{Harmonic,Subharmonic}>-Auto cycle mode
+slider34:auto_max_part=256<2,256,1>-Auto max ratio integer
+slider35:auto_max_err_c=20<1,100,1>-Auto max tuning error (cents)
+slider36:tuning_amount=1<0,1,0.001>Tuning amount (0=12TET, 1=tuning)
+slider37:all_notes_off=0<0,1,1{Ready,Send}>-All Notes Off
+
+in_pin:none
+out_pin:none
+options:no_meter
+
+@init
+MAX_CHANNELS = 16;
+MAX_RATIO_PART = 256;
+AUTO_CANDS = 16;
+LOG2 = log(2);
+LOG_440 = log(440);
+INF = 1000000000000;
+EPS = 0.000000001;
+LCM_LIMIT = 1000000000;
+
+mem_ptr = 0;
+
+voice_note        = mem_ptr; mem_ptr += MAX_CHANNELS;
+voice_src         = mem_ptr; mem_ptr += MAX_CHANNELS;
+voice_held        = mem_ptr; mem_ptr += MAX_CHANNELS;
+voice_vel         = mem_ptr; mem_ptr += MAX_CHANNELS;
+voice_age         = mem_ptr; mem_ptr += MAX_CHANNELS;
+voice_serial      = mem_ptr; mem_ptr += MAX_CHANNELS;
+voice_tune        = mem_ptr; mem_ptr += MAX_CHANNELS;
+
+input_pb          = mem_ptr; mem_ptr += MAX_CHANNELS;
+pedal_down        = mem_ptr; mem_ptr += MAX_CHANNELS;
+
+ratio_num         = mem_ptr; mem_ptr += 12;
+ratio_den         = mem_ptr; mem_ptr += 12;
+ratio_cents       = mem_ptr; mem_ptr += 12;
+pc_count          = mem_ptr; mem_ptr += 12;
+pc_low_note       = mem_ptr; mem_ptr += 12;
+auto_num          = mem_ptr; mem_ptr += 12;
+auto_den          = mem_ptr; mem_ptr += 12;
+auto_cents        = mem_ptr; mem_ptr += 12;
+saved_auto_num    = mem_ptr; mem_ptr += 12;
+saved_auto_den    = mem_ptr; mem_ptr += 12;
+active_degree     = mem_ptr; mem_ptr += 12;
+cand_num          = mem_ptr; mem_ptr += 12 * AUTO_CANDS;
+cand_den          = mem_ptr; mem_ptr += 12 * AUTO_CANDS;
+cand_err          = mem_ptr; mem_ptr += 12 * AUTO_CANDS;
+cand_score        = mem_ptr; mem_ptr += 12 * AUTO_CANDS;
+cand_count        = mem_ptr; mem_ptr += 12;
+gfx_note_active   = mem_ptr; mem_ptr += 128;
+
+opt_voice_d       = mem_ptr; mem_ptr += MAX_CHANNELS;
+opt_voice_octv    = mem_ptr; mem_ptr += MAX_CHANNELS;
+opt_voice_mult    = mem_ptr; mem_ptr += MAX_CHANNELS;
+opt_metric_num    = mem_ptr; mem_ptr += MAX_CHANNELS;
+opt_metric_den    = mem_ptr; mem_ptr += MAX_CHANNELS;
+
+function clampv(v, lo, hi) (
+  min(hi, max(lo, v));
+);
+
+function trunc0(x) (
+  x >= 0 ? floor(x) : -floor(-x);
+);
+
+function gcd_int(a, b) local(t) (
+  a = floor(abs(a) + 0.5);
+  b = floor(abs(b) + 0.5);
+
+  a < 1 ? (
+    b < 1 ? 1 : b;
+  ) : b < 1 ? (
+    a;
+  ) : (
+    while(b > 0) (
+      t = a % b;
+      a = b;
+      b = t;
+    );
+    a;
+  );
+);
+
+function lcm_int(a, b) local(g, r) (
+  a = floor(abs(a) + 0.5);
+  b = floor(abs(b) + 0.5);
+  a < 1 ? a = 1;
+  b < 1 ? b = 1;
+
+  g = gcd_int(a, b);
+  r = (a / g) * b;
+  r > LCM_LIMIT ? LCM_LIMIT : floor(r + 0.5);
+);
+
+function gcd_fast(a, b) local(t) (
+  while(b > 0) (
+    t = a % b;
+    a = b;
+    b = t;
+  );
+  a;
+);
+
+function lcm_fast(a, b) (
+  (a / gcd_fast(a, b)) * b;
+);
+
+function note_pc(note_num) (
+  (note_num|0) % 12;
+);
+
+function midi2hz(n) (
+  440 * exp(LOG2 * (n - 69) / 12);
+);
+
+function degree_for_pc(pc, root_pc) local(d) (
+  d = pc - root_pc;
+  while(d < 0) (d += 12);
+  while(d >= 12) (d -= 12);
+  floor(d + 0.5);
+);
+
+function actual_ratio_for_note(note_num, root_pc) local(d, octv, g, mult) (
+  d = degree_for_pc(note_pc(note_num), root_pc);
+  ratio_mode >= 0.5 ? (
+    harm_tmp_num = auto_num[d];
+    harm_tmp_den = auto_den[d];
+  ) : (
+    harm_tmp_num = ratio_num[d];
+    harm_tmp_den = ratio_den[d];
+  );
+
+  octv = floor((note_num - root_pc - d) / 12 + 0.5);
+  mult = 2 ^ abs(octv);
+  octv > 0 ? harm_tmp_num *= mult : octv < 0 ? harm_tmp_den *= mult;
+
+  g = gcd_int(harm_tmp_num, harm_tmp_den);
+  harm_tmp_num = floor(harm_tmp_num / g + 0.5);
+  harm_tmp_den = floor(harm_tmp_den / g + 0.5);
+);
+
+function ratio_part_limit(v) (
+  floor(clampv(v, 1, max_ratio_part) + 0.5);
+);
+
+function sanitize_ratio_sliders() local(i) (
+  ratio0_num = 1;
+  ratio0_den = 1;
+
+  ratio1_num = ratio_part_limit(ratio1_num);
+  ratio1_den = ratio_part_limit(ratio1_den);
+  ratio2_num = ratio_part_limit(ratio2_num);
+  ratio2_den = ratio_part_limit(ratio2_den);
+  ratio3_num = ratio_part_limit(ratio3_num);
+  ratio3_den = ratio_part_limit(ratio3_den);
+  ratio4_num = ratio_part_limit(ratio4_num);
+  ratio4_den = ratio_part_limit(ratio4_den);
+  ratio5_num = ratio_part_limit(ratio5_num);
+  ratio5_den = ratio_part_limit(ratio5_den);
+  ratio6_num = ratio_part_limit(ratio6_num);
+  ratio6_den = ratio_part_limit(ratio6_den);
+  ratio7_num = ratio_part_limit(ratio7_num);
+  ratio7_den = ratio_part_limit(ratio7_den);
+  ratio8_num = ratio_part_limit(ratio8_num);
+  ratio8_den = ratio_part_limit(ratio8_den);
+  ratio9_num = ratio_part_limit(ratio9_num);
+  ratio9_den = ratio_part_limit(ratio9_den);
+  ratio10_num = ratio_part_limit(ratio10_num);
+  ratio10_den = ratio_part_limit(ratio10_den);
+  ratio11_num = ratio_part_limit(ratio11_num);
+  ratio11_den = ratio_part_limit(ratio11_den);
+
+  ratio_num[0] = ratio0_num;   ratio_den[0] = ratio0_den;
+  ratio_num[1] = ratio1_num;   ratio_den[1] = ratio1_den;
+  ratio_num[2] = ratio2_num;   ratio_den[2] = ratio2_den;
+  ratio_num[3] = ratio3_num;   ratio_den[3] = ratio3_den;
+  ratio_num[4] = ratio4_num;   ratio_den[4] = ratio4_den;
+  ratio_num[5] = ratio5_num;   ratio_den[5] = ratio5_den;
+  ratio_num[6] = ratio6_num;   ratio_den[6] = ratio6_den;
+  ratio_num[7] = ratio7_num;   ratio_den[7] = ratio7_den;
+  ratio_num[8] = ratio8_num;   ratio_den[8] = ratio8_den;
+  ratio_num[9] = ratio9_num;   ratio_den[9] = ratio9_den;
+  ratio_num[10] = ratio10_num; ratio_den[10] = ratio10_den;
+  ratio_num[11] = ratio11_num; ratio_den[11] = ratio11_den;
+
+  i = 0;
+  loop(12,
+    ratio_cents[i] = 1200 * log(ratio_num[i] / ratio_den[i]) / LOG2;
+    i += 1;
+  );
+);
+
+function sanitize_sliders() (
+  root_mode = floor(clampv(root_mode, 0, 4) + 0.5);
+  const_root = floor(clampv(const_root, 0, 11) + 0.5);
+  pb_range = clampv(pb_range, 0.5, 12);
+  out_channels = floor(clampv(out_channels, 1, MAX_CHANNELS) + 0.5);
+  send_rpn = send_rpn >= 0.5 ? 1 : 0;
+  broadcast_ctrl = broadcast_ctrl >= 0.5 ? 1 : 0;
+  use_sustain = use_sustain >= 0.5 ? 1 : 0;
+  max_ratio_part = floor(clampv(max_ratio_part, 2, MAX_RATIO_PART) + 0.5);
+  ratio_mode = root_mode == 4 ? 1 : 0;
+  auto_cycle_mode = auto_cycle_mode >= 0.5 ? 1 : 0;
+  auto_max_part = floor(clampv(auto_max_part, 2, MAX_RATIO_PART) + 0.5);
+  auto_max_err_c = clampv(auto_max_err_c, 1, 100);
+  tuning_amount = clampv(tuning_amount, 0, 1);
+  all_notes_off = all_notes_off >= 0.5 ? 1 : 0;
+  sanitize_ratio_sliders();
+);
+
+function active_ratio_num(deg) (
+  ratio_mode >= 0.5 ? auto_num[deg] : ratio_num[deg];
+);
+
+function active_ratio_den(deg) (
+  ratio_mode >= 0.5 ? auto_den[deg] : ratio_den[deg];
+);
+
+function active_ratio_cents(deg) (
+  ratio_mode >= 0.5 ? auto_cents[deg] : ratio_cents[deg];
+);
+
+function applied_tuning_cents(deg) (
+  tuning_amount * (active_ratio_cents(deg) - deg * 100);
+);
+
+function tuned_note_value(note_num, root_pc) local(exact_note) (
+  actual_ratio_for_note(note_num, root_pc);
+  exact_note = root_pc + 12 * log(harm_tmp_num / harm_tmp_den) / LOG2;
+  note_num + tuning_amount * (exact_note - note_num);
+);
+
+function tuned_chroma_hue(pc, cents) local(chroma) (
+  chroma = pc + cents / 100;
+  chroma -= floor(chroma / 12) * 12;
+  chroma < 0 ? chroma += 12;
+  chroma / 12;
+);
+
+function sync_auto_cents() local(i) (
+  i = 0;
+  loop(12,
+    auto_num[i] < 1 ? auto_num[i] = ratio_num[i];
+    auto_den[i] < 1 ? auto_den[i] = ratio_den[i];
+    auto_cents[i] = 1200 * log(auto_num[i] / auto_den[i]) / LOG2;
+    i += 1;
+  );
+);
+
+function insert_auto_candidate(deg, n, d, err, score)
+local(count, base, k, pos, write_pos, prev) (
+  n = floor(n + 0.5);
+  d = floor(d + 0.5);
+  n < 1 ? n = 1;
+  d < 1 ? d = 1;
+
+  count = cand_count[deg];
+
+  count >= AUTO_CANDS && score >= cand_score[deg * AUTO_CANDS + AUTO_CANDS - 1] ? (
+    0;
+  ) : (
+    pos = count < AUTO_CANDS ? count : AUTO_CANDS - 1;
+    count < AUTO_CANDS ? cand_count[deg] = count + 1;
+
+    while(pos > 0 && score < cand_score[deg * AUTO_CANDS + pos - 1]) (
+      write_pos = deg * AUTO_CANDS + pos;
+      prev = write_pos - 1;
+      cand_num[write_pos] = cand_num[prev];
+      cand_den[write_pos] = cand_den[prev];
+      cand_err[write_pos] = cand_err[prev];
+      cand_score[write_pos] = cand_score[prev];
+      pos -= 1;
+    );
+
+    write_pos = deg * AUTO_CANDS + pos;
+    cand_num[write_pos] = n;
+    cand_den[write_pos] = d;
+    cand_err[write_pos] = err;
+    cand_score[write_pos] = score;
+  );
+);
+
+function build_auto_candidates_for_degree(deg)
+local(p, q, g, n, d, cents, err, err_lim, bad, complexity, score) (
+  cand_count[deg] = 0;
+
+  deg <= 0 ? (
+    insert_auto_candidate(deg, 1, 1, 0, 0);
+  ) : (
+    err_lim = min(auto_max_err_c, pb_range * 98);
+
+    p = 1;
+    loop(auto_max_part,
+      q = floor(p / 2) + 1;
+      loop(p - q + 1,
+        g = gcd_int(p, q);
+        g == 1 ? (
+          cents = 1200 * log(p / q) / LOG2;
+          err = abs(cents - deg * 100);
+          bad = err <= err_lim ? 0 : 1;
+          complexity = auto_cycle_mode < 0.5 ? p * 1.0 + q * 1.25 : q * 1.0 + p * 1.25;
+          score = bad ? (100000000 + err * 1000 + complexity) : (complexity * 1000 + err);
+          insert_auto_candidate(deg, p, q, err, score);
+        );
+        q += 1;
+      );
+      p += 1;
+    );
+
+    cand_count[deg] < 1 ? insert_auto_candidate(deg, ratio_num[deg], ratio_den[deg], abs(ratio_cents[deg] - deg * 100), 200000000);
+  );
+);
+
+function build_all_auto_candidates() local(deg, base) (
+  deg = 0;
+  loop(12,
+    build_auto_candidates_for_degree(deg);
+    base = deg * AUTO_CANDS;
+    auto_num[deg] = cand_num[base];
+    auto_den[deg] = cand_den[base];
+    deg += 1;
+  );
+  sync_auto_cents();
+  auto_candidates_dirty = 0;
+);
+
+function reset_auto_ratios_to_base() local(deg, base) (
+  deg = 0;
+  loop(12,
+    base = deg * AUTO_CANDS;
+    auto_num[deg] = cand_num[base];
+    auto_den[deg] = cand_den[base];
+    deg += 1;
+  );
+  sync_auto_cents();
+);
+
+function save_auto_ratios() local(i) (
+  i = 0;
+  loop(12,
+    saved_auto_num[i] = auto_num[i];
+    saved_auto_den[i] = auto_den[i];
+    i += 1;
+  );
+);
+
+function restore_auto_ratios() local(i) (
+  i = 0;
+  loop(12,
+    auto_num[i] = saved_auto_num[i];
+    auto_den[i] = saved_auto_den[i];
+    i += 1;
+  );
+  sync_auto_cents();
+);
+
+function copy_auto_candidate(deg, idx) local(base) (
+  base = deg * AUTO_CANDS + idx;
+  auto_num[deg] = cand_num[base];
+  auto_den[deg] = cand_den[base];
+);
+
+function build_active_degrees() local(i, k, d, found) (
+  active_degree_count = 0;
+
+  i = 0;
+  loop(out_channels,
+    voice_note[i] > -1 ? (
+      d = degree_for_pc(note_pc(voice_note[i]), current_root_pc);
+      found = 0;
+      k = 0;
+      loop(active_degree_count,
+        active_degree[k] == d ? found = 1;
+        k += 1;
+      );
+
+      !found ? (
+        active_degree[active_degree_count] = d;
+        active_degree_count += 1;
+      );
+    );
+    i += 1;
+  );
+);
+
+function selected_auto_error_sum() local(i, d, cents, errsum) (
+  errsum = 0;
+  i = 0;
+  loop(active_degree_count,
+    d = active_degree[i];
+    cents = 1200 * log(auto_num[d] / auto_den[d]) / LOG2;
+    errsum += abs(cents - d * 100);
+    i += 1;
+  );
+  errsum;
+);
+
+function selected_auto_invalid_count() local(i, d, cents, err_lim, invalid) (
+  err_lim = min(auto_max_err_c, pb_range * 98);
+  invalid = 0;
+
+  i = 0;
+  loop(active_degree_count,
+    d = active_degree[i];
+    cents = 1200 * log(auto_num[d] / auto_den[d]) / LOG2;
+    abs(cents - d * 100) > err_lim + EPS ? invalid += 1;
+    i += 1;
+  );
+
+  invalid;
+);
+
+function selected_auto_complexity_sum() local(i, d, csum) (
+  csum = 0;
+  i = 0;
+  loop(active_degree_count,
+    d = active_degree[i];
+    csum += (auto_cycle_mode < 0.5 ? auto_num[d] * 1.0 + auto_den[d] * 1.25 : auto_den[d] * 1.0 + auto_num[d] * 1.25);
+    i += 1;
+  );
+  csum;
+);
+
+function selected_auto_composite_metric()
+local(i, lcmv, common_g, val, reciprocal, d, p, q, g, octv, mult) (
+  reciprocal = auto_cycle_mode >= 0.5;
+  lcmv = 1;
+
+  i = 0;
+  loop(opt_voice_count,
+    d = opt_voice_d[i];
+    p = auto_num[d];
+    q = auto_den[d];
+    octv = opt_voice_octv[i];
+    mult = opt_voice_mult[i];
+
+    octv > 0 ? p *= mult : octv < 0 ? q *= mult;
+
+    g = gcd_fast(p, q);
+    p = floor(p / g + 0.5);
+    q = floor(q / g + 0.5);
+
+    reciprocal >= 0.5 ? (
+      opt_metric_num[i] = q;
+      opt_metric_den[i] = p;
+    ) : (
+      opt_metric_num[i] = p;
+      opt_metric_den[i] = q;
+    );
+
+    lcmv = lcm_fast(lcmv, opt_metric_den[i]);
+    i += 1;
+  );
+
+  common_g = 0;
+  i = 0;
+  loop(opt_voice_count,
+    val = floor(opt_metric_num[i] * (lcmv / opt_metric_den[i]) + 0.5);
+    common_g = common_g == 0 ? val : gcd_fast(common_g, val);
+    i += 1;
+  );
+
+  common_g < 1 ? common_g = 1;
+  comp_metric_tmp = lcmv / common_g;
+);
+
+function choose_auto_ratios()
+local(pass, ai, deg, idx, count, best_idx, best_invalid, best_metric, best_err, best_complex, invalid, metric, err, complex, changed, n, d, octv, mult, i) (
+  auto_candidates_dirty ? build_all_auto_candidates() : reset_auto_ratios_to_base();
+
+  build_active_degrees();
+
+  opt_voice_count = 0;
+  i = 0;
+  loop(out_channels,
+    voice_note[i] > -1 ? (
+      n = voice_note[i];
+      d = degree_for_pc(note_pc(n), current_root_pc);
+      octv = floor((n - current_root_pc - d) / 12 + 0.5);
+      mult = 2 ^ abs(octv);
+
+      opt_voice_d[opt_voice_count] = d;
+      opt_voice_octv[opt_voice_count] = octv;
+      opt_voice_mult[opt_voice_count] = mult;
+      opt_voice_count += 1;
+    );
+    i += 1;
+  );
+
+  pass = 0;
+  changed = 1;
+  while(pass < 3 && changed) (
+    changed = 0;
+    ai = 0;
+    loop(active_degree_count,
+      deg = active_degree[ai];
+      count = cand_count[deg];
+      best_idx = 0;
+      best_invalid = INF;
+      best_metric = INF;
+      best_err = INF;
+      best_complex = INF;
+
+      idx = 0;
+      loop(count,
+        copy_auto_candidate(deg, idx);
+        
+        invalid = selected_auto_invalid_count();
+        invalid > best_invalid ? (
+          0;
+        ) : (
+          selected_auto_composite_metric();
+          metric = comp_metric_tmp;
+          
+          invalid == best_invalid && metric > best_metric + EPS ? (
+            0;
+          ) : (
+            err = selected_auto_error_sum();
+            
+            invalid == best_invalid && abs(metric - best_metric) <= EPS && err > best_err + EPS ? (
+              0;
+            ) : (
+              complex = selected_auto_complexity_sum();
+              
+              invalid < best_invalid
+              || (invalid == best_invalid && metric < best_metric - EPS)
+              || (invalid == best_invalid && abs(metric - best_metric) <= EPS && err < best_err - EPS)
+              || (invalid == best_invalid && abs(metric - best_metric) <= EPS && abs(err - best_err) <= EPS && complex < best_complex) ? (
+                best_idx = idx;
+                best_invalid = invalid;
+                best_metric = metric;
+                best_err = err;
+                best_complex = complex;
+              );
+            );
+          );
+        );
+        idx += 1;
+      );
+
+      auto_num[deg] != cand_num[deg * AUTO_CANDS + best_idx] || auto_den[deg] != cand_den[deg * AUTO_CANDS + best_idx] ? changed = 1;
+      copy_auto_candidate(deg, best_idx);
+      ai += 1;
+    );
+    pass += 1;
+  );
+
+  sync_auto_cents();
+);
+
+function optimized_cycle_metric_for_root(cand_root) local(old_root, metric) (
+  save_auto_ratios();
+  old_root = current_root_pc;
+
+  current_root_pc = cand_root;
+  choose_auto_ratios();
+  selected_auto_composite_metric();
+  metric = comp_metric_tmp;
+
+  current_root_pc = old_root;
+  restore_auto_ratios();
+
+  metric;
+);
+
+function update_composite_state()
+local(i, lcmv, common_g, val, freq, note_scan, ch_scan, ratios_written) (
+  lcmv = 1;
+  common_g = 0;
+
+  i = 0;
+  loop(out_channels,
+    voice_note[i] > -1 ? (
+      actual_ratio_for_note(voice_note[i], current_root_pc);
+      lcmv = lcm_int(lcmv, harm_tmp_den);
+    );
+    i += 1;
+  );
+
+  i = 0;
+  loop(out_channels,
+    voice_note[i] > -1 ? (
+      actual_ratio_for_note(voice_note[i], current_root_pc);
+      val = floor(harm_tmp_num * (lcmv / harm_tmp_den) + 0.5);
+      common_g = common_g == 0 ? val : gcd_int(common_g, val);
+    );
+    i += 1;
+  );
+
+  common_g < 1 ? common_g = 1;
+  composite_lcm = lcmv;
+  composite_gcd = common_g;
+  stats_active_count > 0 ? (
+    freq = midi2hz(current_root_pc) * common_g / max(lcmv, 1);
+    composite_freq_hz = freq;
+    composite_period_sec = 1 / max(freq, 0.000001);
+  ) : (
+    composite_freq_hz = 0;
+    composite_period_sec = 0;
+  );
+);
+
+function bend_from_semi(semi) local(v) (
+  v = 8192 + semi * (8192 / pb_range);
+  floor(clampv(v, 0, 16383) + 0.5);
+);
+
+function send_pitch_bend_raw(offs, ch, value) local(v) (
+  v = floor(clampv(value, 0, 16383) + 0.5);
+  midisend(offs, 0xE0 + ch, v & 127, floor(v / 128));
+);
+
+function send_pitch_bend_semi(offs, ch, semi) (
+  send_pitch_bend_raw(offs, ch, bend_from_semi(semi));
+);
+
+function note_on_msg(offs, ch, note, vel) (
+  midisend(offs, 0x90 + ch, note, vel);
+);
+
+function note_off_msg(offs, ch, note, vel) (
+  midisend(offs, 0x80 + ch, note, vel);
+);
+
+function cc_msg(offs, ch, cc, val) (
+  midisend(offs, 0xB0 + ch, cc, val);
+);
+
+function ext_pb_semi(srcch) (
+  ((input_pb[srcch] - 8192) / 8192) * pb_range;
+);
+
+function clear_voice(ch) (
+  voice_note[ch] = -1;
+  voice_src[ch] = 0;
+  voice_held[ch] = 0;
+  voice_vel[ch] = 0;
+  voice_age[ch] = 0;
+  voice_serial[ch] = 0;
+  voice_tune[ch] = 0;
+);
+
+function safe_reset_chan(offs, ch) (
+  cc_msg(offs, ch, 64, 0);
+  cc_msg(offs, ch, 123, 0);
+  cc_msg(offs, ch, 120, 0);
+  send_pitch_bend_raw(offs, ch, 8192);
+);
+
+function send_voice_bend(offs, ch) (
+  voice_note[ch] > -1 ? (
+    send_pitch_bend_semi(offs, ch, (voice_tune[ch] - voice_note[ch]) + ext_pb_semi(voice_src[ch]));
+  );
+);
+
+function send_all_voice_bends(offs) local(i) (
+  i = 0;
+  loop(out_channels,
+    send_voice_bend(offs, i);
+    i += 1;
+  );
+);
+
+function active_count() local(i, count) (
+  count = 0;
+  i = 0;
+  loop(out_channels,
+    voice_note[i] > -1 ? count += 1;
+    i += 1;
+  );
+  count;
+);
+
+function send_note_off_and_clear(offs, ch) local(n) (
+  n = voice_note[ch];
+  n > -1 ? (
+    note_off_msg(offs, ch, n, 0);
+    send_pitch_bend_raw(offs, ch, 8192);
+  );
+  clear_voice(ch);
+);
+
+function build_pc_stats() local(i, pc, n) (
+  stats_active_count = 0;
+
+  i = 0;
+  loop(12,
+    pc_count[i] = 0;
+    pc_low_note[i] = 999;
+    i += 1;
+  );
+
+  i = 0;
+  loop(out_channels,
+    voice_note[i] > -1 ? (
+      n = voice_note[i];
+      pc = note_pc(n);
+      pc_count[pc] += 1;
+      n < pc_low_note[pc] ? pc_low_note[pc] = n;
+      stats_active_count += 1;
+    );
+    i += 1;
+  );
+);
+
+function cycle_metric_for_root(cand_root) local(i, d, p, q, g, lcmv, val, common_g) (
+  lcmv = 1;
+
+  i = 0;
+  loop(out_channels,
+    voice_note[i] > -1 ? (
+      actual_ratio_for_note(voice_note[i], cand_root);
+      q = harm_tmp_den;
+      lcmv = lcm_int(lcmv, q);
+    );
+    i += 1;
+  );
+
+  common_g = 0;
+
+  i = 0;
+  loop(out_channels,
+    voice_note[i] > -1 ? (
+      actual_ratio_for_note(voice_note[i], cand_root);
+      p = harm_tmp_num;
+      q = harm_tmp_den;
+      val = floor(p * (lcmv / q) + 0.5);
+      common_g = common_g == 0 ? val : gcd_int(common_g, val);
+    );
+    i += 1;
+  );
+
+  common_g < 1 ? common_g = 1;
+  lcmv / common_g;
+);
+
+function choose_root_pc() local(i, best, best_count, best_note, metric, best_metric) (
+  build_pc_stats();
+
+  root_mode < 0.5 || stats_active_count <= 0 ? (
+    const_root;
+  ) : root_mode < 1.5 ? (
+    best = current_root_pc;
+    (best < 0 || pc_count[best] <= 0) ? best = -1;
+    best_count = best >= 0 ? pc_count[best] : -1;
+
+    i = 0;
+    loop(12,
+      pc_count[i] > best_count ? (
+        best = i;
+        best_count = pc_count[i];
+      );
+      i += 1;
+    );
+
+    best < 0 ? const_root : best;
+  ) : root_mode < 2.5 ? (
+    best = const_root;
+    best_note = 999;
+
+    i = 0;
+    loop(12,
+      pc_count[i] > 0 && pc_low_note[i] < best_note ? (
+        best = i;
+        best_note = pc_low_note[i];
+      );
+      i += 1;
+    );
+
+    best;
+  ) : (
+    best = -1;
+    best_metric = INF;
+
+    i = 0;
+    loop(12,
+      pc_count[i] > 0 ? (
+        metric = ratio_mode >= 0.5 ? optimized_cycle_metric_for_root(i) : cycle_metric_for_root(i);
+        (metric < best_metric - EPS)
+        || (abs(metric - best_metric) <= EPS && i == current_root_pc)
+        || (abs(metric - best_metric) <= EPS && best < 0) ? (
+          best = i;
+          best_metric = metric;
+        );
+      );
+      i += 1;
+    );
+
+    best < 0 ? const_root : best;
+  );
+);
+
+function retune_active(offs, sendpb) local(i) (
+  current_root_pc = choose_root_pc();
+
+  ratio_mode >= 0.5 ? choose_auto_ratios();
+
+  i = 0;
+  loop(out_channels,
+    voice_note[i] > -1 ? (
+      voice_tune[i] = tuned_note_value(voice_note[i], current_root_pc);
+    );
+    i += 1;
+  );
+
+  update_composite_state();
+
+  sendpb >= 0.5 ? send_all_voice_bends(offs);
+);
+
+function panic_all(offs) local(i) (
+  i = 0;
+  loop(MAX_CHANNELS,
+    voice_note[i] > -1 ? note_off_msg(offs, i, voice_note[i], 0);
+    i += 1;
+  );
+
+  i = 0;
+  loop(MAX_CHANNELS,
+    safe_reset_chan(offs, i);
+    input_pb[i] = 8192;
+    pedal_down[i] = 0;
+    clear_voice(i);
+    i += 1;
+  );
+
+  current_root_pc = const_root;
+  next_out_ch = 0;
+  build_pc_stats();
+  update_composite_state();
+);
+
+function broadcast_channel_msg(offs, status, packed, src) local(ch) (
+  broadcast_ctrl >= 0.5 ? (
+    ch = 0;
+    loop(out_channels,
+      midisend(offs, status + ch, packed);
+      ch += 1;
+    );
+  ) : (
+    midisend(offs, status + src, packed);
+  );
+);
+
+function send_pb_rpn_all(offs) local(ch, coarse, fine) (
+  send_rpn >= 0.5 ? (
+    coarse = floor(pb_range);
+    fine = floor((pb_range - coarse) * 100 + 0.5);
+    fine > 99 ? fine = 99;
+
+    ch = 0;
+    loop(out_channels,
+      cc_msg(offs, ch, 101, 0);
+      cc_msg(offs, ch, 100, 0);
+      cc_msg(offs, ch, 6, coarse);
+      cc_msg(offs, ch, 38, fine);
+      cc_msg(offs, ch, 101, 127);
+      cc_msg(offs, ch, 100, 127);
+      ch += 1;
+    );
+  );
+);
+
+function find_free_channel() local(i, ch, found) (
+  found = -1;
+  i = 0;
+  loop(out_channels,
+    ch = (next_out_ch + i) % out_channels;
+    (found < 0) && (voice_note[ch] < 0) ? found = ch;
+    i += 1;
+  );
+  found;
+);
+
+function pick_channel_to_steal() local(i, best, best_age, pass, need_released) (
+  best = -1;
+  best_age = -1;
+
+  pass = 0;
+  loop(2,
+    need_released = pass == 0;
+
+    i = 0;
+    loop(out_channels,
+      voice_note[i] > -1 ? (
+        (!need_released || voice_held[i] == 0) ? (
+          voice_age[i] > best_age ? (
+            best = i;
+            best_age = voice_age[i];
+          );
+        );
+      );
+      i += 1;
+    );
+
+    best >= 0 ? pass = 2 : pass += 1;
+  );
+
+  best;
+);
+
+function alloc_channel(offs) local(ch) (
+  ch = find_free_channel();
+  ch < 0 ? (
+    ch = pick_channel_to_steal();
+    ch >= 0 ? (
+      send_note_off_and_clear(offs, ch);
+      safe_reset_chan(offs, ch);
+    );
+  );
+
+  ch >= 0 ? next_out_ch = (ch + 1) % out_channels;
+  ch;
+);
+
+function find_note_channel_for_off(src, note) local(i, best, best_serial) (
+  best = -1;
+  best_serial = -1;
+
+  i = 0;
+  loop(out_channels,
+    (voice_note[i] == note) && (voice_src[i] == src) && (voice_held[i] == 1) && (voice_serial[i] > best_serial) ? (
+      best = i;
+      best_serial = voice_serial[i];
+    );
+    i += 1;
+  );
+
+  best;
+);
+
+function kill_released_duplicates(offs, src, note) local(i) (
+  i = 0;
+  loop(out_channels,
+    (voice_note[i] == note) && (voice_src[i] == src) && (voice_held[i] == 0) ? (
+      send_note_off_and_clear(offs, i);
+    );
+    i += 1;
+  );
+);
+
+function flush_sustain_src(src, offs) local(i, removed_any) (
+  removed_any = 0;
+
+  i = 0;
+  loop(out_channels,
+    (voice_note[i] > -1) && (voice_src[i] == src) && (voice_held[i] == 0) ? (
+      send_note_off_and_clear(offs, i);
+      removed_any = 1;
+    );
+    i += 1;
+  );
+
+  removed_any ? retune_active(offs, 1);
+);
+
+function release_all_sustained(offs) local(i, ch, removed_any) (
+  removed_any = 0;
+
+  ch = 0;
+  loop(MAX_CHANNELS,
+    pedal_down[ch] = 0;
+    ch += 1;
+  );
+
+  i = 0;
+  loop(out_channels,
+    (voice_note[i] > -1) && (voice_held[i] == 0) ? (
+      send_note_off_and_clear(offs, i);
+      removed_any = 1;
+    );
+    i += 1;
+  );
+
+  removed_any ? retune_active(offs, 1);
+);
+
+function init_all() local(i) (
+  sanitize_sliders();
+  build_all_auto_candidates();
+
+  i = 0;
+  loop(MAX_CHANNELS,
+    clear_voice(i);
+    input_pb[i] = 8192;
+    pedal_down[i] = 0;
+    i += 1;
+  );
+
+  current_root_pc = const_root;
+  next_out_ch = 0;
+  serial_counter = 1;
+
+  last_out_channels = out_channels;
+  last_pb_range = pb_range;
+  last_send_rpn = send_rpn;
+  channels_dirty = 0;
+  settings_dirty = 1;
+  rpn_needs_send = 1;
+  last_mouse_cap = 0;
+  edit_active = 0;
+  edit_degree = -1;
+  edit_part = 0;
+  last_click_pc = -1;
+  last_click_part = -1;
+  last_click_time = -1;
+  panic_request = 0;
+  auto_candidates_dirty = 0;
+  last_auto_cycle_mode = auto_cycle_mode;
+  last_auto_max_part = auto_max_part;
+  last_auto_max_err_c = auto_max_err_c;
+  build_pc_stats();
+  update_composite_state();
+);
+
+init_all();
+
+@slider
+sanitize_sliders();
+
+auto_params_changed =
+  auto_cycle_mode != last_auto_cycle_mode
+  || auto_max_part != last_auto_max_part
+  || auto_max_err_c != last_auto_max_err_c
+  || pb_range != last_pb_range;
+
+auto_params_changed ? auto_candidates_dirty = 1;
+last_auto_cycle_mode = auto_cycle_mode;
+last_auto_max_part = auto_max_part;
+last_auto_max_err_c = auto_max_err_c;
+
+old_current_root_pc = current_root_pc;
+retune_active(0, 0);
+current_root_pc != old_current_root_pc ? (
+  edit_active = 0;
+  last_click_pc = -1;
+);
+
+out_channels != last_out_channels ? (
+  channels_dirty = 1;
+);
+
+(pb_range != last_pb_range || send_rpn != last_send_rpn) ? (
+  rpn_needs_send = 1;
+  last_pb_range = pb_range;
+  last_send_rpn = send_rpn;
+);
+
+settings_dirty = 1;
+
+@block
+b_i = 0;
+loop(out_channels,
+  voice_note[b_i] > -1 ? voice_age[b_i] = min(1048576, voice_age[b_i] + 1);
+  b_i += 1;
+);
+
+channels_dirty ? (
+  panic_all(0);
+  last_out_channels = out_channels;
+  channels_dirty = 0;
+);
+
+panic_request || all_notes_off >= 0.5 ? (
+  panic_all(0);
+  panic_request = 0;
+  all_notes_off = 0;
+  slider_automate(all_notes_off);
+  settings_dirty = 0;
+);
+
+rpn_needs_send ? (
+  send_pb_rpn_all(0);
+  rpn_needs_send = 0;
+);
+
+settings_dirty ? (
+  use_sustain < 0.5 ? release_all_sustained(0);
+  retune_active(0, 1);
+  settings_dirty = 0;
+);
+
+while(midirecv(offset, msg1, msg23)) (
+  status = msg1 & 0xF0;
+  src_ch = msg1 & 0x0F;
+  msg2 = msg23 & 255;
+  msg3 = (msg23 / 256) | 0;
+  handled = 0;
+
+  status == 0x90 && msg3 > 0 ? (
+    kill_released_duplicates(offset, src_ch, msg2);
+
+    out_ch = alloc_channel(offset);
+    out_ch >= 0 ? (
+      voice_note[out_ch] = msg2;
+      voice_src[out_ch] = src_ch;
+      voice_held[out_ch] = 1;
+      voice_vel[out_ch] = msg3;
+      voice_age[out_ch] = 0;
+      voice_serial[out_ch] = serial_counter;
+      voice_tune[out_ch] = msg2;
+      serial_counter += 1;
+
+      retune_active(offset, 1);
+      note_on_msg(offset, out_ch, msg2, msg3);
+    );
+    handled = 1;
+  );
+
+  !handled && (status == 0x80 || (status == 0x90 && msg3 == 0)) ? (
+    off_ch = find_note_channel_for_off(src_ch, msg2);
+    off_ch >= 0 ? (
+      voice_held[off_ch] = 0;
+
+      use_sustain >= 0.5 && pedal_down[src_ch] >= 64 ? (
+        0;
+      ) : (
+        send_note_off_and_clear(offset, off_ch);
+        retune_active(offset, 1);
+      );
+    );
+    handled = 1;
+  );
+
+  !handled && status == 0xE0 ? (
+    input_pb[src_ch] = msg2 + msg3 * 128;
+    send_all_voice_bends(offset);
+    handled = 1;
+  );
+
+  !handled && status == 0xB0 && msg2 == 64 && use_sustain >= 0.5 ? (
+    old_pedal = pedal_down[src_ch];
+    pedal_down[src_ch] = msg3;
+
+    old_pedal >= 64 && msg3 < 64 ? flush_sustain_src(src_ch, offset);
+    handled = 1;
+  );
+
+  !handled && status == 0xB0 && (msg2 == 120 || msg2 == 123) ? (
+    panic_all(offset);
+    handled = 1;
+  );
+
+  !handled && status == 0xB0 && msg2 == 121 ? (
+    pedal_down[src_ch] = 0;
+    flush_sustain_src(src_ch, offset);
+    input_pb[src_ch] = 8192;
+    broadcast_channel_msg(offset, status, msg23, src_ch);
+    send_all_voice_bends(offset);
+    handled = 1;
+  );
+
+  !handled && (status == 0xB0 || status == 0xA0 || status == 0xC0 || status == 0xD0) ? (
+    broadcast_channel_msg(offset, status, msg23, src_ch);
+    handled = 1;
+  );
+
+  !handled ? midisend(offset, msg1, msg23);
+);
+
+@gfx 780 360
+gfx_ext_retina = 1;
+
+function gfx_actual_ratio_for_note(note_num, root_pc) local(d, octv, g, mult) (
+  d = degree_for_pc(note_pc(note_num), root_pc);
+  ratio_mode >= 0.5 ? (
+    gfx_harm_num = auto_num[d];
+    gfx_harm_den = auto_den[d];
+  ) : (
+    gfx_harm_num = ratio_num[d];
+    gfx_harm_den = ratio_den[d];
+  );
+
+  octv = floor((note_num - root_pc - d) / 12);
+  mult = 2 ^ abs(octv);
+  octv > 0 ? gfx_harm_num *= mult : octv < 0 ? gfx_harm_den *= mult;
+
+  g = gcd_int(gfx_harm_num, gfx_harm_den);
+  gfx_harm_num = floor(gfx_harm_num / g + 0.5);
+  gfx_harm_den = floor(gfx_harm_den / g + 0.5);
+);
+
+function gfx_cycle_ratio_for_note(note_num, root_pc, reciprocal) local(tmp) (
+  gfx_actual_ratio_for_note(note_num, root_pc);
+
+  reciprocal >= 0.5 ? (
+    tmp = gfx_harm_num;
+    gfx_harm_num = gfx_harm_den;
+    gfx_harm_den = tmp;
+  );
+);
+
+function pc_name(pc) local(out) (
+  pc == 0 ? strcpy(out=#, "C")
+  : pc == 1 ? strcpy(out=#, "C#")
+  : pc == 2 ? strcpy(out=#, "D")
+  : pc == 3 ? strcpy(out=#, "D#")
+  : pc == 4 ? strcpy(out=#, "E")
+  : pc == 5 ? strcpy(out=#, "F")
+  : pc == 6 ? strcpy(out=#, "F#")
+  : pc == 7 ? strcpy(out=#, "G")
+  : pc == 8 ? strcpy(out=#, "G#")
+  : pc == 9 ? strcpy(out=#, "A")
+  : pc == 10 ? strcpy(out=#, "A#")
+  : strcpy(out=#, "B");
+  out;
+);
+
+function root_mode_name(mode) local(out) (
+  mode < 0.5 ? strcpy(out=#, "constant")
+  : mode < 1.5 ? strcpy(out=#, "most played")
+  : mode < 2.5 ? strcpy(out=#, "lowest")
+  : mode < 3.5 ? strcpy(out=#, "shortest cycle")
+  : strcpy(out=#, "shortest cycle auto ratio");
+  out;
+);
+
+function stripe_pc(stripe_idx) local(pc) (
+  pc = (current_root_pc + stripe_idx) % 12;
+  pc < 0 ? pc += 12;
+  pc;
+);
+
+function draw_center_text(str, x, y, w) local(tw, th) (
+  gfx_measurestr(str, tw, th);
+  gfx_x = x + max(0, (w - tw) * 0.5);
+  gfx_y = y;
+  gfx_drawstr(str);
+);
+
+function hsv_set(h, s, v, a) local(i, f, p, q, t, r, g, b) (
+  h -= floor(h);
+  h *= 6;
+  i = floor(h);
+  f = h - i;
+  p = v * (1 - s);
+  q = v * (1 - s * f);
+  t = v * (1 - s * (1 - f));
+
+  i == 0 ? (r = v; g = t; b = p;)
+  : i == 1 ? (r = q; g = v; b = p;)
+  : i == 2 ? (r = p; g = v; b = t;)
+  : i == 3 ? (r = p; g = q; b = v;)
+  : i == 4 ? (r = t; g = p; b = v;)
+  : (r = v; g = p; b = q;);
+
+  gfx_set(r, g, b, a);
+);
+
+function draw_divisions(x, y, w, h, parts) local(j, count, yy, last_yy) (
+  x = floor(x + 0.5);
+  y = floor(y + 0.5);
+  w = floor(w + 0.5);
+  h = floor(h + 0.5);
+  count = floor(clampv(parts, 1, MAX_RATIO_PART) + 0.5);
+  count > floor(h / 3) ? count = max(1, floor(h / 3));
+  last_yy = -1;
+  j = 1;
+  loop(count - 1,
+    yy = floor(y + h * j / count + 0.5);
+    yy != last_yy ? (
+      gfx_line(x, yy, x + w - 1, yy);
+      last_yy = yy;
+    );
+    j += 1;
+  );
+);
+
+function set_ratio_part(deg, part, value) local(v) (
+  v = floor(clampv(value, 1, max_ratio_part) + 0.5);
+
+  root_mode == 4 ? (
+    root_mode = 3;
+    ratio_mode = 0;
+    slider_automate(slider1);
+  );
+
+  deg <= 0 ? (
+    ratio0_num = 1;
+    ratio0_den = 1;
+    slider_automate(ratio0_num);
+    slider_automate(ratio0_den);
+  ) : deg == 1 ? (
+    part < 0.5 ? (ratio1_num = v; slider_automate(ratio1_num);) : (ratio1_den = v; slider_automate(ratio1_den););
+  ) : deg == 2 ? (
+    part < 0.5 ? (ratio2_num = v; slider_automate(ratio2_num);) : (ratio2_den = v; slider_automate(ratio2_den););
+  ) : deg == 3 ? (
+    part < 0.5 ? (ratio3_num = v; slider_automate(ratio3_num);) : (ratio3_den = v; slider_automate(ratio3_den););
+  ) : deg == 4 ? (
+    part < 0.5 ? (ratio4_num = v; slider_automate(ratio4_num);) : (ratio4_den = v; slider_automate(ratio4_den););
+  ) : deg == 5 ? (
+    part < 0.5 ? (ratio5_num = v; slider_automate(ratio5_num);) : (ratio5_den = v; slider_automate(ratio5_den););
+  ) : deg == 6 ? (
+    part < 0.5 ? (ratio6_num = v; slider_automate(ratio6_num);) : (ratio6_den = v; slider_automate(ratio6_den););
+  ) : deg == 7 ? (
+    part < 0.5 ? (ratio7_num = v; slider_automate(ratio7_num);) : (ratio7_den = v; slider_automate(ratio7_den););
+  ) : deg == 8 ? (
+    part < 0.5 ? (ratio8_num = v; slider_automate(ratio8_num);) : (ratio8_den = v; slider_automate(ratio8_den););
+  ) : deg == 9 ? (
+    part < 0.5 ? (ratio9_num = v; slider_automate(ratio9_num);) : (ratio9_den = v; slider_automate(ratio9_den););
+  ) : deg == 10 ? (
+    part < 0.5 ? (ratio10_num = v; slider_automate(ratio10_num);) : (ratio10_den = v; slider_automate(ratio10_den););
+  ) : (
+    part < 0.5 ? (ratio11_num = v; slider_automate(ratio11_num);) : (ratio11_den = v; slider_automate(ratio11_den););
+  );
+
+  sanitize_sliders();
+  settings_dirty = 1;
+);
+
+function set_root_from_gui(pc) (
+  const_root = floor(clampv(pc, 0, 11) + 0.5);
+  root_mode = 0;
+  current_root_pc = const_root;
+  slider_automate(const_root);
+  slider_automate(root_mode);
+  settings_dirty = 1;
+);
+
+function ratio_part_value(deg, part) (
+  part < 0.5 ? ratio_num[deg] : ratio_den[deg];
+);
+
+function default_ratio_part(deg, part) local(v) (
+  deg <= 0 ? (
+    v = 1;
+  ) : deg == 1 ? (
+    v = part < 0.5 ? 16 : 15;
+  ) : deg == 2 ? (
+    v = part < 0.5 ? 9 : 8;
+  ) : deg == 3 ? (
+    v = part < 0.5 ? 6 : 5;
+  ) : deg == 4 ? (
+    v = part < 0.5 ? 5 : 4;
+  ) : deg == 5 ? (
+    v = part < 0.5 ? 4 : 3;
+  ) : deg == 6 ? (
+    v = part < 0.5 ? 45 : 32;
+  ) : deg == 7 ? (
+    v = part < 0.5 ? 3 : 2;
+  ) : deg == 8 ? (
+    v = part < 0.5 ? 8 : 5;
+  ) : deg == 9 ? (
+    v = part < 0.5 ? 5 : 3;
+  ) : deg == 10 ? (
+    v = part < 0.5 ? 9 : 5;
+  ) : (
+    v = part < 0.5 ? 15 : 8;
+  );
+  v;
+);
+
+gfx_mode = 0;
+
+gfx_set(0.055, 0.060, 0.070, 1);
+gfx_rect(0, 0, gfx_w, gfx_h);
+
+ui = min(gfx_w / 780, gfx_h / 360);
+ui < 0.70 ? ui = 0.70;
+
+margin = floor(14 * ui + 0.5);
+gap = floor(4 * ui + 0.5);
+header_y = floor(10 * ui + 0.5);
+strip_top = floor(98 * ui + 0.5);
+bottom_h = floor(58 * ui + 0.5);
+strip_h = gfx_h - strip_top - bottom_h;
+strip_h < floor(100 * ui + 0.5) ? strip_h = floor(100 * ui + 0.5);
+strip_w_total = gfx_w - margin * 2;
+stripe_w = floor((strip_w_total - gap * 11) / 12 + 0.5);
+part_w = floor(stripe_w * 0.5);
+title_x = margin;
+comp_x = margin + floor(500 * ui + 0.5);
+panic_w = floor(108 * ui + 0.5);
+panic_h = floor(22 * ui + 0.5);
+panic_x = gfx_w - margin - panic_w;
+panic_y = header_y;
+panic_hot = mouse_x >= panic_x && mouse_x <= panic_x + panic_w && mouse_y >= panic_y && mouse_y <= panic_y + panic_h;
+lmb = mouse_cap & 1;
+just_down = lmb && !(last_mouse_cap & 1);
+
+panic_hot && just_down ? panic_request = 1;
+
+gfx_setfont(1, "Arial", floor(17 * ui + 0.5));
+gfx_set(0.93, 0.96, 1.00, 1);
+gfx_x = title_x;
+gfx_y = header_y;
+gfx_drawstr("MIDI Chroma Tuner [JM]");
+
+gfx_setfont(2, "Arial", floor(12 * ui + 0.5));
+panic_hot ? gfx_set(0.22, 0.27, 0.33, 1) : gfx_set(0.14, 0.16, 0.19, 1);
+gfx_rect(panic_x, panic_y, panic_w, panic_h, 1);
+gfx_set(0.42, 0.49, 0.58, 1);
+gfx_rect(panic_x, panic_y, panic_w, panic_h, 0);
+gfx_set(0.92, 0.96, 1.00, 1);
+draw_center_text("All Notes Off", panic_x, panic_y + floor(5 * ui + 0.5), panic_w);
+
+gfx_x = title_x;
+gfx_y = header_y + floor(25 * ui + 0.5);
+gfx_set(0.70, 0.78, 0.88, 1);
+gfx_drawstr("Root ");
+gfx_set(1.00, 0.92, 0.62, 1);
+gfx_drawstr(pc_name(current_root_pc));
+gfx_set(0.70, 0.78, 0.88, 1);
+gfx_drawstr("   Mode ");
+gfx_set(0.86, 0.91, 0.98, 1);
+gfx_drawstr(root_mode_name(root_mode));
+gfx_set(0.70, 0.78, 0.88, 1);
+gfx_drawstr(sprintf(#, "   PB %.2f st   %d ch", pb_range, out_channels));
+
+gfx_x = title_x;
+gfx_y = header_y + floor(47 * ui + 0.5);
+gfx_set(0.70, 0.78, 0.88, 1);
+ratio_exact = tuning_amount >= 0.9995;
+display_subharmonic = ratio_exact && ratio_mode >= 0.5 && auto_cycle_mode >= 0.5;
+ratio_exact ? (
+  display_subharmonic ? gfx_drawstr("Subharmonic ratio ") : gfx_drawstr("Harmonic ratio ");
+) : (
+  gfx_drawstr("Applied ratio ");
+);
+gfx_set(1.00, 0.92, 0.62, 1);
+
+strcpy(#harm_ratio, "");
+stats_active_count > 0 ? (
+  memset(gfx_note_active, 0, 128);
+  g_i = 0;
+  loop(out_channels,
+    n = voice_note[g_i];
+    n >= 0 ? gfx_note_active[n] = 1;
+    g_i += 1;
+  );
+
+  ratio_exact ? (
+    display_lcm = 1;
+    display_gcd = 0;
+
+    note_scan = 0;
+    loop(128,
+      gfx_note_active[note_scan] ? (
+        gfx_cycle_ratio_for_note(note_scan, current_root_pc, display_subharmonic);
+        display_lcm = lcm_int(display_lcm, gfx_harm_den);
+      );
+      note_scan += 1;
+    );
+
+    note_scan = 0;
+    loop(128,
+      gfx_note_active[note_scan] ? (
+        gfx_cycle_ratio_for_note(note_scan, current_root_pc, display_subharmonic);
+        val = floor(gfx_harm_num * (display_lcm / gfx_harm_den) + 0.5);
+        display_gcd = display_gcd == 0 ? val : gcd_int(display_gcd, val);
+      );
+      note_scan += 1;
+    );
+
+    display_gcd < 1 ? display_gcd = 1;
+    ratios_written = 0;
+    note_scan = 0;
+    loop(128,
+      gfx_note_active[note_scan] ? (
+        gfx_cycle_ratio_for_note(note_scan, current_root_pc, display_subharmonic);
+        val = floor(gfx_harm_num * (display_lcm / gfx_harm_den) / display_gcd + 0.5);
+        ratios_written > 0 ? strcat(#harm_ratio, ":");
+        display_subharmonic ? sprintf(#harm_part, "/%d", val) : sprintf(#harm_part, "%d", val);
+        strcat(#harm_ratio, #harm_part);
+        ratios_written += 1;
+      );
+      note_scan += 1;
+    );
+  ) : (
+    ratios_written = 0;
+    ref_tuned_note = -1;
+    note_scan = 0;
+    loop(128,
+      gfx_note_active[note_scan] ? (
+        tuned_note = tuned_note_value(note_scan, current_root_pc);
+        ref_tuned_note < 0 ? ref_tuned_note = tuned_note;
+        val_ratio = exp(LOG2 * (tuned_note - ref_tuned_note) / 12);
+        ratios_written > 0 ? strcat(#harm_ratio, ":") : strcat(#harm_ratio, "~");
+        sprintf(#harm_part, "%.3f", val_ratio);
+        strcat(#harm_ratio, #harm_part);
+        ratios_written += 1;
+      );
+      note_scan += 1;
+    );
+  );
+) : (
+  strcpy(#harm_ratio, "-");
+);
+
+gfx_drawstr(#harm_ratio);
+
+gfx_set(0.055, 0.060, 0.070, 1);
+gfx_rect(comp_x - floor(8 * ui + 0.5), header_y + floor(45 * ui + 0.5), gfx_w - comp_x + floor(8 * ui + 0.5), floor(20 * ui + 0.5), 1);
+gfx_x = comp_x;
+gfx_y = header_y + floor(47 * ui + 0.5);
+gfx_set(0.70, 0.78, 0.88, 1);
+gfx_drawstr("   Composite ");
+gfx_set(0.86, 0.91, 0.98, 1);
+stats_active_count > 0 ? (
+  ratio_exact ? (
+    composite_period_sec < 0.001 ? (
+      gfx_drawstr(sprintf(#, "%.2f us / %.3f Hz", composite_period_sec * 1000000, composite_freq_hz));
+    ) : composite_period_sec < 1 ? (
+      gfx_drawstr(sprintf(#, "%.3f ms / %.3f Hz", composite_period_sec * 1000, composite_freq_hz));
+    ) : (
+      gfx_drawstr(sprintf(#, "%.3f s / %.3f Hz", composite_period_sec, composite_freq_hz));
+    );
+  ) : (
+    gfx_drawstr("partial");
+  );
+) : (
+  gfx_drawstr("-");
+);
+
+hover_pc = -1;
+hover_degree = -1;
+hover_part = 0;
+hover_note_pc = -1;
+mouse_in_strips = mouse_y >= strip_top && mouse_y <= strip_top + strip_h;
+mouse_in_strips ? (
+  g_i = 0;
+  loop(12,
+    sx = floor(margin + g_i * (stripe_w + gap) + 0.5);
+    mouse_x >= sx && mouse_x <= sx + stripe_w ? (
+      hover_pc = stripe_pc(g_i);
+      hover_degree = g_i;
+      hover_part = mouse_x < sx + part_w ? 0 : 1;
+    );
+    g_i += 1;
+  );
+);
+
+note_label_top = strip_top + strip_h + floor(4 * ui + 0.5);
+note_label_h = floor(22 * ui + 0.5);
+mouse_in_note_labels = mouse_y >= note_label_top && mouse_y <= note_label_top + note_label_h;
+mouse_in_note_labels ? (
+  g_i = 0;
+  loop(12,
+    sx = floor(margin + g_i * (stripe_w + gap) + 0.5);
+    mouse_x >= sx && mouse_x <= sx + stripe_w ? (
+      hover_note_pc = stripe_pc(g_i);
+    );
+    g_i += 1;
+  );
+);
+
+just_down && hover_note_pc >= 0 ? (
+  set_root_from_gui(hover_note_pc);
+  edit_active = 0;
+  last_click_pc = -1;
+);
+
+hover_pc >= 0 && mouse_wheel != 0 ? (
+  step = mouse_cap & 8 ? 5 : 1;
+  wheel_delta = mouse_wheel > 0 ? step : -step;
+  set_ratio_part(hover_degree, hover_part, ratio_part_value(hover_degree, hover_part) + wheel_delta);
+  mouse_wheel = 0;
+);
+
+just_down && hover_pc >= 0 && hover_note_pc < 0 ? (
+  now_time = time_precise();
+  click_degree = hover_degree;
+  click_is_double = (hover_pc == last_click_pc) && (hover_part == last_click_part) && (now_time - last_click_time < 0.32);
+
+  click_is_double ? (
+    set_ratio_part(click_degree, hover_part, default_ratio_part(click_degree, hover_part));
+    edit_active = 0;
+    last_click_pc = -1;
+  ) : (
+    edit_active = 1;
+    edit_degree = click_degree;
+    edit_part = hover_part;
+    edit_start_y = mouse_y;
+    edit_start_value = ratio_part_value(edit_degree, edit_part);
+    last_click_pc = hover_pc;
+    last_click_part = hover_part;
+    last_click_time = now_time;
+  );
+);
+
+edit_active ? (
+  lmb ? (
+    drag_step = mouse_cap & 8 ? 3 * ui : 8 * ui;
+    drag_delta = trunc0((edit_start_y - mouse_y) / max(drag_step, 1));
+    new_value = edit_start_value + drag_delta;
+    new_value != ratio_part_value(edit_degree, edit_part) ? (
+      set_ratio_part(edit_degree, edit_part, new_value);
+    );
+  ) : (
+    edit_active = 0;
+  );
+);
+
+gfx_setfont(3, "Arial", floor(11 * ui + 0.5));
+
+g_i = 0;
+loop(12,
+  pc = stripe_pc(g_i);
+  degree = g_i;
+  sx = floor(margin + g_i * (stripe_w + gap) + 0.5);
+  sy = strip_top;
+  is_root = pc == current_root_pc;
+  is_hover = pc == hover_pc;
+  is_note_hover = pc == hover_note_pc;
+  is_playing = pc_count[pc] > 0;
+  shown_num = active_ratio_num(degree);
+  shown_den = active_ratio_den(degree);
+  shown_cents = active_ratio_cents(degree);
+  applied_cents = applied_tuning_cents(degree);
+  stripe_hue = tuned_chroma_hue(pc, applied_cents);
+  
+  hsv_set(stripe_hue, 0.54, 0.22, 1);
+  /*
+  is_playing ? (
+    hsv_set(stripe_hue, 0.68, 0.38, 1);
+  ) : (
+    hsv_set(stripe_hue, 0.54, 0.22, 1);
+  );
+  //*/
+  
+  gfx_rect(sx, sy, stripe_w, strip_h, 1);
+
+  is_hover ? (
+    hsv_set(stripe_hue, 0.54, 0.31, 1);
+    /*
+    is_playing ? (
+      hsv_set(stripe_hue, 0.70, 0.46, 1);
+    ) : (
+      hsv_set(stripe_hue, 0.54, 0.31, 1);
+    );
+    //*/
+    hover_part < 0.5 ? (
+      gfx_rect(sx, sy, part_w, strip_h, 1);
+    ) : (
+      gfx_rect(sx + part_w, sy, stripe_w - part_w, strip_h, 1);
+    );
+  );
+
+  gfx_set(0.48, 0.55, 0.63, 1);
+  //gfx_set(1, 1, 1, 1);
+  gfx_set(0.53, 0.60, 0.68, 1);
+  draw_divisions(sx, sy, part_w, strip_h, shown_num);
+  draw_divisions(sx + part_w, sy, stripe_w - part_w, strip_h, shown_den);
+
+  gfx_set(0.02, 0.03, 0.04, 1);
+  gfx_rect(sx, sy, stripe_w, strip_h, 0);
+
+  is_root ? (
+    root_bar_h = max(3, floor(4 * ui + 0.5));
+    gfx_set(1.00, 0.96, 0.62, 1);
+    gfx_rect(sx + 4, sy + strip_h - root_bar_h - 4, stripe_w - 8, root_bar_h, 1);
+  );
+
+  is_playing ? (
+    //gfx_set(1.00, 0.98, 0.78, 1);
+    //gfx_set(0.5, 0.5, 0.5, 1);
+    gfx_set(1, 1, 1, 1);
+    gfx_rect(sx + 2, sy + 2, stripe_w - 4, strip_h - 4, 0);
+    //gfx_rect(sx + 3, sy + 3, stripe_w - 6, strip_h - 6, 0);
+    //gfx_set(1.00, 1.00, 1.00, 0.32);
+    //gfx_rect(sx + 3, sy + 3, stripe_w - 6, max(6, floor(strip_h * 0.10)), 1);
+  );
+
+  gfx_set(0.92, 0.96, 1.00, 1);
+  draw_center_text(sprintf(#, "%d:%d", shown_num, shown_den), sx, sy - floor(23 * ui + 0.5), stripe_w);
+
+  is_note_hover ? (
+    gfx_set(1.00, 0.96, 0.62, 1);
+  ) : is_root ? (
+    gfx_set(1.00, 0.92, 0.62, 1);
+  ) : (
+    gfx_set(0.95, 0.97, 1.00, 1);
+  );
+  draw_center_text(pc_name(pc), sx, sy + strip_h + floor(8 * ui + 0.5), stripe_w);
+
+  edit_active && edit_degree == degree ? (
+    gfx_set(1.00, 0.92, 0.62, 1);
+  ) : is_hover ? (
+    gfx_set(0.86, 0.92, 1.00, 1);
+  ) : (
+    gfx_set(0.68, 0.76, 0.86, 1);
+  );
+  draw_center_text(sprintf(#, "%+.1f ct", applied_cents), sx, sy + strip_h + floor(28 * ui + 0.5), stripe_w);
+
+  g_i += 1;
+);
+
+last_mouse_cap = mouse_cap;

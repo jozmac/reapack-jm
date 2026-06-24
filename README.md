@@ -320,6 +320,7 @@ Utility for modyfying azimuth, balance and width of stereo field.
 # MIDI
 
 ## Chroma Tuner
+<img width="1369" height="833" alt="reaper_wbz8DBrjkL" src="https://github.com/user-attachments/assets/756803a6-2969-423f-afd7-1382f35acf18" />
 
 Retunes incoming MIDI notes into ratio-based tuning systems.
 
